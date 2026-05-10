@@ -29,7 +29,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
-reqwest = { version = "0.11", default-features = false, features = ["blocking", "rustls-tls-native-roots"] }
+reqwest = { version = "0.11", default-features = false, features = ["blocking", "rustls-tls"] }
 zip = "0.6"
 anyhow = "1"
 flate2 = "1.0"
@@ -46,7 +46,7 @@ unified-entity-card = "0.2.0"
 keyring = "2"
 zeroize = "1"
 tauri-plugin-aptabase = { path = "crates/tauri-plugin-aptabase" }
-reqwest = { version = "0.11", default-features = false, features = ["json", "stream", "multipart", "rustls-tls-native-roots"] }
+reqwest = { version = "0.11", default-features = false, features = ["json", "stream", "multipart", "rustls-tls"] }
 axum = { version = "0.8", default-features = false, features = ["http1", "json", "tokio"] }
 tower-http = { version = "0.6", default-features = false, features = ["cors"] }
 futures-util = "0.3"
