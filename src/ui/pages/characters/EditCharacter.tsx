@@ -83,6 +83,83 @@ const summarizeAvatarValue = (value?: string | null) => {
   return value.length > 96 ? `${value.slice(0, 96)}...` : value;
 };
 
+const GradientColorField = React.memo(function GradientColorField({
+  label,
+  value,
+  placeholder,
+  fallback,
+  onCommit,
+  onRemove,
+}: {
+  label: string;
+  value?: string;
+  placeholder: string;
+  fallback: string;
+  onCommit: (value: string) => void;
+  onRemove?: () => void;
+}) {
+  const [draft, setDraft] = React.useState(value || "");
+
+  React.useEffect(() => {
+    setDraft(value || "");
+  }, [value]);
+
+  const commit = React.useCallback(
+    (nextValue: string) => {
+      if (nextValue !== (value || "")) {
+        onCommit(nextValue);
+      }
+    },
+    [onCommit, value],
+  );
+
+  return (
+    <div className="flex items-center gap-3">
+      <label className="w-12 text-xs text-fg/50">{label}</label>
+      <div className="relative shrink-0">
+        <input
+          type="color"
+          value={draft || fallback}
+          onInput={(e) => {
+            setDraft(e.currentTarget.value);
+          }}
+          onChange={(e) => {
+            const nextValue = e.currentTarget.value;
+            setDraft(nextValue);
+            commit(nextValue);
+          }}
+          className="h-10 w-10 cursor-pointer rounded-lg border-2 border-fg/20 p-0.5"
+          style={{
+            backgroundColor: draft || fallback,
+          }}
+        />
+      </div>
+      <input
+        type="text"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={() => commit(draft)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.currentTarget.blur();
+          }
+        }}
+        placeholder={placeholder}
+        className="flex-1 rounded-lg border border-fg/10 bg-surface-el/50 px-3 py-2 text-sm font-mono text-fg placeholder:text-fg/30 focus:border-secondary/50 focus:outline-none"
+      />
+      {onRemove ? (
+        <button
+          type="button"
+          onClick={onRemove}
+          className="shrink-0 text-xs text-danger hover:text-danger"
+        >
+          ✕
+        </button>
+      ) : null}
+    </div>
+  );
+});
+
 type EditCharacterTab = "character" | "soul" | "settings";
 
 const buildOpeningContext = (
@@ -850,80 +927,37 @@ export function EditCharacterPage() {
                             }}
                           />
 
-                          <div className="flex items-center gap-3">
-                            <label className="w-12 text-xs text-fg/50">Start</label>
-                            <div className="relative shrink-0">
-                              <input
-                                type="color"
-                                value={suggestedCustomGradientColors[0] || "#4f46e5"}
-                                onChange={(e) => {
-                                  const newColors = [...suggestedCustomGradientColors];
-                                  newColors[0] = e.target.value;
-                                  setFields({ customGradientColors: newColors });
-                                }}
-                                className="h-10 w-10 cursor-pointer rounded-lg border-2 border-fg/20 p-0.5"
-                                style={{
-                                  backgroundColor: suggestedCustomGradientColors[0] || "#4f46e5",
-                                }}
-                              />
-                            </div>
-                            <input
-                              type="text"
-                              value={suggestedCustomGradientColors[0] || ""}
-                              onChange={(e) => {
-                                const newColors = [...suggestedCustomGradientColors];
-                                newColors[0] = e.target.value;
-                                setFields({ customGradientColors: newColors });
-                              }}
-                              placeholder="#4f46e5"
-                              className="flex-1 rounded-lg border border-fg/10 bg-surface-el/50 px-3 py-2 text-sm font-mono text-fg placeholder:text-fg/30 focus:border-secondary/50 focus:outline-none"
-                            />
-                          </div>
+                          <GradientColorField
+                            label="Start"
+                            value={suggestedCustomGradientColors[0] || ""}
+                            placeholder="#4f46e5"
+                            fallback="#4f46e5"
+                            onCommit={(nextValue) => {
+                              const newColors = [...suggestedCustomGradientColors];
+                              newColors[0] = nextValue;
+                              setFields({ customGradientColors: newColors });
+                            }}
+                          />
 
                           {suggestedCustomGradientColors.length >= 3 ? (
-                            <div className="flex items-center gap-3">
-                              <label className="w-12 text-xs text-fg/50">Mid</label>
-                              <div className="relative shrink-0">
-                                <input
-                                  type="color"
-                                  value={suggestedCustomGradientColors[2] || "#a855f7"}
-                                  onChange={(e) => {
-                                    const newColors = [...suggestedCustomGradientColors];
-                                    newColors[2] = e.target.value;
-                                    setFields({ customGradientColors: newColors });
-                                  }}
-                                  className="h-10 w-10 cursor-pointer rounded-lg border-2 border-fg/20 p-0.5"
-                                  style={{
-                                    backgroundColor:
-                                      suggestedCustomGradientColors[2] || "#a855f7",
-                                  }}
-                                />
-                              </div>
-                              <input
-                                type="text"
-                                value={suggestedCustomGradientColors[2] || ""}
-                                onChange={(e) => {
-                                  const newColors = [...suggestedCustomGradientColors];
-                                  newColors[2] = e.target.value;
-                                  setFields({ customGradientColors: newColors });
-                                }}
-                                placeholder="#a855f7"
-                                className="flex-1 rounded-lg border border-fg/10 bg-surface-el/50 px-3 py-2 text-sm font-mono text-fg placeholder:text-fg/30 focus:border-secondary/50 focus:outline-none"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const newColors = [
-                                    suggestedCustomGradientColors[0],
-                                    suggestedCustomGradientColors[1],
-                                  ];
-                                  setFields({ customGradientColors: newColors });
-                                }}
-                                className="shrink-0 text-xs text-danger hover:text-danger"
-                              >
-                                ✕
-                              </button>
-                            </div>
+                            <GradientColorField
+                              label="Mid"
+                              value={suggestedCustomGradientColors[2] || ""}
+                              placeholder="#a855f7"
+                              fallback="#a855f7"
+                              onCommit={(nextValue) => {
+                                const newColors = [...suggestedCustomGradientColors];
+                                newColors[2] = nextValue;
+                                setFields({ customGradientColors: newColors });
+                              }}
+                              onRemove={() => {
+                                const newColors = [
+                                  suggestedCustomGradientColors[0],
+                                  suggestedCustomGradientColors[1],
+                                ];
+                                setFields({ customGradientColors: newColors });
+                              }}
+                            />
                           ) : (
                             <button
                               type="button"
@@ -941,35 +975,17 @@ export function EditCharacterPage() {
                             </button>
                           )}
 
-                          <div className="flex items-center gap-3">
-                            <label className="w-12 text-xs text-fg/50">End</label>
-                            <div className="relative shrink-0">
-                              <input
-                                type="color"
-                                value={suggestedCustomGradientColors[1] || "#7c3aed"}
-                                onChange={(e) => {
-                                  const newColors = [...suggestedCustomGradientColors];
-                                  newColors[1] = e.target.value;
-                                  setFields({ customGradientColors: newColors });
-                                }}
-                                className="h-10 w-10 cursor-pointer rounded-lg border-2 p-0.5"
-                                style={{
-                                  backgroundColor: suggestedCustomGradientColors[1] || "#7c3aed",
-                                }}
-                              />
-                            </div>
-                            <input
-                              type="text"
-                              value={suggestedCustomGradientColors[1] || ""}
-                              onChange={(e) => {
-                                const newColors = [...suggestedCustomGradientColors];
-                                newColors[1] = e.target.value;
-                                setFields({ customGradientColors: newColors });
-                              }}
-                              placeholder="#7c3aed"
-                              className="flex-1 rounded-lg border border-fg/10 bg-surface-el/50 px-3 py-2 text-sm font-mono text-fg placeholder:text-fg/30 focus:border-secondary/50 focus:outline-none"
-                            />
-                          </div>
+                          <GradientColorField
+                            label="End"
+                            value={suggestedCustomGradientColors[1] || ""}
+                            placeholder="#7c3aed"
+                            fallback="#7c3aed"
+                            onCommit={(nextValue) => {
+                              const newColors = [...suggestedCustomGradientColors];
+                              newColors[1] = nextValue;
+                              setFields({ customGradientColors: newColors });
+                            }}
+                          />
 
                           <p className="mt-2 text-[10px] text-fg/40">
                             Text colors are auto-calculated based on gradient brightness
