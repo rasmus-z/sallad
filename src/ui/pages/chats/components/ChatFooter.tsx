@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { ArrowUp, Bot, Check, ChevronsRight, Mic, Plus, Square, X } from "lucide-react";
+import { ArrowUp, Check, ChevronsRight, Mic, Plus, Square, X } from "lucide-react";
 import type { Character, ImageAttachment } from "../../../../core/storage/schemas";
 import { radius, typography, interactive, shadows, cn } from "../../../design-tokens";
 import { getPlatform } from "../../../../core/utils/platform";
@@ -497,41 +497,38 @@ export function ChatFooter({
         onClose={handleCloseSystemSendMenu}
         title="Send as system message?"
       >
-        <div className="space-y-4 px-4 pb-5 pt-1 text-fg">
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-fg/15 bg-fg/6">
-              <Bot size={18} className="text-fg/80" />
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-fg">Send message as system message</p>
-              <p className="text-sm leading-6 text-fg/65">
-                Is this your intention? This sends the current composer content as a visible system
-                message and does not trigger generation.
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-2">
+        <div className="space-y-4">
+          <p className="text-sm leading-relaxed text-fg/55">
+            Sends the composer content as a visible system message. It does not trigger
+            generation.
+          </p>
+
+          <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
               onClick={handleCloseSystemSendMenu}
               disabled={sendingSystemMessage}
               className={cn(
-                "flex-1 rounded-2xl border border-fg/12 bg-fg/6 px-4 py-3 text-sm font-medium text-fg/75",
-                "hover:bg-fg/10 disabled:opacity-50",
+                "h-11 border px-3 text-sm font-semibold transition",
+                radius.md,
+                "border-fg/10 bg-fg/[0.04] text-fg/75 hover:border-fg/20 hover:bg-fg/[0.07]",
+                "disabled:cursor-not-allowed disabled:opacity-45",
               )}
             >
-              No
+              Cancel
             </button>
             <button
               type="button"
               onClick={() => void handleConfirmSystemSend()}
               disabled={sendingSystemMessage}
               className={cn(
-                "flex-1 rounded-2xl bg-accent px-4 py-3 text-sm font-semibold text-black",
-                "hover:brightness-110 disabled:opacity-50",
+                "h-11 border px-3 text-sm font-semibold transition",
+                radius.md,
+                "border-emerald-400/35 bg-emerald-500/20 text-emerald-100 hover:bg-emerald-500/30",
+                "disabled:cursor-not-allowed disabled:opacity-45",
               )}
             >
-              {sendingSystemMessage ? "Sending..." : "Yes"}
+              {sendingSystemMessage ? "Sending…" : "Send"}
             </button>
           </div>
         </div>
