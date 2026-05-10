@@ -2,21 +2,18 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUpRight, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getEmbeddingModelInfo } from "../../core/storage/repo";
+import { getEmbeddingModelInfo, readSettings } from "../../core/storage/repo";
 import { useI18n } from "../../core/i18n/context";
 import {
   isEmbeddingUpgradeDismissed,
-  isEmbeddingUpgradePromptForced,
   markEmbeddingUpgradeDismissed,
 } from "./EmbeddingUpgradePrompt";
 
 /**
- * App-level toast that appears once on app launch if a v3 embedding model is
- * detected (and v4 is not yet installed). Persists dismissal to localStorage
- * via `markEmbeddingUpgradeDismissed("v4")` so the prompt doesn't reappear
- * until the next major target ships. The debug-only force flag bypasses both
- * the version check and persisted dismissal — see
- * `EmbeddingUpgradePrompt.tsx` for the console snippet.
+ * App-level toast that appears once on app launch only when dynamic memory is
+ * enabled, the active embedding source is v3, and v4 is not yet installed.
+ * Dismissal is persisted to localStorage via `markEmbeddingUpgradeDismissed("v4")`
+ * so the prompt does not reappear until the next major target ships.
  */
 export function V3UpgradeToast() {
   const { t } = useI18n();
@@ -25,27 +22,29 @@ export function V3UpgradeToast() {
   const [isDismissed, setIsDismissed] = useState(false);
 
   useEffect(() => {
-    const forced = isEmbeddingUpgradePromptForced();
-    if (!forced && isEmbeddingUpgradeDismissed("v4")) {
+    if (isEmbeddingUpgradeDismissed("v4")) {
       return;
     }
 
     let cancelled = false;
     const checkVersion = async () => {
       try {
-        const modelInfo = await getEmbeddingModelInfo();
+        const [settings, modelInfo] = await Promise.all([readSettings(), getEmbeddingModelInfo()]);
+        const dynamicMemoryEnabled = settings.advancedSettings?.dynamicMemory?.enabled ?? false;
+        if (!dynamicMemoryEnabled || !modelInfo.installed) {
+          return;
+        }
+
+        const sourceVersion =
+          modelInfo.selectedSourceVersion ?? modelInfo.sourceVersion ?? modelInfo.version;
         const available = modelInfo.availableVersions ?? [];
-        const v4Installed =
-          available.includes("v4") || modelInfo.sourceVersion === "v4";
-        // If v4 is genuinely installed, never show — regardless of any debug
-        // flag. Catches the case where the force flag was left on after
-        // testing on a now-upgraded system.
+        const v4Installed = available.includes("v4") || sourceVersion === "v4";
         if (v4Installed) {
           return;
         }
-        const eligible =
-          modelInfo.installed && modelInfo.version === "v3" && !available.includes("v4");
-        if (forced || eligible) {
+
+        const eligible = sourceVersion === "v3";
+        if (eligible) {
           if (!cancelled) {
             setTimeout(() => {
               if (!cancelled) setIsVisible(true);
