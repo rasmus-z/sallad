@@ -30,6 +30,13 @@ pub enum ChangeOp {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct DomainPlan {
+    pub domain: SyncDomain,
+    pub change_count: u32,
+    pub estimated_bytes: u64,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct ChangeRecord {
     pub change_id: i64,
     pub source_device_id: String,
@@ -72,6 +79,11 @@ pub enum P2PMessage {
     AdvertiseCursors {
         cursors: CursorSet,
     },
+    SyncManifest {
+        plan: Vec<DomainPlan>,
+        total_changes: u32,
+        total_bytes: u64,
+    },
 
     // Data Transfer
     PushChanges {
@@ -94,6 +106,21 @@ pub enum P2PMessage {
     StatusUpdate(String),
     Disconnect,
     Error(String),
+
+    // Appended at the end to preserve discriminants for pre-v11 peers.
+    AssetContentStart {
+        entity_id: String,
+        path: String,
+        content_hash: String,
+        total_bytes: u64,
+    },
+    AssetContentChunk {
+        entity_id: String,
+        chunk: Vec<u8>,
+    },
+    AssetContentComplete {
+        entity_id: String,
+    },
 }
 
 fn default_protocol_version() -> u32 {
