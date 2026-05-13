@@ -26,6 +26,7 @@ import {
   ChevronRight,
   FolderOpen,
   Heart,
+  Trash2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEditCharacterForm } from "./hooks/useEditCharacterForm";
@@ -1147,11 +1148,33 @@ export function EditCharacterPage() {
                     </div>
 
                     <div>
-                      <p className="text-sm font-medium text-fg">Banner image</p>
-                      <p className="mt-1 text-xs text-fg/45">
-                        Used on banner cards. Falls back to the base avatar when empty.
-                      </p>
-                      <div className="mt-3 flex flex-col items-center gap-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-fg">Banner image</p>
+                          <p className="mt-1 text-xs text-fg/45">
+                            Optional. When empty, the banner card uses the base avatar.
+                          </p>
+                        </div>
+                        {avatarBannerPath ? (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFields({ avatarBannerPath: null, bannerCrop: null })
+                            }
+                            className={cn(
+                              "flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium",
+                              "border-danger/25 bg-danger/10 text-danger/90",
+                              "transition hover:border-danger/40 hover:bg-danger/15 active:scale-[0.98]",
+                            )}
+                            aria-label="Remove banner image"
+                          >
+                            <Trash2 size={12} strokeWidth={2.2} />
+                            <span>Remove</span>
+                          </button>
+                        ) : null}
+                      </div>
+
+                      <div className="mt-3 flex flex-col items-center gap-2">
                         <AvatarPicker
                           currentAvatarPath={avatarBannerPath || ""}
                           onAvatarChange={(path) => setFields({ avatarBannerPath: path })}
@@ -1161,19 +1184,13 @@ export function EditCharacterPage() {
                           avatarCrop={bannerCrop}
                           onAvatarCropChange={(crop) => setFields({ bannerCrop: crop })}
                           shape="banner"
-                          size="md"
+                          size="lg"
                         />
-                        {avatarBannerPath ? (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setFields({ avatarBannerPath: null, bannerCrop: null })
-                            }
-                            className="text-xs text-fg/45 transition hover:text-danger"
-                          >
-                            Remove banner image
-                          </button>
-                        ) : null}
+                        {!avatarBannerPath && (
+                          <p className="text-[11px] text-fg/35">
+                            Tap to upload, generate, or pick from library
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>

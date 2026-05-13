@@ -13,6 +13,10 @@ interface AvatarSourceMenuProps {
   onEditCurrent?: () => void;
   hasImageGenerationModels: boolean;
   hasCurrentAvatar?: boolean;
+  /** Horizontal alignment of the menu relative to the picker wrapper. */
+  align?: "left" | "right";
+  /** Vertical anchor: "below" the wrapper (default) or "above" it. */
+  anchor?: "below" | "above";
 }
 
 export function AvatarSourceMenu({
@@ -24,6 +28,8 @@ export function AvatarSourceMenu({
   onEditCurrent,
   hasImageGenerationModels,
   hasCurrentAvatar = false,
+  align = "left",
+  anchor = "below",
 }: AvatarSourceMenuProps) {
   const { t } = useI18n();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -72,7 +78,8 @@ export function AvatarSourceMenu({
               "absolute z-100 w-56 overflow-hidden rounded-2xl",
               "border border-white/15 bg-[#0f1014]/95 backdrop-blur-xl",
               "shadow-xl shadow-black/40",
-              "left-0 top-full mt-2",
+              align === "right" ? "right-0" : "left-0",
+              anchor === "above" ? "bottom-full mb-2" : "top-full mt-2",
             )}
             initial={{ opacity: 0, scale: 0.9, y: -8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}

@@ -125,7 +125,7 @@ export function AvatarPicker({
       ? {
           sm: "h-24 w-60",
           md: "h-32 w-80",
-          lg: "h-40 w-96",
+          lg: "h-48 w-full max-w-[480px]",
         }
       : {
           sm: "h-20 w-20",
@@ -351,7 +351,12 @@ export function AvatarPicker({
   ]);
 
   return (
-    <div className="relative inline-block">
+    <div
+      className={cn(
+        "relative",
+        shape === "banner" ? "block w-full" : "inline-block",
+      )}
+    >
       {/* Main avatar container */}
       <div
         className={cn(
@@ -416,23 +421,46 @@ export function AvatarPicker({
         ) : null}
       </div>
 
-      {/* Camera button */}
-      <button
-        ref={buttonRef}
-        onClick={handleButtonClick}
-        className={cn(
-          "absolute z-20 flex items-center justify-center",
-          "bottom-0 right-0 h-12 w-12",
-          radius.full,
-          "bg-[#1a1a1c] border border-white/10",
-          "text-white/70",
-          interactive.transition.default,
-          "hover:bg-[#252528] hover:text-white hover:border-white/20",
-          "active:scale-95",
-        )}
-      >
-        <Camera size={16} strokeWidth={2} />
-      </button>
+      {/* Camera / edit affordance.
+          Banner shape: chip-style "Edit" button inset from edges (sits over the dark
+          scrim on the right of the preview, where it reads cleanly).
+          Circle shape: classic round corner-button overlapping the avatar edge. */}
+      {shape === "banner" ? (
+        <button
+          ref={buttonRef}
+          onClick={handleButtonClick}
+          className={cn(
+            "absolute z-20 flex items-center gap-1.5",
+            "right-3 bottom-3 h-9 px-3",
+            radius.full,
+            "border border-white/15 bg-black/55 backdrop-blur-md",
+            "text-xs font-medium text-white/85",
+            interactive.transition.default,
+            "hover:border-white/25 hover:bg-black/70 hover:text-white",
+            "active:scale-95",
+          )}
+        >
+          <Camera size={14} strokeWidth={2} />
+          <span>{hasDisplayAvatar ? "Edit" : "Add banner"}</span>
+        </button>
+      ) : (
+        <button
+          ref={buttonRef}
+          onClick={handleButtonClick}
+          className={cn(
+            "absolute z-20 flex items-center justify-center",
+            "bottom-0 right-0 h-12 w-12",
+            radius.full,
+            "bg-[#1a1a1c] border border-white/10",
+            "text-white/70",
+            interactive.transition.default,
+            "hover:bg-[#252528] hover:text-white hover:border-white/20",
+            "active:scale-95",
+          )}
+        >
+          <Camera size={16} strokeWidth={2} />
+        </button>
+      )}
 
       <input
         ref={fileInputRef}
@@ -454,6 +482,8 @@ export function AvatarPicker({
         onEditCurrent={handleEditCurrent}
         hasImageGenerationModels={hasImageGenModels}
         hasCurrentAvatar={hasDisplayAvatar}
+        align={shape === "banner" ? "right" : "left"}
+        anchor="below"
       />
 
       <AvatarCurrentEditMenu
