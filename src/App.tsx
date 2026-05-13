@@ -770,6 +770,10 @@ function AppContent() {
     () => /^\/personas\/[^/]+\/edit$/.test(location.pathname),
     [location.pathname],
   );
+  const isCharacterEditRoute = useMemo(
+    () => /^\/settings\/characters\/[^/]+\/edit$/.test(location.pathname),
+    [location.pathname],
+  );
 
   const isSettingRoute = useMemo(
     () => location.pathname.startsWith("/settings"),
@@ -958,15 +962,17 @@ function AppContent() {
             onBackOverride={
               isPersonaEditRoute
                 ? () => navigate(PERSONA_LIBRARY_ROUTE, { replace: true })
-                : isSettingRoute &&
-                    isLgViewport &&
-                    (location.pathname === "/settings" ||
-                      location.pathname === "/settings/about")
-                  ? () => {
-                      const target = preSettingsPathRef.current || "/";
-                      navigate(target.startsWith("/settings") ? "/" : target);
-                    }
-                  : undefined
+                : isCharacterEditRoute
+                  ? () => navigate("/", { replace: true })
+                  : isSettingRoute &&
+                      isLgViewport &&
+                      (location.pathname === "/settings" ||
+                        location.pathname === "/settings/about")
+                    ? () => {
+                        const target = preSettingsPathRef.current || "/";
+                        navigate(target.startsWith("/settings") ? "/" : target);
+                      }
+                    : undefined
             }
             titleOverride={
               isAvatarLibraryPickerRoute
