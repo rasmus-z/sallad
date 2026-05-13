@@ -12,6 +12,7 @@ export type EntityType = "character" | "persona";
 
 export const AVATAR_BASE_FILENAME = "avatar_base.webp";
 export const AVATAR_ROUND_FILENAME = "avatar_round.webp";
+export const AVATAR_BANNER_FILENAME = "avatar_banner.webp";
 export const AVATAR_UPDATED_EVENT = "lettuce:avatar-updated";
 
 export interface GradientColor {
@@ -89,6 +90,7 @@ export async function saveAvatar(
   entityId: string,
   imageData: string,
   roundImageData?: string | null,
+  bannerImageData?: string | null,
   gradientSource: AvatarGradientSource = "round",
 ): Promise<string> {
   if (!imageData || !entityId) {
@@ -103,11 +105,15 @@ export async function saveAvatar(
     const normalizedRoundImageData = roundImageData
       ? await toDataUrlIfNeeded(roundImageData)
       : null;
+    const normalizedBannerImageData = bannerImageData
+      ? await toDataUrlIfNeeded(bannerImageData)
+      : null;
 
     const result = await invoke<string>("storage_save_avatar", {
       entityId: prefixedId,
       base64Data: normalizedImageData,
       roundBase64Data: normalizedRoundImageData,
+      bannerBase64Data: normalizedBannerImageData,
     });
 
     // Clear the gradient cache for this entity since avatar changed
@@ -202,6 +208,7 @@ export async function deleteAvatar(
       avatarFilename,
       AVATAR_BASE_FILENAME,
       AVATAR_ROUND_FILENAME,
+      AVATAR_BANNER_FILENAME,
       "avatar.webp",
     ]);
     await Promise.all(

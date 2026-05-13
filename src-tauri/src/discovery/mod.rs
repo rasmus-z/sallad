@@ -1027,7 +1027,7 @@ pub async fn discovery_import_character(app: AppHandle, path: String) -> Result<
         base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &avatar_data);
 
     let avatar_path =
-        storage_save_avatar(app.clone(), avatar_entity_id.clone(), avatar_base64, None).map_err(
+        storage_save_avatar(app.clone(), avatar_entity_id.clone(), avatar_base64, None, None).map_err(
             |e| {
                 crate::utils::err_msg(
                     module_path!(),

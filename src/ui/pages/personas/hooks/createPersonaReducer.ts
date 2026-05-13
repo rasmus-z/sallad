@@ -240,6 +240,7 @@ export function useCreatePersonaController() {
           personaId,
           state.avatarPath,
           state.avatarRoundPath,
+          undefined,
         );
         if (!avatarFilename) {
           console.error("[CreatePersona] Failed to save avatar image");

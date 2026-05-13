@@ -4,6 +4,7 @@ import { listCharacters, saveCharacter, readSettings } from "../../../../core/st
 import type {
   AvatarCrop,
   ChatTemplate,
+  CharacterCardType,
   CharacterMode,
   CharacterVoiceConfig,
   CompanionConfig,
@@ -12,12 +13,13 @@ import type {
   SystemPromptTemplate,
 } from "../../../../core/storage/schemas";
 import { processBackgroundImage } from "../../../../core/utils/image";
+import { convertToImageRef, convertToImageUrl, deleteImageRef } from "../../../../core/storage/images";
 import {
-  convertToImageRef,
-  convertToImageUrl,
-  deleteImageRef,
-} from "../../../../core/storage/images";
-import { saveAvatar, loadAvatar, recalculateGradient } from "../../../../core/storage/avatars";
+  AVATAR_BANNER_FILENAME,
+  saveAvatar,
+  loadAvatar,
+  recalculateGradient,
+} from "../../../../core/storage/avatars";
 import { listPromptTemplates } from "../../../../core/prompts/service";
 import { invalidateAvatarCache } from "../../../hooks/useAvatar";
 import {
@@ -51,6 +53,9 @@ type EditCharacterState = {
   avatarPath: string;
   avatarCrop: AvatarCrop | null;
   avatarRoundPath: string | null;
+  avatarBannerPath: string | null;
+  bannerCrop: AvatarCrop | null;
+  cardType: CharacterCardType;
   designDescription: string;
   designReferenceImageIds: string[];
   backgroundImagePath: string;
@@ -116,6 +121,9 @@ const initialState: EditCharacterState = {
   avatarPath: "",
   avatarCrop: null,
   avatarRoundPath: null,
+  avatarBannerPath: null,
+  bannerCrop: null,
+  cardType: "circle",
   designDescription: "",
   designReferenceImageIds: [],
   backgroundImagePath: "",
@@ -193,6 +201,9 @@ export function useEditCharacterForm(characterId: string | undefined) {
     avatarPath: string;
     avatarCrop: string;
     avatarRoundPath: string;
+    avatarBannerPath: string;
+    bannerCrop: string;
+    cardType: CharacterCardType;
     designDescription: string;
     designReferenceImageIds: string;
     backgroundImagePath: string;
@@ -222,6 +233,7 @@ export function useEditCharacterForm(characterId: string | undefined) {
     avatarUrl?: string;
     backgroundImageId?: string;
     backgroundImageUrl?: string;
+    avatarBannerUrl?: string;
   }>({});
 
   const setError = useCallback(
@@ -272,6 +284,7 @@ export function useEditCharacterForm(characterId: string | undefined) {
 
       let loadedAvatarPath = "";
       let loadedAvatarRoundPath: string | null = null;
+      let loadedAvatarBannerPath: string | null = null;
       let backgroundImage = character.backgroundImagePath || "";
 
       if (character.avatarPath) {
@@ -282,12 +295,19 @@ export function useEditCharacterForm(characterId: string | undefined) {
             character.id,
             "avatar_round.webp",
           ).catch(() => undefined);
+          const avatarBannerUrl = await loadAvatar(
+            "character",
+            character.id,
+            AVATAR_BANNER_FILENAME,
+          ).catch(() => undefined);
           loadedAvatarPath = avatarUrl || "";
           loadedAvatarRoundPath = avatarRoundUrl || null;
+          loadedAvatarBannerPath = avatarBannerUrl || null;
         } catch (err) {
           console.warn("Failed to load avatar:", err);
           loadedAvatarPath = "";
           loadedAvatarRoundPath = null;
+          loadedAvatarBannerPath = null;
         }
       } else {
         loadedAvatarPath = "";
@@ -309,6 +329,7 @@ export function useEditCharacterForm(characterId: string | undefined) {
       persistedMediaRef.current = {
         avatarFilename: character.avatarPath ?? undefined,
         avatarUrl: loadedAvatarPath || undefined,
+        avatarBannerUrl: loadedAvatarBannerPath || undefined,
         backgroundImageId: character.backgroundImagePath ?? undefined,
         backgroundImageUrl: backgroundImage || undefined,
       };
@@ -331,6 +352,9 @@ export function useEditCharacterForm(characterId: string | undefined) {
         avatarPath: loadedAvatarPath,
         avatarCrop: character.avatarCrop ?? null,
         avatarRoundPath: loadedAvatarRoundPath,
+        avatarBannerPath: loadedAvatarBannerPath,
+        bannerCrop: character.bannerCrop ?? null,
+        cardType: character.cardType === "banner" ? "banner" : "circle",
         designDescription: character.designDescription || "",
         designReferenceImageIds: Array.isArray(character.designReferenceImageIds)
           ? character.designReferenceImageIds
@@ -379,6 +403,9 @@ export function useEditCharacterForm(characterId: string | undefined) {
         avatarPath: loadedAvatarPath,
         avatarCrop: JSON.stringify(character.avatarCrop ?? null),
         avatarRoundPath: JSON.stringify(loadedAvatarRoundPath ?? null),
+        avatarBannerPath: JSON.stringify(loadedAvatarBannerPath ?? null),
+        bannerCrop: JSON.stringify(character.bannerCrop ?? null),
+        cardType: character.cardType === "banner" ? "banner" : "circle",
         designDescription: character.designDescription || "",
         designReferenceImageIds: JSON.stringify(character.designReferenceImageIds || []),
         backgroundImagePath: backgroundImage,
@@ -490,15 +517,29 @@ export function useEditCharacterForm(characterId: string | undefined) {
 
       // Save avatar using new centralized system if it's a new upload (data URL)
       let avatarFilename: string | undefined = undefined;
-      if (state.avatarPath) {
-        const hasNewAvatarData = state.avatarPath.startsWith("data:");
-        const hasNewRoundAvatarData = state.avatarRoundPath?.startsWith("data:") ?? false;
-        if (hasNewAvatarData || hasNewRoundAvatarData) {
+      const effectiveAvatarPath = state.avatarPath || state.avatarBannerPath || "";
+      const effectiveRoundPath = state.avatarPath ? state.avatarRoundPath : null;
+      if (effectiveAvatarPath) {
+        const hasNewAvatarData = effectiveAvatarPath.startsWith("data:");
+        const hasNewRoundAvatarData = effectiveRoundPath?.startsWith("data:") ?? false;
+        const hasNewBannerAvatarData = state.avatarBannerPath?.startsWith("data:") ?? false;
+        const bannerChanged =
+          (state.avatarBannerPath || null) !== (persistedMediaRef.current.avatarBannerUrl || null);
+        const avatarChanged =
+          (state.avatarPath || null) !== (persistedMediaRef.current.avatarUrl || null);
+        if (
+          hasNewAvatarData ||
+          hasNewRoundAvatarData ||
+          hasNewBannerAvatarData ||
+          bannerChanged ||
+          avatarChanged
+        ) {
           avatarFilename = await saveAvatar(
             "character",
             characterId,
-            state.avatarPath,
-            state.avatarRoundPath,
+            effectiveAvatarPath,
+            effectiveRoundPath,
+            state.avatarBannerPath,
             state.avatarGradientSource,
           );
           if (!avatarFilename) {
@@ -512,9 +553,12 @@ export function useEditCharacterForm(characterId: string | undefined) {
         } else {
           avatarFilename =
             persistedMediaRef.current.avatarUrl &&
-            state.avatarPath === persistedMediaRef.current.avatarUrl
+            effectiveAvatarPath === persistedMediaRef.current.avatarUrl
               ? persistedMediaRef.current.avatarFilename
-              : state.avatarPath;
+              : persistedMediaRef.current.avatarBannerUrl &&
+                  effectiveAvatarPath === persistedMediaRef.current.avatarBannerUrl
+                ? persistedMediaRef.current.avatarFilename
+                : effectiveAvatarPath;
         }
       } else {
         invalidateAvatarCache("character", characterId);
@@ -566,6 +610,9 @@ export function useEditCharacterForm(characterId: string | undefined) {
         tags: tags.length > 0 ? tags : undefined,
         avatarPath: avatarFilename,
         avatarCrop: avatarFilename ? (state.avatarCrop ?? undefined) : undefined,
+        bannerCrop:
+          avatarFilename && state.avatarBannerPath ? (state.bannerCrop ?? undefined) : undefined,
+        cardType: state.cardType,
         backgroundImagePath: backgroundImageId,
         scenes: state.scenes,
         chatTemplates: state.chatTemplates,
@@ -623,6 +670,9 @@ export function useEditCharacterForm(characterId: string | undefined) {
         avatarPath: state.avatarPath,
         avatarCrop: JSON.stringify(state.avatarCrop ?? null),
         avatarRoundPath: JSON.stringify(state.avatarRoundPath ?? null),
+        avatarBannerPath: JSON.stringify(state.avatarBannerPath ?? null),
+        bannerCrop: JSON.stringify(state.bannerCrop ?? null),
+        cardType: state.cardType,
         designDescription: state.designDescription.trim(),
         designReferenceImageIds: JSON.stringify(designReferenceImageIds),
         backgroundImagePath: state.backgroundImagePath,
@@ -812,6 +862,8 @@ export function useEditCharacterForm(characterId: string | undefined) {
           avatarPath: reader.result as string,
           avatarCrop: null,
           avatarRoundPath: null,
+          avatarBannerPath: null,
+          bannerCrop: null,
         });
       };
       reader.readAsDataURL(file);
@@ -838,6 +890,9 @@ export function useEditCharacterForm(characterId: string | undefined) {
       avatarPath: initial.avatarPath,
       avatarCrop: JSON.parse(initial.avatarCrop) as AvatarCrop | null,
       avatarRoundPath: JSON.parse(initial.avatarRoundPath) as string | null,
+      avatarBannerPath: JSON.parse(initial.avatarBannerPath) as string | null,
+      bannerCrop: JSON.parse(initial.bannerCrop) as AvatarCrop | null,
+      cardType: initial.cardType,
       designDescription: initial.designDescription,
       designReferenceImageIds: JSON.parse(initial.designReferenceImageIds) as string[],
       backgroundImagePath: initial.backgroundImagePath,
@@ -912,6 +967,9 @@ export function useEditCharacterForm(characterId: string | undefined) {
           state.avatarPath !== initial.avatarPath ||
           JSON.stringify(state.avatarCrop ?? null) !== initial.avatarCrop ||
           JSON.stringify(state.avatarRoundPath ?? null) !== initial.avatarRoundPath ||
+          JSON.stringify(state.avatarBannerPath ?? null) !== initial.avatarBannerPath ||
+          JSON.stringify(state.bannerCrop ?? null) !== initial.bannerCrop ||
+          state.cardType !== initial.cardType ||
           state.backgroundImagePath !== initial.backgroundImagePath ||
           JSON.stringify(state.scenes) !== initial.scenes ||
           JSON.stringify(state.chatTemplates) !== initial.chatTemplates ||

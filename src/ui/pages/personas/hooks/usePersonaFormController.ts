@@ -239,7 +239,13 @@ export function usePersonaFormController(personaId: string | undefined) {
         const hasNewAvatarData = avatarPath.startsWith("data:");
         const hasNewRoundAvatarData = avatarRoundPath?.startsWith("data:") ?? false;
         if (hasNewAvatarData || hasNewRoundAvatarData) {
-          avatarFilename = await saveAvatar("persona", personaId, avatarPath, avatarRoundPath);
+          avatarFilename = await saveAvatar(
+            "persona",
+            personaId,
+            avatarPath,
+            avatarRoundPath,
+            undefined,
+          );
           if (!avatarFilename) {
             console.error("[EditPersona] Failed to save avatar image");
           } else {

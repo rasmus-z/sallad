@@ -2826,6 +2826,9 @@ export const AvatarCropSchema = z.object({
 });
 export type AvatarCrop = z.infer<typeof AvatarCropSchema>;
 
+export const CharacterCardTypeSchema = z.enum(["circle", "banner"]);
+export type CharacterCardType = z.infer<typeof CharacterCardTypeSchema>;
+
 export const AvatarGradientSourceSchema = z.enum(["base", "round"]);
 export type AvatarGradientSource = z.infer<typeof AvatarGradientSourceSchema>;
 
@@ -3111,6 +3114,8 @@ export const CharacterSchema = z.object({
   nickname: z.string().nullish(),
   avatarPath: z.string().optional(),
   avatarCrop: AvatarCropSchema.optional(),
+  bannerCrop: AvatarCropSchema.optional(),
+  cardType: CharacterCardTypeSchema.default("circle").optional(),
   designDescription: z.string().optional(),
   designReferenceImageIds: DesignReferenceImageIdsSchema.optional(),
   backgroundImagePath: z.string().optional(),

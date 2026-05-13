@@ -3,6 +3,7 @@ import type {
   AvatarCrop,
   AvatarGradientSource,
   Character,
+  CharacterCardType,
   CharacterMode,
   ChatTemplate,
   CompanionConfig,
@@ -63,9 +64,11 @@ export interface CharacterImportPreview {
   memoryType: "manual" | "dynamic";
   disableAvatarGradient: boolean;
   avatarGradientSource?: AvatarGradientSource;
+  cardType?: CharacterCardType;
   fileFormat?: CharacterFileFormat;
   avatarData?: string | null;
   avatarCrop?: AvatarCrop;
+  bannerCrop?: AvatarCrop;
   backgroundImageData?: string | null;
 }
 

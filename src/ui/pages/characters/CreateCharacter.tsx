@@ -47,10 +47,13 @@ function buildCompactCreateCharacterDraft(draft: Record<string, unknown>): Recor
   const avatarPath = typeof draft.avatarPath === "string" ? draft.avatarPath : "";
   const avatarRoundPath =
     typeof draft.avatarRoundPath === "string" ? draft.avatarRoundPath : null;
+  const avatarBannerPath =
+    typeof draft.avatarBannerPath === "string" ? draft.avatarBannerPath : null;
   const backgroundImagePath =
     typeof draft.backgroundImagePath === "string" ? draft.backgroundImagePath : "";
 
   const safeAvatarRoundPath = keepDraftInlineImage(avatarRoundPath);
+  const safeAvatarBannerPath = keepDraftInlineImage(avatarBannerPath);
   const safeAvatarPath = keepDraftInlineImage(avatarPath);
   const safeBackgroundImagePath = keepDraftInlineImage(backgroundImagePath);
 
@@ -58,6 +61,7 @@ function buildCompactCreateCharacterDraft(draft: Record<string, unknown>): Recor
     ...draft,
     avatarPath: safeAvatarRoundPath || safeAvatarPath,
     avatarRoundPath: safeAvatarRoundPath || null,
+    avatarBannerPath: safeAvatarBannerPath || null,
     backgroundImagePath: safeBackgroundImagePath,
   };
 }
@@ -192,6 +196,9 @@ export function CreateCharacterPage() {
       avatarPath: state.avatarPath,
       avatarCrop: state.avatarCrop,
       avatarRoundPath: state.avatarRoundPath,
+      avatarBannerPath: state.avatarBannerPath,
+      bannerCrop: state.bannerCrop,
+      cardType: state.cardType,
       backgroundImagePath: state.backgroundImagePath,
       definition: state.definition,
       description: state.description,
@@ -244,6 +251,9 @@ export function CreateCharacterPage() {
     state.avatarPath,
     state.avatarCrop,
     state.avatarRoundPath,
+    state.avatarBannerPath,
+    state.bannerCrop,
+    state.cardType,
     state.backgroundImagePath,
     state.definition,
     state.description,
@@ -406,6 +416,12 @@ export function CreateCharacterPage() {
               onAvatarCropChange={actions.setAvatarCrop}
               avatarRoundPath={state.avatarRoundPath}
               onAvatarRoundChange={actions.setAvatarRoundPath}
+              bannerPath={state.avatarBannerPath}
+              onBannerChange={actions.setAvatarBannerPath}
+              bannerCrop={state.bannerCrop}
+              onBannerCropChange={actions.setBannerCrop}
+              cardType={state.cardType}
+              onCardTypeChange={actions.setCardType}
               backgroundImagePath={state.backgroundImagePath}
               onBackgroundImageChange={actions.setBackgroundImagePath}
               onBackgroundImageUpload={actions.handleBackgroundImageUpload}

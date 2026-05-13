@@ -928,6 +928,8 @@ export async function saveCharacter(c: Partial<Character>): Promise<Character> {
     nickname: c.nickname,
     avatarPath: c.avatarPath,
     avatarCrop: c.avatarCrop,
+    bannerCrop: c.bannerCrop,
+    cardType: c.cardType ?? "circle",
     designDescription: c.designDescription,
     designReferenceImageIds: c.designReferenceImageIds ?? [],
     backgroundImagePath: c.backgroundImagePath,

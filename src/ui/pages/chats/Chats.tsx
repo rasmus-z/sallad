@@ -27,6 +27,8 @@ import {
 } from "../../../core/storage/characterTransfer";
 import { storageBridge } from "../../../core/storage/files";
 import { ChatTemplateSelector } from "./components/ChatTemplateSelector";
+import { BannerCharacterCard } from "./components/BannerCharacterCard";
+import { CircleCharacterCard } from "./components/CircleCharacterCard";
 import { useI18n } from "../../../core/i18n/context";
 import { isRenderableImageUrl } from "../../../core/utils/image";
 import { cleanupOldDrafts } from "./utils/draftCleanup";
@@ -306,7 +308,7 @@ export function ChatPage() {
 
   return (
     <div className="flex h-full flex-col pb-6 text-gray-200">
-      <main className="flex-1 overflow-y-auto px-1 lg:px-8 pt-4 mx-auto w-full max-w-md lg:max-w-5xl">
+      <main className="flex-1 overflow-y-auto px-1 lg:px-8 pt-4 mx-auto w-full max-w-md lg:max-w-6xl">
         {loading ? (
           <CharacterSkeleton />
         ) : characters.length ? (
@@ -544,19 +546,28 @@ function CharacterList({
   }, [characters]);
 
   const visible = characters.slice(0, visibleCount);
+  const renderListCard = (character: Character) =>
+    character.cardType === "banner" ? (
+      <BannerCharacterCard
+        key={character.id}
+        character={character}
+        onSelect={onSelect}
+        onLongPress={onLongPress}
+      />
+    ) : (
+      <CircleCharacterCard
+        key={character.id}
+        character={character}
+        onSelect={onSelect}
+        onLongPress={onLongPress}
+      />
+    );
 
   return (
     <AnimatePresence mode="wait" initial={false}>
       {viewMode === "list" && (
         <motion.div key="list" {...viewModeTransition} className="space-y-2 pb-24">
-          {visible.map((character) => (
-            <CharacterCard
-              key={character.id}
-              character={character}
-              onSelect={onSelect}
-              onLongPress={onLongPress}
-            />
-          ))}
+          {visible.map((character) => renderListCard(character))}
         </motion.div>
       )}
 
@@ -569,11 +580,7 @@ function CharacterList({
           {visible.map((character) => (
             <div key={character.id}>
               <div className="lg:hidden">
-                <CharacterCard
-                  character={character}
-                  onSelect={onSelect}
-                  onLongPress={onLongPress}
-                />
+                {renderListCard(character)}
               </div>
               <div className="hidden lg:block">
                 <GalleryCard character={character} onSelect={onSelect} onLongPress={onLongPress} />
@@ -588,11 +595,7 @@ function CharacterList({
           {visible[0] && (
             <>
               <div className="lg:hidden">
-                <CharacterCard
-                  character={visible[0]}
-                  onSelect={onSelect}
-                  onLongPress={onLongPress}
-                />
+                {renderListCard(visible[0])}
               </div>
               <div className="hidden lg:block">
                 <HeroCard character={visible[0]} onSelect={onSelect} onLongPress={onLongPress} />
@@ -601,14 +604,7 @@ function CharacterList({
           )}
           {visible.length > 1 && (
             <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3">
-              {visible.slice(1).map((character) => (
-                <CharacterCard
-                  key={character.id}
-                  character={character}
-                  onSelect={onSelect}
-                  onLongPress={onLongPress}
-                />
-              ))}
+              {visible.slice(1).map((character) => renderListCard(character))}
             </div>
           )}
         </motion.div>
@@ -669,16 +665,24 @@ function isImageLike(s?: string) {
 }
 
 const CharacterAvatar = memo(
-  ({ character, className }: { character: Character; className?: string }) => {
-    const avatarUrl = useAvatar("character", character.id, character.avatarPath, "round");
+  ({
+    character,
+    className,
+    variant = "round",
+  }: {
+    character: Character;
+    className?: string;
+    variant?: "round" | "banner";
+  }) => {
+    const avatarUrl = useAvatar("character", character.id, character.avatarPath, variant);
 
     if (avatarUrl && isImageLike(avatarUrl)) {
       return (
         <AvatarImage
           src={avatarUrl}
           alt={`${character.name} avatar`}
-          crop={character.avatarCrop}
-          applyCrop
+          crop={variant === "banner" ? character.bannerCrop : character.avatarCrop}
+          applyCrop={variant !== "banner"}
           className={className}
         />
       );
@@ -933,6 +937,114 @@ const HeroCard = memo(
       handleClick,
       handleContextMenu,
     } = useLongPress(character, onSelect, onLongPress);
+
+    const isBannerStyle = (character.cardType ?? "circle") === "banner";
+
+    if (isBannerStyle) {
+      return (
+        <motion.button
+          onClick={handleClick}
+          onContextMenu={handleContextMenu}
+          onPointerDown={handlePointerDown}
+          onPointerUp={handlePointerUp}
+          onPointerLeave={handlePointerLeave}
+          className={cn(
+            "group relative flex w-full text-left overflow-hidden",
+            "h-44 lg:h-52",
+            "rounded-3xl",
+            interactive.transition.default,
+            interactive.active.scale,
+            hasGradient ? "" : "border border-white/10 bg-[#1a1b23] hover:bg-[#22232d]",
+          )}
+          style={
+            hasGradient
+              ? {
+                  background: gradientCss,
+                  boxShadow: "inset 0 0 0 1px rgba(255, 255, 255, 0.12)",
+                }
+              : {}
+          }
+        >
+          {/* Cover Avatar — fills left, fades on right.
+              max-w prevents the slot from getting too wide on large viewports. */}
+          <div
+            aria-hidden
+            className="absolute inset-y-0 left-0 w-3/5 lg:w-1/2 max-w-[560px] overflow-hidden"
+            style={{
+              WebkitMaskImage:
+                "linear-gradient(to right, black 0%, black 55%, transparent 100%)",
+              maskImage:
+                "linear-gradient(to right, black 0%, black 55%, transparent 100%)",
+            }}
+          >
+            <div className="h-full w-full origin-center scale-[1.14] transition-transform duration-500 ease-out group-hover:-translate-x-3 group-hover:scale-[1.14]">
+              <CharacterAvatar character={character} variant="banner" />
+            </div>
+          </div>
+
+          {/* Darkening scrim */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 transition-opacity duration-300 group-hover:opacity-90"
+            style={{
+              background:
+                "linear-gradient(to right, rgba(0,0,0,0) 28%, rgba(0,0,0,0.45) 60%, rgba(0,0,0,0.55) 100%)",
+            }}
+          />
+
+          {/* Hover highlight */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+            style={{
+              background:
+                "radial-gradient(120% 80% at 30% 50%, rgba(255,255,255,0.06) 0%, transparent 60%)",
+            }}
+          />
+
+          {/* Content */}
+          <div className="relative z-10 flex w-full items-center gap-4 pl-[42%] lg:pl-[36%] pr-6 lg:pr-8 py-6 lg:py-8">
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+              <h3
+                className={cn(
+                  "truncate font-bold text-2xl leading-tight drop-shadow-sm",
+                  hasGradient ? "" : "text-white",
+                )}
+                style={hasGradient ? { color: textColor } : {}}
+              >
+                {character.name}
+              </h3>
+              <p
+                className={cn(
+                  "line-clamp-3 text-base leading-relaxed",
+                  hasGradient ? "" : "text-white/50",
+                )}
+                style={hasGradient ? { color: textSecondary } : {}}
+              >
+                {descriptionPreview}
+              </p>
+            </div>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={cn(
+                "shrink-0 transition-all duration-300 group-hover:translate-x-1",
+                hasGradient ? "" : "text-white/30 group-hover:text-white/60",
+              )}
+              style={hasGradient ? { color: textSecondary } : {}}
+            >
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </div>
+        </motion.button>
+      );
+    }
 
     return (
       <motion.button

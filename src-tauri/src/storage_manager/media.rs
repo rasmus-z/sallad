@@ -272,7 +272,7 @@ fn scan_image_dir(
         }
 
         if let Some(file_name) = path.file_name().and_then(|name| name.to_str()) {
-            if file_name == "avatar_round.webp" {
+            if file_name == "avatar_round.webp" || file_name == "avatar_banner.webp" {
                 continue;
             }
 
@@ -715,6 +715,7 @@ pub fn storage_save_avatar(
     entity_id: String,
     base64_data: String,
     round_base64_data: Option<String>,
+    banner_base64_data: Option<String>,
 ) -> Result<String, String> {
     let entity_id = validate_simple_id(&entity_id, "entity ID")?;
     let data = if let Some(comma_idx) = base64_data.find(',') {
@@ -793,6 +794,42 @@ pub fn storage_save_avatar(
     let round_path = avatars_dir.join(round_filename);
     fs::write(&round_path, round_webp_bytes)
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+    let banner_path = avatars_dir.join("avatar_banner.webp");
+    if let Some(banner_data) = banner_base64_data {
+        let banner_payload = if let Some(comma_idx) = banner_data.find(',') {
+            banner_data[comma_idx + 1..].to_string()
+        } else {
+            banner_data
+        };
+        let banner_bytes = general_purpose::STANDARD
+            .decode(banner_payload)
+            .map_err(|e| {
+                crate::utils::err_msg(
+                    module_path!(),
+                    line!(),
+                    format!("Failed to decode banner avatar base64: {}", e),
+                )
+            })?;
+        let banner_webp_bytes = match image::load_from_memory(&banner_bytes) {
+            Ok(img) => {
+                let mut webp_data: Vec<u8> = Vec::new();
+                let encoder = image::codecs::webp::WebPEncoder::new_lossless(&mut webp_data);
+                img.write_with_encoder(encoder).map_err(|e| {
+                    crate::utils::err_msg(
+                        module_path!(),
+                        line!(),
+                        format!("Failed to encode banner WebP: {}", e),
+                    )
+                })?;
+                webp_data
+            }
+            Err(_) => banner_bytes,
+        };
+        fs::write(&banner_path, banner_webp_bytes)
+            .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+    } else if banner_path.exists() {
+        let _ = fs::remove_file(&banner_path);
+    }
     for cache_name in ["gradient.json", "gradient-base.json", "gradient-round.json"] {
         let gradient_cache_path = avatars_dir.join(cache_name);
         if gradient_cache_path.exists() {

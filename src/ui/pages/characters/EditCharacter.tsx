@@ -230,6 +230,9 @@ export function EditCharacterPage() {
     avatarPath,
     avatarCrop,
     avatarRoundPath,
+    avatarBannerPath,
+    bannerCrop,
+    cardType,
     designDescription,
     designReferenceImageIds,
     backgroundImagePath,
@@ -1101,7 +1104,13 @@ export function EditCharacterPage() {
                         <button
                           type="button"
                           onClick={() =>
-                            setFields({ avatarPath: "", avatarCrop: null, avatarRoundPath: null })
+                            setFields({
+                              avatarPath: "",
+                              avatarCrop: null,
+                              avatarRoundPath: null,
+                              avatarBannerPath: null,
+                              bannerCrop: null,
+                            })
                           }
                           className="absolute -top-1 -left-1 z-30 flex h-10 w-10 items-center justify-center rounded-full border border-fg/10 bg-surface-el text-fg/60 transition hover:bg-danger/80 hover:border-danger/50 hover:text-fg active:scale-95"
                           aria-label={t("common.buttons.remove")}
@@ -1113,6 +1122,60 @@ export function EditCharacterPage() {
                     <p className="mt-3 text-center text-xs text-fg/40">
                       Tap to add or generate avatar
                     </p>
+                  </div>
+
+                  <div className="space-y-4 rounded-2xl border border-fg/10 bg-surface-el/10 p-4">
+                    <div>
+                      <p className="text-sm font-medium text-fg">Card type</p>
+                      <div className="mt-2 grid grid-cols-2 gap-2">
+                        {(["circle", "banner"] as const).map((value) => (
+                          <button
+                            key={value}
+                            type="button"
+                            onClick={() => setFields({ cardType: value })}
+                            className={cn(
+                              "rounded-xl border px-3 py-2 text-sm font-medium transition",
+                              cardType === value
+                                ? "border-accent/50 bg-accent/10 text-fg"
+                                : "border-fg/10 bg-surface-el/20 text-fg/60 hover:border-fg/20 hover:text-fg",
+                            )}
+                          >
+                            {value === "circle" ? "Circle" : "Banner"}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-medium text-fg">Banner image</p>
+                      <p className="mt-1 text-xs text-fg/45">
+                        Used on banner cards. Falls back to the base avatar when empty.
+                      </p>
+                      <div className="mt-3 flex flex-col items-center gap-3">
+                        <AvatarPicker
+                          currentAvatarPath={avatarBannerPath || ""}
+                          onAvatarChange={(path) => setFields({ avatarBannerPath: path })}
+                          librarySelectionScope="character-banner"
+                          promptSubjectName={name}
+                          promptSubjectDescription={definition}
+                          avatarCrop={bannerCrop}
+                          onAvatarCropChange={(crop) => setFields({ bannerCrop: crop })}
+                          shape="banner"
+                          size="md"
+                        />
+                        {avatarBannerPath ? (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFields({ avatarBannerPath: null, bannerCrop: null })
+                            }
+                            className="text-xs text-fg/45 transition hover:text-danger"
+                          >
+                            Remove banner image
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
                   </div>
 
                   <div className={spacing.field}>

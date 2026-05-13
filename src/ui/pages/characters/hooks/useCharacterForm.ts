@@ -11,6 +11,7 @@ import { saveAvatar, recalculateGradient } from "../../../../core/storage/avatar
 import { convertToImageRef, convertToImageUrl } from "../../../../core/storage/images";
 import type {
   AvatarCrop,
+  CharacterCardType,
   CharacterMode,
   CompanionConfig,
   Model,
@@ -55,6 +56,9 @@ interface CharacterFormState {
   avatarPath: string;
   avatarCrop: AvatarCrop | null;
   avatarRoundPath: string | null;
+  avatarBannerPath: string | null;
+  bannerCrop: AvatarCrop | null;
+  cardType: CharacterCardType;
   designDescription: string;
   designReferenceImageIds: string[];
   backgroundImagePath: string;
@@ -105,6 +109,9 @@ type CharacterFormAction =
   | { type: "SET_AVATAR_PATH"; payload: string }
   | { type: "SET_AVATAR_CROP"; payload: AvatarCrop | null }
   | { type: "SET_AVATAR_ROUND_PATH"; payload: string | null }
+  | { type: "SET_AVATAR_BANNER_PATH"; payload: string | null }
+  | { type: "SET_BANNER_CROP"; payload: AvatarCrop | null }
+  | { type: "SET_CARD_TYPE"; payload: CharacterCardType }
   | { type: "SET_DESIGN_DESCRIPTION"; payload: string }
   | { type: "SET_DESIGN_REFERENCE_IMAGE_IDS"; payload: string[] }
   | { type: "SET_BACKGROUND_IMAGE_PATH"; payload: string }
@@ -149,6 +156,9 @@ const initialState: CharacterFormState = {
   avatarPath: "",
   avatarCrop: null,
   avatarRoundPath: null,
+  avatarBannerPath: null,
+  bannerCrop: null,
+  cardType: "circle",
   designDescription: "",
   designReferenceImageIds: [],
   backgroundImagePath: "",
@@ -202,6 +212,12 @@ function characterFormReducer(
       return { ...state, avatarCrop: action.payload };
     case "SET_AVATAR_ROUND_PATH":
       return { ...state, avatarRoundPath: action.payload };
+    case "SET_AVATAR_BANNER_PATH":
+      return { ...state, avatarBannerPath: action.payload };
+    case "SET_BANNER_CROP":
+      return { ...state, bannerCrop: action.payload };
+    case "SET_CARD_TYPE":
+      return { ...state, cardType: action.payload };
     case "SET_DESIGN_DESCRIPTION":
       return { ...state, designDescription: action.payload };
     case "SET_DESIGN_REFERENCE_IMAGE_IDS":
@@ -344,6 +360,18 @@ export function useCharacterForm(draftCharacter?: any) {
             payload: draftCharacter.avatarCrop ?? null,
           });
           dispatch({
+            type: "SET_AVATAR_BANNER_PATH",
+            payload: draftCharacter.avatarBannerPath ?? null,
+          });
+          dispatch({
+            type: "SET_BANNER_CROP",
+            payload: draftCharacter.bannerCrop ?? null,
+          });
+          dispatch({
+            type: "SET_CARD_TYPE",
+            payload: draftCharacter.cardType === "banner" ? "banner" : "circle",
+          });
+          dispatch({
             type: "SET_BACKGROUND_IMAGE_PATH",
             payload: draftCharacter.backgroundImagePath || "",
           });
@@ -479,11 +507,23 @@ export function useCharacterForm(draftCharacter?: any) {
   }, []);
 
   const setAvatarCrop = useCallback((crop: AvatarCrop | null) => {
-    dispatch({ type: "SET_AVATAR_CROP", payload: crop });
+      dispatch({ type: "SET_AVATAR_CROP", payload: crop });
   }, []);
 
   const setAvatarRoundPath = useCallback((path: string | null) => {
     dispatch({ type: "SET_AVATAR_ROUND_PATH", payload: path });
+  }, []);
+
+  const setAvatarBannerPath = useCallback((path: string | null) => {
+    dispatch({ type: "SET_AVATAR_BANNER_PATH", payload: path });
+  }, []);
+
+  const setBannerCrop = useCallback((crop: AvatarCrop | null) => {
+    dispatch({ type: "SET_BANNER_CROP", payload: crop });
+  }, []);
+
+  const setCardType = useCallback((cardType: CharacterCardType) => {
+    dispatch({ type: "SET_CARD_TYPE", payload: cardType });
   }, []);
 
   const setBackgroundImagePath = useCallback((path: string) => {
@@ -595,11 +635,13 @@ export function useCharacterForm(draftCharacter?: any) {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = () => {
-      dispatch({ type: "SET_AVATAR_PATH", payload: reader.result as string });
-      dispatch({ type: "SET_AVATAR_CROP", payload: null });
-      dispatch({ type: "SET_AVATAR_ROUND_PATH", payload: null });
-    };
+      reader.onload = () => {
+        dispatch({ type: "SET_AVATAR_PATH", payload: reader.result as string });
+        dispatch({ type: "SET_AVATAR_CROP", payload: null });
+        dispatch({ type: "SET_AVATAR_ROUND_PATH", payload: null });
+        dispatch({ type: "SET_AVATAR_BANNER_PATH", payload: null });
+        dispatch({ type: "SET_BANNER_CROP", payload: null });
+      };
     reader.readAsDataURL(file);
   }, []);
 
@@ -744,6 +786,10 @@ export function useCharacterForm(draftCharacter?: any) {
         payload: characterData.avatarGradientSource ?? "base",
       });
       dispatch({
+        type: "SET_CARD_TYPE",
+        payload: characterData.cardType === "banner" ? "banner" : "circle",
+      });
+      dispatch({
         type: "SET_SYSTEM_PROMPT_TEMPLATE_ID",
         payload: characterData.promptTemplateId || null,
       });
@@ -777,12 +823,16 @@ export function useCharacterForm(draftCharacter?: any) {
             dispatch({ type: "SET_AVATAR_PATH", payload: "" });
             dispatch({ type: "SET_AVATAR_ROUND_PATH", payload: null });
             dispatch({ type: "SET_AVATAR_CROP", payload: null });
+            dispatch({ type: "SET_AVATAR_BANNER_PATH", payload: null });
+            dispatch({ type: "SET_BANNER_CROP", payload: null });
           } else {
             dispatch({ type: "SET_IMPORTING_AVATAR", payload: true });
             dispatch({ type: "SET_AVATAR_IMPORT_ERROR", payload: null });
             dispatch({ type: "SET_AVATAR_PATH", payload: "" });
             dispatch({ type: "SET_AVATAR_ROUND_PATH", payload: null });
             dispatch({ type: "SET_AVATAR_CROP", payload: null });
+            dispatch({ type: "SET_AVATAR_BANNER_PATH", payload: null });
+            dispatch({ type: "SET_BANNER_CROP", payload: null });
 
             const imageDataUrl = await new Promise<string>((resolve, reject) => {
               const image = new Image();
@@ -825,6 +875,8 @@ export function useCharacterForm(draftCharacter?: any) {
             dispatch({ type: "SET_AVATAR_PATH", payload: imageDataUrl });
             dispatch({ type: "SET_AVATAR_ROUND_PATH", payload: null });
             dispatch({ type: "SET_AVATAR_CROP", payload: null });
+            dispatch({ type: "SET_AVATAR_BANNER_PATH", payload: null });
+            dispatch({ type: "SET_BANNER_CROP", payload: null });
             dispatch({ type: "SET_IMPORTING_AVATAR", payload: false });
           }
         } else {
@@ -833,6 +885,8 @@ export function useCharacterForm(draftCharacter?: any) {
           dispatch({ type: "SET_AVATAR_PATH", payload: resolvedAvatarPath });
           dispatch({ type: "SET_AVATAR_ROUND_PATH", payload: null });
           dispatch({ type: "SET_AVATAR_CROP", payload: null });
+          dispatch({ type: "SET_AVATAR_BANNER_PATH", payload: null });
+          dispatch({ type: "SET_BANNER_CROP", payload: null });
           dispatch({ type: "SET_IMPORTING_AVATAR", payload: false });
           dispatch({ type: "SET_AVATAR_IMPORT_ERROR", payload: null });
         }
@@ -841,6 +895,9 @@ export function useCharacterForm(draftCharacter?: any) {
       }
       if (characterData.avatarCrop) {
         dispatch({ type: "SET_AVATAR_CROP", payload: characterData.avatarCrop });
+      }
+      if (characterData.bannerCrop) {
+        dispatch({ type: "SET_BANNER_CROP", payload: characterData.bannerCrop });
       }
 
       if (characterData.backgroundImageData) {
@@ -945,12 +1002,15 @@ export function useCharacterForm(draftCharacter?: any) {
 
       // Save avatar using new centralized system
       let avatarFilename: string | undefined = undefined;
-      if (state.avatarPath) {
+      const effectiveAvatarPath = state.avatarPath || state.avatarBannerPath || "";
+      const effectiveRoundPath = state.avatarPath ? state.avatarRoundPath : null;
+      if (effectiveAvatarPath) {
         avatarFilename = await saveAvatar(
           "character",
           characterId,
-          state.avatarPath,
-          state.avatarRoundPath,
+          effectiveAvatarPath,
+          effectiveRoundPath,
+          state.avatarBannerPath,
           state.avatarGradientSource,
         );
         if (!avatarFilename) {
@@ -1001,6 +1061,8 @@ export function useCharacterForm(draftCharacter?: any) {
         name: state.name.trim(),
         avatarPath: avatarFilename || undefined,
         avatarCrop: avatarFilename ? (state.avatarCrop ?? undefined) : undefined,
+        bannerCrop: avatarFilename && state.avatarBannerPath ? (state.bannerCrop ?? undefined) : undefined,
+        cardType: state.cardType,
         designDescription: state.designDescription.trim() || undefined,
         designReferenceImageIds:
           designReferenceImageIds.length > 0 ? designReferenceImageIds : undefined,
@@ -1087,6 +1149,9 @@ export function useCharacterForm(draftCharacter?: any) {
     state.avatarPath,
     state.avatarCrop,
     state.avatarRoundPath,
+    state.avatarBannerPath,
+    state.bannerCrop,
+    state.cardType,
     state.designDescription,
     state.designReferenceImageIds,
     state.backgroundImagePath,
@@ -1142,6 +1207,9 @@ export function useCharacterForm(draftCharacter?: any) {
       setAvatarPath,
       setAvatarCrop,
       setAvatarRoundPath,
+      setAvatarBannerPath,
+      setBannerCrop,
+      setCardType,
       setDesignDescription,
       setDesignReferenceImageIds,
       setBackgroundImagePath,

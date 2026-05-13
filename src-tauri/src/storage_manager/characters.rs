@@ -5,53 +5,16 @@ use super::db::{now_ms, open_db};
 use crate::utils::{log_error, log_info};
 
 fn read_character(conn: &rusqlite::Connection, id: &str) -> Result<JsonValue, String> {
-    let (
-        name,
-        avatar_path,
-        avatar_crop_x,
-        avatar_crop_y,
-        avatar_crop_scale,
-        design_description,
-        design_reference_image_ids,
-        bg_path,
-        description,
-        definition,
-        nickname,
-        scenario,
-        creator_notes,
-        creator,
-        creator_notes_multilingual,
-        source,
-        tags,
-        default_scene_id,
-        default_model_id,
-        fallback_model_id,
-        mode,
-        companion,
-        prompt_template_id,
-        active_lorebook_ids,
-        group_chat_prompt_template_id,
-        group_chat_roleplay_prompt_template_id,
-        system_prompt,
-        voice_config,
-        voice_autoplay,
-        memory_type,
-        disable_avatar_gradient,
-        avatar_gradient_source,
-        custom_gradient_enabled,
-        custom_gradient_colors,
-        custom_text_color,
-        custom_text_secondary,
-        chat_appearance,
-        default_chat_template_id,
-        created_at,
-        updated_at,
-    ): (
+    let row: (
         String,
         Option<String>,
         Option<f64>,
         Option<f64>,
         Option<f64>,
+        Option<f64>,
+        Option<f64>,
+        Option<f64>,
+        Option<String>,
         Option<String>,
         Option<String>,
         Option<String>,
@@ -89,52 +52,102 @@ fn read_character(conn: &rusqlite::Connection, id: &str) -> Result<JsonValue, St
         i64,
     ) = conn
         .query_row(
-            "SELECT name, avatar_path, avatar_crop_x, avatar_crop_y, avatar_crop_scale, design_description, design_reference_image_ids, background_image_path, description, definition, nickname, scenario, creator_notes, creator, creator_notes_multilingual, source, tags, default_scene_id, default_model_id, fallback_model_id, mode, companion, prompt_template_id, active_lorebook_ids, group_chat_prompt_template_id, group_chat_roleplay_prompt_template_id, system_prompt, voice_config, voice_autoplay, memory_type, disable_avatar_gradient, avatar_gradient_source, custom_gradient_enabled, custom_gradient_colors, custom_text_color, custom_text_secondary, chat_appearance, default_chat_template_id, created_at, updated_at FROM characters WHERE id = ?",
+            "SELECT name, avatar_path, avatar_crop_x, avatar_crop_y, avatar_crop_scale, banner_crop_x, banner_crop_y, banner_crop_scale, card_type, design_description, design_reference_image_ids, background_image_path, description, definition, nickname, scenario, creator_notes, creator, creator_notes_multilingual, source, tags, default_scene_id, default_model_id, fallback_model_id, mode, companion, prompt_template_id, active_lorebook_ids, group_chat_prompt_template_id, group_chat_roleplay_prompt_template_id, system_prompt, voice_config, voice_autoplay, memory_type, disable_avatar_gradient, avatar_gradient_source, custom_gradient_enabled, custom_gradient_colors, custom_text_color, custom_text_secondary, chat_appearance, default_chat_template_id, created_at, updated_at FROM characters WHERE id = ?",
             params![id],
             |r| Ok((
-                r.get(0)?,
-                r.get(1)?,
-                r.get(2)?,
-                r.get(3)?,
-                r.get(4)?,
-                r.get(5)?,
-                r.get(6)?,
-                r.get(7)?,
-                r.get(8)?,
-                r.get(9)?,
-                r.get(10)?,
-                r.get(11)?,
-                r.get(12)?,
-                r.get(13)?,
-                r.get(14)?,
-                r.get(15)?,
-                r.get(16)?,
-                r.get(17)?,
-                r.get(18)?,
-                r.get(19)?,
-                r.get(20)?,
-                r.get(21)?,
-                r.get(22)?,
-                r.get(23)?,
-                r.get(24)?,
-                r.get(25)?,
-                r.get(26)?,
-                r.get(27)?,
-                r.get::<_, Option<i64>>(28)?,
+                r.get::<_, String>(0)?,
+                r.get::<_, Option<String>>(1)?,
+                r.get::<_, Option<f64>>(2)?,
+                r.get::<_, Option<f64>>(3)?,
+                r.get::<_, Option<f64>>(4)?,
+                r.get::<_, Option<f64>>(5)?,
+                r.get::<_, Option<f64>>(6)?,
+                r.get::<_, Option<f64>>(7)?,
+                r.get::<_, Option<String>>(8)?,
+                r.get::<_, Option<String>>(9)?,
+                r.get::<_, Option<String>>(10)?,
+                r.get::<_, Option<String>>(11)?,
+                r.get::<_, Option<String>>(12)?,
+                r.get::<_, Option<String>>(13)?,
+                r.get::<_, Option<String>>(14)?,
+                r.get::<_, Option<String>>(15)?,
+                r.get::<_, Option<String>>(16)?,
+                r.get::<_, Option<String>>(17)?,
+                r.get::<_, Option<String>>(18)?,
+                r.get::<_, Option<String>>(19)?,
+                r.get::<_, Option<String>>(20)?,
+                r.get::<_, Option<String>>(21)?,
+                r.get::<_, Option<String>>(22)?,
+                r.get::<_, Option<String>>(23)?,
+                r.get::<_, Option<String>>(24)?,
+                r.get::<_, Option<String>>(25)?,
+                r.get::<_, Option<String>>(26)?,
+                r.get::<_, Option<String>>(27)?,
+                r.get::<_, Option<String>>(28)?,
                 r.get::<_, Option<String>>(29)?,
-                r.get::<_, i64>(30)?,
-                r.get(31)?,
-                r.get::<_, i64>(32)?,
-                r.get(33)?,
-                r.get(34)?,
-                r.get(35)?,
-                r.get(36)?,
-                r.get(37)?,
-                r.get::<_, i64>(38)?,
-                r.get::<_, i64>(39)?
+                r.get::<_, Option<String>>(30)?,
+                r.get::<_, Option<String>>(31)?,
+                r.get::<_, Option<i64>>(32)?,
+                r.get::<_, Option<String>>(33)?,
+                r.get::<_, i64>(34)?,
+                r.get::<_, Option<String>>(35)?,
+                r.get::<_, i64>(36)?,
+                r.get::<_, Option<String>>(37)?,
+                r.get::<_, Option<String>>(38)?,
+                r.get::<_, Option<String>>(39)?,
+                r.get::<_, Option<String>>(40)?,
+                r.get::<_, Option<String>>(41)?,
+                r.get::<_, i64>(42)?,
+                r.get::<_, i64>(43)?
             )),
         )
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+    let (
+        name,
+        avatar_path,
+        avatar_crop_x,
+        avatar_crop_y,
+        avatar_crop_scale,
+        banner_crop_x,
+        banner_crop_y,
+        banner_crop_scale,
+        card_type,
+        design_description,
+        design_reference_image_ids,
+        bg_path,
+        description,
+        definition,
+        nickname,
+        scenario,
+        creator_notes,
+        creator,
+        creator_notes_multilingual,
+        source,
+        tags,
+        default_scene_id,
+        default_model_id,
+        fallback_model_id,
+        mode,
+        companion,
+        prompt_template_id,
+        active_lorebook_ids,
+        group_chat_prompt_template_id,
+        group_chat_roleplay_prompt_template_id,
+        system_prompt,
+        voice_config,
+        voice_autoplay,
+        memory_type,
+        disable_avatar_gradient,
+        avatar_gradient_source,
+        custom_gradient_enabled,
+        custom_gradient_colors,
+        custom_text_color,
+        custom_text_secondary,
+        chat_appearance,
+        default_chat_template_id,
+        created_at,
+        updated_at,
+    ) = row;
 
     // rules
     let mut rules: Vec<JsonValue> = Vec::new();
@@ -288,6 +301,16 @@ fn read_character(conn: &rusqlite::Connection, id: &str) -> Result<JsonValue, St
         crop.insert("y".into(), JsonValue::from(y));
         crop.insert("scale".into(), JsonValue::from(scale));
         root.insert("avatarCrop".into(), JsonValue::Object(crop));
+    }
+    if let (Some(x), Some(y), Some(scale)) = (banner_crop_x, banner_crop_y, banner_crop_scale) {
+        let mut crop = JsonMap::new();
+        crop.insert("x".into(), JsonValue::from(x));
+        crop.insert("y".into(), JsonValue::from(y));
+        crop.insert("scale".into(), JsonValue::from(scale));
+        root.insert("bannerCrop".into(), JsonValue::Object(crop));
+    }
+    if let Some(value) = card_type {
+        root.insert("cardType".into(), JsonValue::String(value));
     }
     if let Some(value) = design_description {
         root.insert("designDescription".into(), JsonValue::String(value));
@@ -547,6 +570,15 @@ fn upsert_character_value(app: &tauri::AppHandle, c: &JsonValue) -> Result<JsonV
     let avatar_crop_x = avatar_crop.and_then(|crop| crop.get("x").and_then(|v| v.as_f64()));
     let avatar_crop_y = avatar_crop.and_then(|crop| crop.get("y").and_then(|v| v.as_f64()));
     let avatar_crop_scale = avatar_crop.and_then(|crop| crop.get("scale").and_then(|v| v.as_f64()));
+    let banner_crop = c.get("bannerCrop").and_then(|v| v.as_object());
+    let banner_crop_x = banner_crop.and_then(|crop| crop.get("x").and_then(|v| v.as_f64()));
+    let banner_crop_y = banner_crop.and_then(|crop| crop.get("y").and_then(|v| v.as_f64()));
+    let banner_crop_scale =
+        banner_crop.and_then(|crop| crop.get("scale").and_then(|v| v.as_f64()));
+    let card_type = match c.get("cardType").and_then(|v| v.as_str()) {
+        Some("banner") => "banner".to_string(),
+        _ => "circle".to_string(),
+    };
     let design_description = c
         .get("designDescription")
         .and_then(|v| v.as_str())
@@ -721,14 +753,18 @@ fn upsert_character_value(app: &tauri::AppHandle, c: &JsonValue) -> Result<JsonV
         .unwrap_or_else(|| "[]".to_string());
 
     tx.execute(
-        r#"INSERT INTO characters (id, name, avatar_path, avatar_crop_x, avatar_crop_y, avatar_crop_scale, design_description, design_reference_image_ids, background_image_path, description, definition, nickname, scenario, creator_notes, creator, creator_notes_multilingual, source, tags, default_scene_id, default_model_id, fallback_model_id, mode, companion, prompt_template_id, active_lorebook_ids, group_chat_prompt_template_id, group_chat_roleplay_prompt_template_id, system_prompt, voice_config, voice_autoplay, memory_type, disable_avatar_gradient, avatar_gradient_source, custom_gradient_enabled, custom_gradient_colors, custom_text_color, custom_text_secondary, chat_appearance, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        r#"INSERT INTO characters (id, name, avatar_path, avatar_crop_x, avatar_crop_y, avatar_crop_scale, banner_crop_x, banner_crop_y, banner_crop_scale, card_type, design_description, design_reference_image_ids, background_image_path, description, definition, nickname, scenario, creator_notes, creator, creator_notes_multilingual, source, tags, default_scene_id, default_model_id, fallback_model_id, mode, companion, prompt_template_id, active_lorebook_ids, group_chat_prompt_template_id, group_chat_roleplay_prompt_template_id, system_prompt, voice_config, voice_autoplay, memory_type, disable_avatar_gradient, avatar_gradient_source, custom_gradient_enabled, custom_gradient_colors, custom_text_color, custom_text_secondary, chat_appearance, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
               name=excluded.name,
               avatar_path=excluded.avatar_path,
               avatar_crop_x=excluded.avatar_crop_x,
               avatar_crop_y=excluded.avatar_crop_y,
               avatar_crop_scale=excluded.avatar_crop_scale,
+              banner_crop_x=excluded.banner_crop_x,
+              banner_crop_y=excluded.banner_crop_y,
+              banner_crop_scale=excluded.banner_crop_scale,
+              card_type=excluded.card_type,
               design_description=excluded.design_description,
               design_reference_image_ids=excluded.design_reference_image_ids,
               background_image_path=excluded.background_image_path,
@@ -768,6 +804,10 @@ fn upsert_character_value(app: &tauri::AppHandle, c: &JsonValue) -> Result<JsonV
             avatar_crop_x,
             avatar_crop_y,
             avatar_crop_scale,
+            banner_crop_x,
+            banner_crop_y,
+            banner_crop_scale,
+            card_type,
             design_description,
             design_reference_image_ids,
             bg_path,

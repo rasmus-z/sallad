@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  AVATAR_BANNER_FILENAME,
   AVATAR_ROUND_FILENAME,
   AVATAR_UPDATED_EVENT,
   loadAvatar,
@@ -9,7 +10,7 @@ import { isRenderableImageUrl } from "../../core/utils/image";
 
 const avatarCache = new Map<string, string | Promise<string>>();
 
-export type AvatarVariant = "base" | "round";
+export type AvatarVariant = "base" | "round" | "banner";
 
 /**
  * Invalidate cached avatar for a specific entity
@@ -74,7 +75,12 @@ export function useAvatar(
         return;
       }
 
-      const primaryFilename = variant === "round" ? AVATAR_ROUND_FILENAME : avatarFilename;
+      const primaryFilename =
+        variant === "round"
+          ? AVATAR_ROUND_FILENAME
+          : variant === "banner"
+            ? AVATAR_BANNER_FILENAME
+            : avatarFilename;
       const cacheKey = `${type}:${entityId}:${variant}:${primaryFilename}`;
       const cached = avatarCache.get(cacheKey);
 
@@ -105,7 +111,7 @@ export function useAvatar(
           avatarCache.set(cacheKey, primary);
           return primary;
         }
-        if (variant === "round" && primaryFilename !== avatarFilename) {
+        if ((variant === "round" || variant === "banner") && primaryFilename !== avatarFilename) {
           const fallback = await loadAvatar(type, entityId, avatarFilename);
           if (fallback) {
             avatarCache.set(cacheKey, fallback);

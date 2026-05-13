@@ -23,6 +23,8 @@ export { AvatarSourceMenu, AvatarCurrentEditMenu, AvatarGenerationSheet, AvatarP
 interface AvatarPickerProps {
   currentAvatarPath: string;
   onAvatarChange: (path: string) => void;
+  shape?: "circle" | "banner";
+  librarySelectionScope?: string;
   onBeforeChooseFromLibrary?: () => void;
   promptSubjectName?: string;
   promptSubjectDescription?: string;
@@ -40,6 +42,8 @@ interface AvatarPickerProps {
 export function AvatarPicker({
   currentAvatarPath,
   onAvatarChange,
+  shape = "circle",
+  librarySelectionScope,
   onBeforeChooseFromLibrary,
   promptSubjectName,
   promptSubjectDescription,
@@ -67,6 +71,9 @@ export function AvatarPicker({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const hadExternalAvatarRef = useRef(false);
   const returnPath = `${location.pathname}${location.search}`;
+  const selectionReturnPath = librarySelectionScope
+    ? `${returnPath}::${librarySelectionScope}`
+    : returnPath;
   const summarizeSrc = useCallback((value?: string | null) => {
     if (!value) return "(empty)";
     if (value.startsWith("data:")) return `data-url(${value.slice(0, 24)}..., len=${value.length})`;
@@ -110,11 +117,21 @@ export function AvatarPicker({
     });
   }, [avatarRoundPath, currentAvatarPath]);
 
-  const sizeClasses = {
-    sm: "h-20 w-20",
-    md: "h-28 w-28",
-    lg: "h-48 w-48",
-  };
+  // Banner preview uses the same aspect as BannerCharacterCard's avatar slot
+  // (~2.25:1 mobile, ~2.5:1 desktop) so users can see how their crop will land
+  // on the actual card — including the right-edge fade.
+  const sizeClasses =
+    shape === "banner"
+      ? {
+          sm: "h-24 w-60",
+          md: "h-32 w-80",
+          lg: "h-40 w-96",
+        }
+      : {
+          sm: "h-20 w-20",
+          md: "h-28 w-28",
+          lg: "h-48 w-48",
+        };
 
   const handleButtonClick = useCallback(() => {
     setShowMenu(true);
@@ -125,14 +142,19 @@ export function AvatarPicker({
   }, []);
 
   const handleChooseFromLibrary = useCallback(() => {
-    console.log("[AvatarPicker] choose from library", { returnPath });
+    console.log("[AvatarPicker] choose from library", {
+      returnPath,
+      selectionStorageKey: selectionReturnPath,
+      scope: librarySelectionScope,
+    });
     onBeforeChooseFromLibrary?.();
     navigate("/library/images/pick", {
       state: {
         returnPath,
+        selectionStorageKey: selectionReturnPath,
       },
     });
-  }, [navigate, onBeforeChooseFromLibrary, returnPath]);
+  }, [librarySelectionScope, navigate, onBeforeChooseFromLibrary, returnPath, selectionReturnPath]);
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -217,28 +239,35 @@ export function AvatarPicker({
   const handlePositionConfirm = useCallback(
     ({
       baseImageData,
-      roundImageData,
+      shapeImageData,
+      crop,
     }: {
       baseImageData: string;
-      roundImageData: string;
+      shapeImageData: string;
+      crop: AvatarCrop;
     }) => {
       console.log("[AvatarPicker] position confirm", {
         pendingImageSrc: summarizeSrc(pendingImageSrc),
         baseImageData: summarizeSrc(baseImageData),
-        roundImageData: summarizeSrc(roundImageData),
+        shapeImageData: summarizeSrc(shapeImageData),
       });
-      setLocalAvatarPreviewPath(baseImageData);
-      if (pendingImageSrc) {
-        onAvatarChange(pendingImageSrc);
+      if (shape === "banner") {
+        setLocalAvatarPreviewPath(shapeImageData);
+        onAvatarChange(shapeImageData);
       } else {
-        onAvatarChange(baseImageData);
+        setLocalAvatarPreviewPath(baseImageData);
+        if (pendingImageSrc) {
+          onAvatarChange(pendingImageSrc);
+        } else {
+          onAvatarChange(baseImageData);
+        }
+        setLocalAvatarRoundPreviewPath(shapeImageData);
+        onAvatarRoundChange?.(shapeImageData);
       }
-      setLocalAvatarRoundPreviewPath(roundImageData);
-      onAvatarRoundChange?.(roundImageData);
-      onAvatarCropChange?.(null);
+      onAvatarCropChange?.(crop);
       setPendingImageSrc(null);
     },
-    [onAvatarChange, onAvatarRoundChange, onAvatarCropChange, pendingImageSrc, summarizeSrc],
+    [onAvatarChange, onAvatarRoundChange, onAvatarCropChange, pendingImageSrc, shape, summarizeSrc],
   );
 
   const handlePositionModalClose = useCallback(() => {
@@ -247,7 +276,7 @@ export function AvatarPicker({
   }, []);
 
   useEffect(() => {
-    const storageKey = buildAvatarLibrarySelectionKey(returnPath);
+    const storageKey = buildAvatarLibrarySelectionKey(selectionReturnPath);
     const rawSelection = sessionStorage.getItem(storageKey);
     if (!rawSelection) {
       return;
@@ -287,13 +316,15 @@ export function AvatarPicker({
     return () => {
       cancelled = true;
     };
-  }, [returnPath, summarizeSrc]);
+  }, [selectionReturnPath, summarizeSrc]);
 
   const displayAvatarSrc =
-    localAvatarRoundPreviewPath ||
-    avatarRoundPath ||
-    localAvatarPreviewPath ||
-    currentAvatarPath;
+    shape === "banner"
+      ? localAvatarPreviewPath || currentAvatarPath
+      : localAvatarRoundPreviewPath ||
+        avatarRoundPath ||
+        localAvatarPreviewPath ||
+        currentAvatarPath;
   const hasDisplayAvatar = !!displayAvatarSrc;
 
   useEffect(() => {
@@ -326,7 +357,7 @@ export function AvatarPicker({
         className={cn(
           "relative overflow-hidden flex items-center justify-center",
           sizeClasses[size],
-          radius.full,
+          shape === "banner" ? radius.lg : radius.full,
           "bg-[#111113]",
           hasDisplayAvatar
             ? "border-[3px] border-white/10"
@@ -336,12 +367,43 @@ export function AvatarPicker({
         {avatarPreview ? (
           avatarPreview
         ) : hasDisplayAvatar ? (
-          <AvatarImage
-            src={displayAvatarSrc}
-            alt="Avatar"
-            crop={avatarCrop}
-            applyCrop
-          />
+          shape === "banner" ? (
+            <>
+              {/* Banner avatar with right-edge fade (mirrors BannerCharacterCard's mask) */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  WebkitMaskImage:
+                    "linear-gradient(to right, black 0%, black 55%, transparent 100%)",
+                  maskImage:
+                    "linear-gradient(to right, black 0%, black 55%, transparent 100%)",
+                }}
+              >
+                <AvatarImage
+                  src={displayAvatarSrc}
+                  alt="Avatar"
+                  crop={avatarCrop}
+                  applyCrop={false}
+                />
+              </div>
+              {/* Dark scrim — mirrors the card's text-panel scrim */}
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0"
+                style={{
+                  background:
+                    "linear-gradient(to right, rgba(0,0,0,0) 28%, rgba(0,0,0,0.45) 60%, rgba(0,0,0,0.55) 100%)",
+                }}
+              />
+            </>
+          ) : (
+            <AvatarImage
+              src={displayAvatarSrc}
+              alt="Avatar"
+              crop={avatarCrop}
+              applyCrop={true}
+            />
+          )
         ) : placeholder ? (
           <span
             className={cn(
@@ -421,6 +483,7 @@ export function AvatarPicker({
           isOpen={showPositionModal}
           onClose={handlePositionModalClose}
           imageSrc={pendingImageSrc}
+          shape={shape}
           onConfirm={handlePositionConfirm}
         />
       )}

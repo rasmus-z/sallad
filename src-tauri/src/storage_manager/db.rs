@@ -464,6 +464,10 @@ pub fn init_db(_app: &tauri::AppHandle, conn: &Connection) -> Result<(), String>
           avatar_crop_x REAL,
           avatar_crop_y REAL,
           avatar_crop_scale REAL,
+          banner_crop_x REAL,
+          banner_crop_y REAL,
+          banner_crop_scale REAL,
+          card_type TEXT NOT NULL DEFAULT 'circle',
           design_description TEXT,
           design_reference_image_ids TEXT,
           background_image_path TEXT,
@@ -1610,7 +1614,6 @@ pub fn init_db(_app: &tauri::AppHandle, conn: &Connection) -> Result<(), String>
             [],
         );
     }
-
     let mut stmt_personas = conn
         .prepare("PRAGMA table_info(personas)")
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
