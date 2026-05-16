@@ -1,6 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Download, Edit3, RotateCcw, Trash2, Upload } from "lucide-react";
+import {
+  ChevronRight,
+  Cpu,
+  Download,
+  Edit3,
+  EthernetPort,
+  RotateCcw,
+  Trash2,
+  Upload,
+} from "lucide-react";
 import { useTheme } from "../../../core/theme/ThemeContext";
+import { ToggleRow } from "./components/Field";
 import {
   getCustomColorPresets,
   getCustomColors,
@@ -13,7 +23,6 @@ import type { CustomColorPreset, CustomColors } from "../../../core/storage/sche
 import { cn, interactive, radius } from "../../design-tokens";
 import { toast } from "../../components/toast";
 import { useI18n } from "../../../core/i18n/context";
-import { Switch } from "../../components/Switch";
 
 const SETTINGS_CARD_OPACITY_DEFAULT = 5;
 
@@ -1045,7 +1054,9 @@ export function ColorCustomizationPage() {
 
   return (
     <div className="color-customization-editor-scope flex h-full flex-col">
-      <section className="flex-1 min-h-0 overflow-y-auto px-3 pt-3 pb-6 space-y-5">
+      <section className="flex-1 min-h-0 overflow-y-auto px-3 pt-3 pb-6 lg:px-6 lg:pt-6">
+        <div className="mx-auto w-full max-w-6xl space-y-5 lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-6 lg:items-start lg:space-y-0">
+        <div className="space-y-5">
         <input
           ref={importInputRef}
           type="file"
@@ -1378,6 +1389,8 @@ export function ColorCustomizationPage() {
           );
         })}
 
+        </div>
+        <div className="lg:sticky lg:top-0">
         {/* Live preview */}
         <div>
           <h2
@@ -1386,7 +1399,7 @@ export function ColorCustomizationPage() {
           >
             {t("colorCustomization.previewLabel")}
           </h2>
-          <div className="rounded-xl border border-fg/10 bg-surface p-4 space-y-4">
+          <div className="rounded-xl border border-fg/10 bg-surface p-4 space-y-3">
             <div className="space-y-1">
               <p className="text-sm font-medium" style={{ color: "var(--color-app-text)" }}>
                 Primary text
@@ -1414,38 +1427,56 @@ export function ColorCustomizationPage() {
               </span>
             </div>
 
-            <div className="rounded-lg border border-fg/10 bg-fg/5 p-3 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium" style={{ color: "var(--color-app-text)" }}>
-                  Sample Card
-                </span>
-                <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-medium text-accent">
-                  Active
-                </span>
-              </div>
-              <p className="text-[11px]" style={{ color: "var(--color-app-text-subtle)" }}>
-                This preview uses the current settings-card opacity and app text colors.
-              </p>
-              <div className="flex gap-2">
-                <div className="flex-1 rounded-md bg-accent/10 px-2 py-1.5 text-center text-[10px] font-medium text-accent">
-                  Confirm
+            <div className="relative flex w-full items-center gap-2.5 rounded-md bg-fg/8 px-2.5 py-2 text-fg shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]">
+              <span
+                aria-hidden
+                className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-accent"
+              />
+              <Cpu className="h-4.5 w-4.5 text-accent" />
+              <span className="text-sm font-semibold tracking-[-0.005em]">Models</span>
+              <span className="ml-auto rounded-full bg-fg/10 px-1.5 py-px text-[10px] font-semibold tabular-nums text-fg/80">
+                12
+              </span>
+            </div>
+
+            <div className="rounded-xl border border-fg/10 bg-fg/5 px-4 py-3">
+              <div className="flex items-center gap-3">
+                <EthernetPort className="h-5 w-5 text-fg/60" />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium text-fg">Sample provider</div>
+                  <div className="mt-0.5 truncate text-[11px] text-fg/50">api.provider.com</div>
                 </div>
-                <div className="flex-1 rounded-md bg-danger/10 px-2 py-1.5 text-center text-[10px] font-medium text-danger">
-                  Delete
-                </div>
+                <ChevronRight className="h-4 w-4 text-fg/30" />
               </div>
             </div>
 
-            <div className="flex items-center justify-between rounded-lg border border-fg/10 bg-fg/5 px-3 py-2.5">
-              <span className="text-xs" style={{ color: "var(--color-app-text-muted)" }}>
-                Sample toggle
-              </span>
-              <Switch checked={true} onChange={() => {}} />
+            <ToggleRow
+              id="color-preview-toggle"
+              title="Enable feature"
+              description="Stream responses while a model generates"
+              checked={true}
+              onChange={() => {}}
+            />
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="flex-1 rounded-lg border border-fg/10 bg-fg/5 px-4 py-2 text-sm font-medium text-fg/70"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="flex-1 rounded-lg border border-accent/40 bg-accent/20 px-4 py-2 text-sm font-semibold text-accent/90"
+              >
+                Save
+              </button>
             </div>
           </div>
         </div>
 
-        <div className="h-4" />
+        </div>
+        </div>
       </section>
     </div>
   );
