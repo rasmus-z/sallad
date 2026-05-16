@@ -252,11 +252,7 @@ impl SyncManagerState {
     }
 }
 
-async fn set_driver_running_status(
-    app: &AppHandle,
-    state: &SyncManagerState,
-    port: u16,
-) {
+async fn set_driver_running_status(app: &AppHandle, state: &SyncManagerState, port: u16) {
     let my_ip = crate::utils::get_local_ip().unwrap_or_else(|_| "0.0.0.0".to_string());
     let pin = state.pin.read().await.clone().unwrap_or_default();
     state
@@ -703,10 +699,7 @@ async fn handle_advertise_cursors(
         if changes.is_empty() {
             continue;
         }
-        let mut bytes: u64 = changes
-            .iter()
-            .map(|c| c.payload.len() as u64)
-            .sum();
+        let mut bytes: u64 = changes.iter().map(|c| c.payload.len() as u64).sum();
         if cursor.domain == SyncDomain::Assets {
             bytes = bytes.saturating_add(estimate_asset_bytes(app, &changes));
         }
@@ -740,7 +733,10 @@ async fn handle_advertise_cursors(
     }
 
     state
-        .set_status(app, tracker.syncing_status("Preparing transfer".into(), None))
+        .set_status(
+            app,
+            tracker.syncing_status("Preparing transfer".into(), None),
+        )
         .await;
 
     log_info(
@@ -799,7 +795,9 @@ async fn handle_advertise_cursors(
                 state.inner(),
                 phase.as_str(),
                 peer_protocol_version,
-                prepared_asset_contents.as_ref().expect("prepared asset contents"),
+                prepared_asset_contents
+                    .as_ref()
+                    .expect("prepared asset contents"),
             )
             .await?;
             let last_change_id = changes.last().map(|change| change.change_id).unwrap_or(0);
@@ -1554,10 +1552,7 @@ fn remove_asset_path(app: &AppHandle, relative_path: &str) -> Result<(), String>
     Ok(())
 }
 
-fn estimate_asset_bytes(
-    app: &AppHandle,
-    changes: &[crate::sync::protocol::ChangeRecord],
-) -> u64 {
+fn estimate_asset_bytes(app: &AppHandle, changes: &[crate::sync::protocol::ChangeRecord]) -> u64 {
     let mut total: u64 = 0;
     for change in changes {
         if change.op != ChangeOp::Upsert {
@@ -1593,13 +1588,16 @@ async fn send_asset_change_contents(
 
         let asset: sync_db::AssetRecord = bincode::deserialize(&change.payload)
             .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
-        let content = prepared_contents.get(&change.entity_id).cloned().ok_or_else(|| {
-            crate::utils::err_msg(
-                module_path!(),
-                line!(),
-                format!("Prepared asset content missing for {}", change.entity_id),
-            )
-        })?;
+        let content = prepared_contents
+            .get(&change.entity_id)
+            .cloned()
+            .ok_or_else(|| {
+                crate::utils::err_msg(
+                    module_path!(),
+                    line!(),
+                    format!("Prepared asset content missing for {}", change.entity_id),
+                )
+            })?;
         let actual_hash = asset.content_hash.clone();
         if peer_protocol_version >= ASSET_CHUNK_PROTOCOL {
             let total_bytes = content.len() as u64;
@@ -1623,7 +1621,10 @@ async fn send_asset_change_contents(
                     .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
                 tracker.record_bytes(chunk.len() as u64);
                 state
-                    .set_status(app, tracker.syncing_status(phase.to_string(), Some(SyncDomain::Assets)))
+                    .set_status(
+                        app,
+                        tracker.syncing_status(phase.to_string(), Some(SyncDomain::Assets)),
+                    )
                     .await;
             }
 
@@ -1635,7 +1636,10 @@ async fn send_asset_change_contents(
                 .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
             tracker.record_items(SyncDomain::Assets, 1);
             state
-                .set_status(app, tracker.syncing_status(phase.to_string(), Some(SyncDomain::Assets)))
+                .set_status(
+                    app,
+                    tracker.syncing_status(phase.to_string(), Some(SyncDomain::Assets)),
+                )
                 .await;
         } else {
             framed
@@ -1651,7 +1655,10 @@ async fn send_asset_change_contents(
             tracker.record_bytes(file_bytes);
             tracker.record_items(SyncDomain::Assets, 1);
             state
-                .set_status(app, tracker.syncing_status(phase.to_string(), Some(SyncDomain::Assets)))
+                .set_status(
+                    app,
+                    tracker.syncing_status(phase.to_string(), Some(SyncDomain::Assets)),
+                )
                 .await;
         }
     }

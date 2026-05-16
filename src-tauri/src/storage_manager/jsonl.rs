@@ -258,7 +258,8 @@ pub fn jsonl_export_group_chat(
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
     let mut char_names: HashMap<String, String> = HashMap::new();
     for row in char_name_rows {
-        let (id, name) = row.map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+        let (id, name) =
+            row.map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
         char_names.insert(id, name);
     }
 
@@ -493,8 +494,7 @@ pub fn jsonl_inspect(path: String) -> Result<String, String> {
         "requiresCharacterSelection": !is_group,
         "requiresParticipantMapping": is_group,
     });
-    serde_json::to_string(&out)
-        .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))
+    serde_json::to_string(&out).map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))
 }
 
 // ------------------- Import -------------------
@@ -604,8 +604,7 @@ fn import_single(
         "sessionId": new_session_id,
         "characterId": target_character_id,
     });
-    serde_json::to_string(&out)
-        .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))
+    serde_json::to_string(&out).map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))
 }
 
 fn import_group(
@@ -752,6 +751,5 @@ fn import_group(
         "type": "group_chat",
         "sessionId": new_session_id,
     });
-    serde_json::to_string(&out)
-        .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))
+    serde_json::to_string(&out).map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))
 }

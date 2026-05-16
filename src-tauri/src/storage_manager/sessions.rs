@@ -42,9 +42,9 @@ fn resolve_companion_state_json(
     session_value: &JsonValue,
 ) -> Result<Option<String>, String> {
     match session_value.get("companionState") {
-        Some(v) if !v.is_null() => {
-            Ok(Some(serde_json::to_string(v).unwrap_or_else(|_| "{}".to_string())))
-        }
+        Some(v) if !v.is_null() => Ok(Some(
+            serde_json::to_string(v).unwrap_or_else(|_| "{}".to_string()),
+        )),
         _ if !mode.eq_ignore_ascii_case("companion") => Ok(None),
         _ => {
             let companion_json = conn
@@ -200,10 +200,11 @@ fn read_session_memories_json_with_resolution(
         &mode,
     )?;
     if owner.shared {
-        return Ok(
-            crate::storage_manager::companion_shared_memory::load_state(conn, &character_id)?
-                .memories_json,
-        );
+        return Ok(crate::storage_manager::companion_shared_memory::load_state(
+            conn,
+            &character_id,
+        )?
+        .memories_json);
     }
 
     Ok(local_memories_json)
@@ -267,7 +268,8 @@ fn write_resolved_memories_json(
     )?;
 
     if owner.shared {
-        let mut state = crate::storage_manager::companion_shared_memory::load_state(conn, &character_id)?;
+        let mut state =
+            crate::storage_manager::companion_shared_memory::load_state(conn, &character_id)?;
         state.memories_json = memories_json.to_string();
         crate::storage_manager::companion_shared_memory::upsert_state(conn, &character_id, &state)?;
     } else {
@@ -314,7 +316,11 @@ fn persist_shared_memory_from_session_json(
         memory_error,
         memory_progress_step,
     };
-    crate::storage_manager::companion_shared_memory::upsert_state(conn, character_id, &shared_state)?;
+    crate::storage_manager::companion_shared_memory::upsert_state(
+        conn,
+        character_id,
+        &shared_state,
+    )?;
     crate::storage_manager::memory_embeddings::replace_all_from_json(
         conn,
         character_id,
@@ -1521,10 +1527,11 @@ fn read_session_meta(conn: &rusqlite::Connection, id: &str) -> Result<Option<Jso
 
     let memories: JsonValue = serde_json::from_str(&loaded_memory.memories_json)
         .unwrap_or_else(|_| JsonValue::Array(vec![]));
-    let memory_embeddings =
-        serde_json::to_value(loaded_memory.memory_embeddings).unwrap_or_else(|_| JsonValue::Array(vec![]));
-    let memory_tool_events: JsonValue = serde_json::from_str(&loaded_memory.memory_tool_events_json)
+    let memory_embeddings = serde_json::to_value(loaded_memory.memory_embeddings)
         .unwrap_or_else(|_| JsonValue::Array(vec![]));
+    let memory_tool_events: JsonValue =
+        serde_json::from_str(&loaded_memory.memory_tool_events_json)
+            .unwrap_or_else(|_| JsonValue::Array(vec![]));
 
     let session = serde_json::json!({
         "id": id,
@@ -1750,10 +1757,11 @@ fn read_session(conn: &rusqlite::Connection, id: &str) -> Result<Option<JsonValu
 
     let memories: JsonValue = serde_json::from_str(&loaded_memory.memories_json)
         .unwrap_or_else(|_| JsonValue::Array(vec![]));
-    let memory_embeddings =
-        serde_json::to_value(loaded_memory.memory_embeddings).unwrap_or_else(|_| JsonValue::Array(vec![]));
-    let memory_tool_events: JsonValue = serde_json::from_str(&loaded_memory.memory_tool_events_json)
+    let memory_embeddings = serde_json::to_value(loaded_memory.memory_embeddings)
         .unwrap_or_else(|_| JsonValue::Array(vec![]));
+    let memory_tool_events: JsonValue =
+        serde_json::from_str(&loaded_memory.memory_tool_events_json)
+            .unwrap_or_else(|_| JsonValue::Array(vec![]));
 
     let session = serde_json::json!({
         "id": id,

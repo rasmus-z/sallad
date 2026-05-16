@@ -573,8 +573,7 @@ fn upsert_character_value(app: &tauri::AppHandle, c: &JsonValue) -> Result<JsonV
     let banner_crop = c.get("bannerCrop").and_then(|v| v.as_object());
     let banner_crop_x = banner_crop.and_then(|crop| crop.get("x").and_then(|v| v.as_f64()));
     let banner_crop_y = banner_crop.and_then(|crop| crop.get("y").and_then(|v| v.as_f64()));
-    let banner_crop_scale =
-        banner_crop.and_then(|crop| crop.get("scale").and_then(|v| v.as_f64()));
+    let banner_crop_scale = banner_crop.and_then(|crop| crop.get("scale").and_then(|v| v.as_f64()));
     let card_type = match c.get("cardType").and_then(|v| v.as_str()) {
         Some("banner") => "banner".to_string(),
         _ => "circle".to_string(),

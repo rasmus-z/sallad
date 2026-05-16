@@ -158,14 +158,13 @@ impl ImageProviderAdapter for PollinationsAdapter {
     }
 
     fn parse_response(&self, response: Value) -> Result<Vec<ImageResponseData>, String> {
-        let parsed: PollinationsImageResponse =
-            serde_json::from_value(response).map_err(|e| {
-                crate::utils::err_msg(
-                    module_path!(),
-                    line!(),
-                    format!("Failed to parse response: {}", e),
-                )
-            })?;
+        let parsed: PollinationsImageResponse = serde_json::from_value(response).map_err(|e| {
+            crate::utils::err_msg(
+                module_path!(),
+                line!(),
+                format!("Failed to parse response: {}", e),
+            )
+        })?;
 
         Ok(parsed
             .data

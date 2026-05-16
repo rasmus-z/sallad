@@ -182,6 +182,19 @@ fn sanitize_media_archive_name(
     Ok(path.to_path_buf())
 }
 
+fn parse_memory_session_kind(
+    raw: &str,
+) -> Result<crate::storage_manager::memory_embeddings::SessionKind, String> {
+    match raw {
+        "session" => Ok(crate::storage_manager::memory_embeddings::SessionKind::Session),
+        "group_session" => Ok(crate::storage_manager::memory_embeddings::SessionKind::GroupSession),
+        "companion_shared" => {
+            Ok(crate::storage_manager::memory_embeddings::SessionKind::CompanionShared)
+        }
+        other => Err(format!("Unknown memory_embeddings session_kind: {}", other)),
+    }
+}
+
 // ============================================================================
 // TABLE EXPORT FUNCTIONS - Export each table to JSON
 // ============================================================================
@@ -549,22 +562,23 @@ fn export_companion_scheduled_notes(app: &tauri::AppHandle) -> Result<Vec<JsonVa
         )
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
 
-    let rows = stmt.query_map([], |r| {
-        Ok(serde_json::json!({
-            "id": r.get::<_, String>(0)?,
-            "character_id": r.get::<_, String>(1)?,
-            "label": r.get::<_, String>(2)?,
-            "content": r.get::<_, String>(3)?,
-            "available_at": r.get::<_, i64>(4)?,
-            "expires_at": r.get::<_, Option<i64>>(5)?,
-            "recurrence": r.get::<_, String>(6)?,
-            "recurrence_window_ms": r.get::<_, Option<i64>>(7)?,
-            "enabled": r.get::<_, i64>(8)? != 0,
-            "created_at": r.get::<_, i64>(9)?,
-            "updated_at": r.get::<_, i64>(10)?,
-        }))
-    })
-    .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+    let rows = stmt
+        .query_map([], |r| {
+            Ok(serde_json::json!({
+                "id": r.get::<_, String>(0)?,
+                "character_id": r.get::<_, String>(1)?,
+                "label": r.get::<_, String>(2)?,
+                "content": r.get::<_, String>(3)?,
+                "available_at": r.get::<_, i64>(4)?,
+                "expires_at": r.get::<_, Option<i64>>(5)?,
+                "recurrence": r.get::<_, String>(6)?,
+                "recurrence_window_ms": r.get::<_, Option<i64>>(7)?,
+                "enabled": r.get::<_, i64>(8)? != 0,
+                "created_at": r.get::<_, i64>(9)?,
+                "updated_at": r.get::<_, i64>(10)?,
+            }))
+        })
+        .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
 
     rows.collect::<Result<Vec<_>, _>>()
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))
@@ -591,6 +605,42 @@ fn export_companion_shared_memory(app: &tauri::AppHandle) -> Result<Vec<JsonValu
         }
     }
     Ok(rows)
+}
+
+fn export_memory_embeddings(app: &tauri::AppHandle) -> Result<Vec<JsonValue>, String> {
+    let conn = open_db(app)?;
+    let mut stmt = conn
+        .prepare(
+            "SELECT DISTINCT session_id, session_kind
+             FROM memory_embeddings
+             ORDER BY session_kind ASC, session_id ASC",
+        )
+        .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+
+    let owners: Vec<(String, String)> = stmt
+        .query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?)))
+        .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+
+    let mut result = Vec::with_capacity(owners.len());
+    for (session_id, session_kind) in owners {
+        let kind = parse_memory_session_kind(&session_kind)?;
+        let memory_embeddings =
+            crate::storage_manager::memory_embeddings::canonical_json_for_session(
+                &conn,
+                &session_id,
+                kind,
+                Some("[]"),
+            )?;
+        result.push(serde_json::json!({
+            "session_id": session_id,
+            "session_kind": session_kind,
+            "memory_embeddings": memory_embeddings,
+        }));
+    }
+
+    Ok(result)
 }
 
 fn export_sessions(app: &tauri::AppHandle) -> Result<Vec<JsonValue>, String> {
@@ -1430,6 +1480,15 @@ pub async fn backup_export(
         &encryption,
     )?;
 
+    log_info(&app, "backup", "Exporting memory embeddings...");
+    let memory_embeddings = export_memory_embeddings(&app)?;
+    add_json_to_zip(
+        &mut zip,
+        "memory_embeddings",
+        &serde_json::json!(memory_embeddings),
+        &encryption,
+    )?;
+
     log_info(&app, "backup", "Exporting sessions...");
     let sessions = export_sessions(&app)?;
     add_json_to_zip(
@@ -2167,9 +2226,13 @@ fn import_companion_scheduled_notes(
                     item.get("content").and_then(|v| v.as_str()),
                     item.get("available_at").and_then(|v| v.as_i64()),
                     item.get("expires_at").and_then(|v| v.as_i64()),
-                    item.get("recurrence").and_then(|v| v.as_str()).unwrap_or("none"),
+                    item.get("recurrence")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("none"),
                     item.get("recurrence_window_ms").and_then(|v| v.as_i64()),
-                    item.get("enabled").and_then(|v| v.as_bool()).unwrap_or(true) as i64,
+                    item.get("enabled")
+                        .and_then(|v| v.as_bool())
+                        .unwrap_or(true) as i64,
                     item.get("created_at").and_then(|v| v.as_i64()),
                     item.get("updated_at").and_then(|v| v.as_i64()),
                 ],
@@ -2188,7 +2251,10 @@ fn import_companion_scheduled_notes(
     log_info(
         app,
         "backup",
-        format!("Companion scheduled notes import complete: {} notes", note_count),
+        format!(
+            "Companion scheduled notes import complete: {} notes",
+            note_count
+        ),
     );
     Ok(())
 }
@@ -2417,8 +2483,40 @@ fn import_companion_shared_memory(app: &tauri::AppHandle, data: &JsonValue) -> R
 
         crate::storage_manager::memory_embeddings::replace_all_from_json(
             &mut conn,
-            item.get("character_id").and_then(|v| v.as_str()).unwrap_or_default(),
+            item.get("character_id")
+                .and_then(|v| v.as_str())
+                .unwrap_or_default(),
             crate::storage_manager::memory_embeddings::SessionKind::CompanionShared,
+            item.get("memory_embeddings").and_then(|v| v.as_str()),
+        )?;
+    }
+
+    Ok(())
+}
+
+fn import_memory_embeddings(app: &tauri::AppHandle, data: &JsonValue) -> Result<(), String> {
+    let mut conn = open_db(app)?;
+    conn.execute("DELETE FROM memory_embeddings", [])
+        .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+
+    let Some(arr) = data.as_array() else {
+        return Ok(());
+    };
+
+    for item in arr {
+        let session_id = item
+            .get("session_id")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| "memory_embeddings row missing session_id".to_string())?;
+        let session_kind = item
+            .get("session_kind")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| "memory_embeddings row missing session_kind".to_string())?;
+        let kind = parse_memory_session_kind(session_kind)?;
+        crate::storage_manager::memory_embeddings::replace_all_from_json(
+            &mut conn,
+            session_id,
+            kind,
             item.get("memory_embeddings").and_then(|v| v.as_str()),
         )?;
     }
@@ -3361,6 +3459,11 @@ pub async fn backup_import(
         "data/companion_shared_memory.json",
         &encryption_params,
     )?;
+    let memory_embeddings_data = read_backup_file(
+        &mut archive,
+        "data/memory_embeddings.json",
+        &encryption_params,
+    )?;
     let sessions_data = read_backup_file(&mut archive, "data/sessions.json", &encryption_params)?;
     let creation_helper_sessions_data = read_backup_file(
         &mut archive,
@@ -3699,6 +3802,23 @@ pub async fn backup_import(
         log_info(&app, "backup", "Group sessions imported");
     } else {
         log_info(&app, "backup", "No group sessions data found");
+    }
+
+    if let Some(data) = memory_embeddings_data {
+        log_info(&app, "backup", "Found memory_embeddings data");
+        let json_str = String::from_utf8(data)
+            .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+        let json_value: serde_json::Value = serde_json::from_str(&json_str).map_err(|e| {
+            crate::utils::err_msg(
+                module_path!(),
+                line!(),
+                format!("Failed to parse memory_embeddings JSON: {}", e),
+            )
+        })?;
+        import_memory_embeddings(&app, &json_value)?;
+        log_info(&app, "backup", "Memory embeddings imported");
+    } else {
+        log_info(&app, "backup", "No memory_embeddings data found");
     }
 
     // Usage records (depends on sessions)
@@ -4458,6 +4578,8 @@ pub async fn backup_import_from_bytes(
         "data/companion_shared_memory.json",
         &encryption_params,
     )?;
+    let memory_embeddings_data =
+        read_backup_file_bytes(&data, "data/memory_embeddings.json", &encryption_params)?;
     let sessions_data = read_backup_file_bytes(&data, "data/sessions.json", &encryption_params)?;
     let creation_helper_sessions_data = read_backup_file_bytes(
         &data,
@@ -4727,6 +4849,20 @@ pub async fn backup_import_from_bytes(
         })?;
         import_group_sessions(&app, &json_value)?;
         log_info(&app, "backup", "Group sessions imported");
+    }
+
+    if let Some(file_data) = memory_embeddings_data {
+        let json_str = String::from_utf8(file_data)
+            .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+        let json_value: serde_json::Value = serde_json::from_str(&json_str).map_err(|e| {
+            crate::utils::err_msg(
+                module_path!(),
+                line!(),
+                format!("Failed to parse memory_embeddings JSON: {}", e),
+            )
+        })?;
+        import_memory_embeddings(&app, &json_value)?;
+        log_info(&app, "backup", "Memory embeddings imported");
     }
 
     if let Some(file_data) = usage_records_data {

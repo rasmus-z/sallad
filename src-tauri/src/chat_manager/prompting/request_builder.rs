@@ -455,7 +455,9 @@ mod tests {
             .and_then(Value::as_array)
             .expect("request body should contain messages");
 
-        let user_message = messages[0].as_object().expect("user message should be an object");
+        let user_message = messages[0]
+            .as_object()
+            .expect("user message should be an object");
         assert_eq!(user_message.get("role"), Some(&json!("user")));
         assert_eq!(user_message.get("content"), Some(&json!("hello")));
         assert!(!user_message.contains_key("visible_in_chat"));

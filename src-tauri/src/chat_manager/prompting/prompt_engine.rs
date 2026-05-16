@@ -3173,16 +3173,15 @@ pub fn build_system_prompt_entries(
         if skip_scene_placeholder_entries && has_scene_placeholder(&entry.content) {
             continue;
         }
-        let rendered =
-            render_with_context(
-                app,
-                &entry.content,
-                character,
-                persona,
-                session,
-                settings,
-                scheduled_notes_text.as_deref(),
-            );
+        let rendered = render_with_context(
+            app,
+            &entry.content,
+            character,
+            persona,
+            session,
+            settings,
+            scheduled_notes_text.as_deref(),
+        );
         if rendered.trim().is_empty() {
             continue;
         }

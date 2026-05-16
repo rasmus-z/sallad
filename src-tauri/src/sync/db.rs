@@ -6,16 +6,17 @@ use tauri::Manager;
 use crate::storage_manager::db::DbConnection;
 use crate::storage_manager::memory_embeddings::SessionKind;
 use crate::sync::models::{
-    AudioProvider, Character, CharacterRule, ChatTemplate, ChatTemplateMessage, GroupMessage,
-    GroupMessageVariant, GroupParticipation, GroupSession, Message, MessageVariant, MetaEntry,
-    Model, Persona, PromptTemplate, ProviderCredential, Scene, SceneVariant, Secret, Session,
-    Settings, SyncLorebook, SyncLorebookEntry, UsageMetadata, UsageRecord, UserVoice,
+    AudioProvider, Character, CharacterRule, ChatTemplate, ChatTemplateMessage,
+    CompanionSharedMemory, GroupMessage, GroupMessageVariant, GroupParticipation, GroupSession,
+    Message, MessageVariant, MetaEntry, Model, Persona, PromptTemplate, ProviderCredential, Scene,
+    SceneVariant, Secret, Session, Settings, SyncLorebook, SyncLorebookEntry,
+    SyncedMemoryEmbedding, UsageMetadata, UsageRecord, UserVoice,
 };
 use crate::sync::protocol::{ChangeOp, ChangeRecord, CursorSet, DomainCursor, SyncDomain};
 use crate::utils::{log_error_global, log_info_global};
 
-pub const CHANGE_SCHEMA_VERSION: u16 = 5;
-pub const LOCAL_SYNC_STATE_VERSION: u16 = 6;
+pub const CHANGE_SCHEMA_VERSION: u16 = 6;
+pub const LOCAL_SYNC_STATE_VERSION: u16 = 7;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct EntityKey {
@@ -107,6 +108,7 @@ struct SyncGroupConfigRecord {
 struct GroupsSnapshot {
     group_characters: Vec<SyncGroupConfigRecord>,
     group_sessions: Vec<SyncGroupSessionRecord>,
+    memory_embeddings: Vec<SyncedMemoryEmbedding>,
     group_participation: Vec<GroupParticipation>,
     group_messages: Vec<GroupMessage>,
     group_message_variants: Vec<GroupMessageVariant>,
@@ -145,6 +147,8 @@ struct SyncGroupSessionRecord {
 #[derive(serde::Serialize, serde::Deserialize)]
 struct SessionsSnapshot {
     sessions: Vec<Session>,
+    companion_shared_memory: Vec<CompanionSharedMemory>,
+    memory_embeddings: Vec<SyncedMemoryEmbedding>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -285,6 +289,57 @@ fn persist_memory_embeddings_payload(
         kind,
         Some(raw),
     )
+}
+
+fn fetch_memory_embeddings_for_owner(
+    conn: &DbConnection,
+    session_id: &str,
+    kind: SessionKind,
+) -> Result<Vec<SyncedMemoryEmbedding>, String> {
+    let memories =
+        crate::storage_manager::memory_embeddings::load_for_session(conn, session_id, kind)?;
+    Ok(memories
+        .into_iter()
+        .map(|memory| SyncedMemoryEmbedding {
+            session_id: session_id.to_string(),
+            session_kind: kind.as_str().to_string(),
+            memory,
+        })
+        .collect())
+}
+
+fn persist_memory_embedding_records(
+    conn: &mut DbConnection,
+    records: &[SyncedMemoryEmbedding],
+) -> Result<(), String> {
+    use std::collections::BTreeMap;
+
+    let mut grouped: BTreeMap<(String, String), Vec<crate::chat_manager::types::MemoryEmbedding>> =
+        BTreeMap::new();
+    for record in records {
+        grouped
+            .entry((record.session_id.clone(), record.session_kind.clone()))
+            .or_default()
+            .push(record.memory.clone());
+    }
+
+    for ((session_id, session_kind), memories) in grouped {
+        let kind = match session_kind.as_str() {
+            "session" => SessionKind::Session,
+            "group_session" => SessionKind::GroupSession,
+            "companion_shared" => SessionKind::CompanionShared,
+            other => {
+                return Err(crate::utils::err_msg(
+                    module_path!(),
+                    line!(),
+                    format!("Unknown memory_embeddings session_kind: {}", other),
+                ))
+            }
+        };
+        crate::storage_manager::memory_embeddings::replace_all(conn, &session_id, kind, &memories)?;
+    }
+
+    Ok(())
 }
 
 pub fn fetch_changes_since(
@@ -658,6 +713,21 @@ fn collect_current_entity_records(
             item,
         )?;
     }
+    for session_id in &group_session_ids {
+        for item in fetch_memory_embeddings_for_owner(conn, session_id, SessionKind::GroupSession)?
+        {
+            push_entity_record(
+                &mut records,
+                SyncDomain::Groups,
+                "memory_embedding",
+                format!(
+                    "{}:{}:{}",
+                    item.session_kind, item.session_id, item.memory.id
+                ),
+                &item,
+            )?;
+        }
+    }
     for item in &group_participation {
         push_entity_record(
             &mut records,
@@ -707,6 +777,7 @@ fn collect_current_entity_records(
     let session_ids = collect_text_ids(conn, "SELECT id FROM sessions")?;
     let (sessions, messages, message_variants, usage_records, usage_metadata) =
         fetch_sessions_data(conn, &session_ids)?;
+    let companion_shared_memory = fetch_companion_shared_memory_data(conn)?;
     for item in &sessions {
         push_entity_record(
             &mut records,
@@ -715,6 +786,47 @@ fn collect_current_entity_records(
             item.id.clone(),
             item,
         )?;
+    }
+    for session_id in &session_ids {
+        for item in fetch_memory_embeddings_for_owner(conn, session_id, SessionKind::Session)? {
+            push_entity_record(
+                &mut records,
+                SyncDomain::Sessions,
+                "memory_embedding",
+                format!(
+                    "{}:{}:{}",
+                    item.session_kind, item.session_id, item.memory.id
+                ),
+                &item,
+            )?;
+        }
+    }
+    for item in &companion_shared_memory {
+        push_entity_record(
+            &mut records,
+            SyncDomain::Sessions,
+            "companion_shared_memory",
+            item.character_id.clone(),
+            item,
+        )?;
+    }
+    for item in &companion_shared_memory {
+        for memory in fetch_memory_embeddings_for_owner(
+            conn,
+            &item.character_id,
+            SessionKind::CompanionShared,
+        )? {
+            push_entity_record(
+                &mut records,
+                SyncDomain::Sessions,
+                "memory_embedding",
+                format!(
+                    "{}:{}:{}",
+                    memory.session_kind, memory.session_id, memory.memory.id
+                ),
+                &memory,
+            )?;
+        }
     }
     for item in &messages {
         push_entity_record(
@@ -1451,6 +1563,7 @@ fn materialize_domain_heads(conn: &mut DbConnection, domain: SyncDomain) -> Resu
             let mut snapshot = GroupsSnapshot {
                 group_characters: Vec::new(),
                 group_sessions: Vec::new(),
+                memory_embeddings: Vec::new(),
                 group_participation: Vec::new(),
                 group_messages: Vec::new(),
                 group_message_variants: Vec::new(),
@@ -1463,6 +1576,9 @@ fn materialize_domain_heads(conn: &mut DbConnection, domain: SyncDomain) -> Resu
                         .group_characters
                         .push(deserialize_head(&key, &head)?),
                     "group_session" => snapshot.group_sessions.push(deserialize_head(&key, &head)?),
+                    "memory_embedding" => snapshot
+                        .memory_embeddings
+                        .push(deserialize_head(&key, &head)?),
                     "group_participation" => snapshot
                         .group_participation
                         .push(deserialize_head(&key, &head)?),
@@ -1486,10 +1602,19 @@ fn materialize_domain_heads(conn: &mut DbConnection, domain: SyncDomain) -> Resu
         SyncDomain::Sessions => {
             let mut snapshot = SessionsSnapshot {
                 sessions: Vec::new(),
+                companion_shared_memory: Vec::new(),
+                memory_embeddings: Vec::new(),
             };
             for (key, head) in domain_heads {
-                if key.entity_type == "session" {
-                    snapshot.sessions.push(deserialize_head(&key, &head)?);
+                match key.entity_type.as_str() {
+                    "session" => snapshot.sessions.push(deserialize_head(&key, &head)?),
+                    "companion_shared_memory" => snapshot
+                        .companion_shared_memory
+                        .push(deserialize_head(&key, &head)?),
+                    "memory_embedding" => snapshot
+                        .memory_embeddings
+                        .push(deserialize_head(&key, &head)?),
+                    _ => {}
                 }
             }
             let payload = bincode::serialize(&snapshot)
@@ -2155,6 +2280,7 @@ fn apply_characters_snapshot(conn: &mut DbConnection, payload: &[u8]) -> Result<
 fn apply_groups_snapshot(conn: &mut DbConnection, payload: &[u8]) -> Result<(), String> {
     let snapshot: GroupsSnapshot = bincode::deserialize(payload)
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+    let has_memory_embedding_records = !snapshot.memory_embeddings.is_empty();
     let incoming_group_sessions = snapshot
         .group_sessions
         .iter()
@@ -2369,13 +2495,17 @@ fn apply_groups_snapshot(conn: &mut DbConnection, payload: &[u8]) -> Result<(), 
         [],
     )
     .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
-    for (session_id, memory_embeddings) in &incoming_group_sessions {
-        persist_memory_embeddings_payload(
-            conn,
-            session_id,
-            SessionKind::GroupSession,
-            memory_embeddings,
-        )?;
+    if has_memory_embedding_records {
+        persist_memory_embedding_records(conn, &snapshot.memory_embeddings)?;
+    } else {
+        for (session_id, memory_embeddings) in &incoming_group_sessions {
+            persist_memory_embeddings_payload(
+                conn,
+                session_id,
+                SessionKind::GroupSession,
+                memory_embeddings,
+            )?;
+        }
     }
 
     Ok(())
@@ -2384,10 +2514,16 @@ fn apply_groups_snapshot(conn: &mut DbConnection, payload: &[u8]) -> Result<(), 
 fn apply_sessions_snapshot(conn: &mut DbConnection, payload: &[u8]) -> Result<(), String> {
     let snapshot: SessionsSnapshot = bincode::deserialize(payload)
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+    let has_memory_embedding_records = !snapshot.memory_embeddings.is_empty();
     let incoming_sessions = snapshot
         .sessions
         .iter()
         .map(|session| (session.id.clone(), session.memory_embeddings.clone()))
+        .collect::<Vec<_>>();
+    let incoming_companion_shared_memory = snapshot
+        .companion_shared_memory
+        .iter()
+        .map(|row| (row.character_id.clone(), row.memory_embeddings.clone()))
         .collect::<Vec<_>>();
     let tx = conn
         .transaction()
@@ -2408,6 +2544,11 @@ fn apply_sessions_snapshot(conn: &mut DbConnection, payload: &[u8]) -> Result<()
         .sessions
         .iter()
         .map(|session| session.id.clone())
+        .collect::<Vec<_>>();
+    let incoming_companion_character_ids = snapshot
+        .companion_shared_memory
+        .iter()
+        .map(|row| row.character_id.clone())
         .collect::<Vec<_>>();
     let removed_session_ids = existing_session_ids
         .into_iter()
@@ -2482,7 +2623,37 @@ fn apply_sessions_snapshot(conn: &mut DbConnection, payload: &[u8]) -> Result<()
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
     }
 
+    for row in snapshot.companion_shared_memory {
+        tx.execute(
+            r#"INSERT OR REPLACE INTO companion_shared_memory_state (
+                   character_id, memories, memory_summary, memory_summary_token_count,
+                   memory_tool_events, memory_status, memory_error, memory_progress_step,
+                   created_at, updated_at
+               )
+               VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)"#,
+            params![
+                row.character_id,
+                row.memories,
+                row.memory_summary,
+                row.memory_summary_token_count,
+                row.memory_tool_events,
+                row.memory_status,
+                row.memory_error,
+                row.memory_progress_step,
+                row.created_at,
+                row.updated_at,
+            ],
+        )
+        .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+    }
+
     delete_missing_rows(&tx, "sessions", "id", &incoming_session_ids)?;
+    delete_missing_rows(
+        &tx,
+        "companion_shared_memory_state",
+        "character_id",
+        &incoming_companion_character_ids,
+    )?;
 
     tx.commit()
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
@@ -2494,13 +2665,40 @@ fn apply_sessions_snapshot(conn: &mut DbConnection, payload: &[u8]) -> Result<()
             SessionKind::Session,
         )?;
     }
-    for (session_id, memory_embeddings) in &incoming_sessions {
-        persist_memory_embeddings_payload(
-            conn,
-            session_id,
-            SessionKind::Session,
-            memory_embeddings,
-        )?;
+    if has_memory_embedding_records {
+        conn.execute(
+            "DELETE FROM memory_embeddings WHERE session_kind = 'session'",
+            [],
+        )
+        .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+        conn.execute(
+            "DELETE FROM memory_embeddings WHERE session_kind = 'companion_shared'",
+            [],
+        )
+        .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+        persist_memory_embedding_records(conn, &snapshot.memory_embeddings)?;
+    } else {
+        for (session_id, memory_embeddings) in &incoming_sessions {
+            persist_memory_embeddings_payload(
+                conn,
+                session_id,
+                SessionKind::Session,
+                memory_embeddings,
+            )?;
+        }
+        conn.execute(
+            "DELETE FROM memory_embeddings WHERE session_kind = 'companion_shared'",
+            [],
+        )
+        .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+        for (character_id, memory_embeddings) in &incoming_companion_shared_memory {
+            persist_memory_embeddings_payload(
+                conn,
+                character_id,
+                SessionKind::CompanionShared,
+                memory_embeddings,
+            )?;
+        }
     }
 
     Ok(())
@@ -3292,6 +3490,49 @@ fn fetch_sessions_data(
         .collect();
 
     Ok((sessions, messages, variants, usages, metadata))
+}
+
+fn fetch_companion_shared_memory_data(
+    conn: &DbConnection,
+) -> Result<Vec<CompanionSharedMemory>, String> {
+    let mut stmt = conn
+        .prepare(
+            "SELECT character_id, memories, memory_summary, memory_summary_token_count,
+                    memory_tool_events, memory_status, memory_error, memory_progress_step,
+                    created_at, updated_at
+             FROM companion_shared_memory_state",
+        )
+        .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+    let mut rows: Vec<CompanionSharedMemory> = stmt
+        .query_map([], |r| {
+            Ok(CompanionSharedMemory {
+                character_id: r.get(0)?,
+                memories: r.get(1)?,
+                memory_embeddings: "[]".to_string(),
+                memory_summary: r.get(2)?,
+                memory_summary_token_count: r.get(3)?,
+                memory_tool_events: r.get(4)?,
+                memory_status: r.get(5)?,
+                memory_error: r.get(6)?,
+                memory_progress_step: r.get(7)?,
+                created_at: r.get(8)?,
+                updated_at: r.get(9)?,
+            })
+        })
+        .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+
+    for row in &mut rows {
+        row.memory_embeddings = canonical_memory_embeddings_json(
+            conn,
+            &row.character_id,
+            SessionKind::CompanionShared,
+            &row.memory_embeddings,
+        );
+    }
+
+    Ok(rows)
 }
 
 fn fetch_group_sessions_data(

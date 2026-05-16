@@ -3648,8 +3648,11 @@ fn migrate_v63_to_v64(app: &AppHandle) -> Result<(), String> {
             .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
     }
     if !has_banner_crop_scale {
-        conn.execute("ALTER TABLE characters ADD COLUMN banner_crop_scale REAL", [])
-            .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+        conn.execute(
+            "ALTER TABLE characters ADD COLUMN banner_crop_scale REAL",
+            [],
+        )
+        .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
     }
     if !has_card_type {
         conn.execute(

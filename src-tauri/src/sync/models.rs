@@ -1,3 +1,4 @@
+use crate::chat_manager::types::MemoryEmbedding;
 use serde::{Deserialize, Serialize};
 
 fn default_speaker_selection_method() -> String {
@@ -374,6 +375,31 @@ pub struct Session {
     pub memory_error: Option<String>,
     #[serde(default)]
     pub memory_progress_step: Option<i64>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CompanionSharedMemory {
+    pub character_id: String,
+    pub memories: String,
+    pub memory_embeddings: String,
+    pub memory_summary: Option<String>,
+    pub memory_summary_token_count: i64,
+    pub memory_tool_events: String,
+    #[serde(default)]
+    pub memory_status: Option<String>,
+    #[serde(default)]
+    pub memory_error: Option<String>,
+    #[serde(default)]
+    pub memory_progress_step: Option<i64>,
+    pub created_at: i64,
+    pub updated_at: i64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SyncedMemoryEmbedding {
+    pub session_id: String,
+    pub session_kind: String,
+    pub memory: MemoryEmbedding,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

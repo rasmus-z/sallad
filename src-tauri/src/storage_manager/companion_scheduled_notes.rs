@@ -170,17 +170,24 @@ fn most_recent_occurrence_on_or_before(
     let now = timestamp_ms_to_local(now_ms)?;
     let occurrence = match recurrence {
         "daily" => {
-            let diff_days = now.date_naive().signed_duration_since(base.date_naive()).num_days();
+            let diff_days = now
+                .date_naive()
+                .signed_duration_since(base.date_naive())
+                .num_days();
             let days = diff_days.max(0);
             base + Duration::days(days)
         }
         "weekly" => {
-            let diff_days = now.date_naive().signed_duration_since(base.date_naive()).num_days();
+            let diff_days = now
+                .date_naive()
+                .signed_duration_since(base.date_naive())
+                .num_days();
             let weeks = (diff_days / 7).max(0);
             base + Duration::weeks(weeks)
         }
         "monthly" => {
-            let month_diff = (now.year() - base.year()) * 12 + (now.month() as i32 - base.month() as i32);
+            let month_diff =
+                (now.year() - base.year()) * 12 + (now.month() as i32 - base.month() as i32);
             let mut candidate = monthly_occurrence(
                 base,
                 base.year() + month_diff.div_euclid(12),
@@ -192,7 +199,8 @@ fn most_recent_occurrence_on_or_before(
                     .ok_or_else(|| "Failed to compute previous month anchor".to_string())?
                     .checked_sub_months(Months::new(1))
                     .ok_or_else(|| "Failed to step back one month".to_string())?;
-                candidate = monthly_occurrence(base, prev_month_anchor.year(), prev_month_anchor.month())?;
+                candidate =
+                    monthly_occurrence(base, prev_month_anchor.year(), prev_month_anchor.month())?;
             }
             candidate
         }
@@ -240,16 +248,23 @@ fn note_from_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<CompanionScheduled
         label: row.get(2)?,
         content: row.get(3)?,
         available_at: row.get::<_, i64>(4)?.max(0) as u64,
-        expires_at: row.get::<_, Option<i64>>(5)?.map(|value| value.max(0) as u64),
+        expires_at: row
+            .get::<_, Option<i64>>(5)?
+            .map(|value| value.max(0) as u64),
         recurrence: row.get(6)?,
-        recurrence_window_ms: row.get::<_, Option<i64>>(7)?.map(|value| value.max(0) as u64),
+        recurrence_window_ms: row
+            .get::<_, Option<i64>>(7)?
+            .map(|value| value.max(0) as u64),
         enabled: row.get::<_, i64>(8)? != 0,
         created_at: row.get::<_, i64>(9)?.max(0) as u64,
         updated_at: row.get::<_, i64>(10)?.max(0) as u64,
     })
 }
 
-fn ensure_companion_character(conn: &rusqlite::Connection, character_id: &str) -> Result<(), String> {
+fn ensure_companion_character(
+    conn: &rusqlite::Connection,
+    character_id: &str,
+) -> Result<(), String> {
     let mode = conn
         .query_row(
             "SELECT mode FROM characters WHERE id = ?1",
@@ -276,7 +291,10 @@ fn get_note_character_id(conn: &rusqlite::Connection, id: &str) -> Result<Option
     .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))
 }
 
-pub fn list_notes(app: &AppHandle, character_id: &str) -> Result<Vec<CompanionScheduledNote>, String> {
+pub fn list_notes(
+    app: &AppHandle,
+    character_id: &str,
+) -> Result<Vec<CompanionScheduledNote>, String> {
     let conn = open_db(app)?;
     ensure_companion_character(&conn, character_id)?;
     let mut stmt = conn
@@ -435,7 +453,8 @@ pub fn companion_scheduled_notes_upsert(
     )
     .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
 
-    serde_json::to_string(&note).map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))
+    serde_json::to_string(&note)
+        .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))
 }
 
 #[tauri::command]
@@ -456,7 +475,11 @@ pub fn companion_scheduled_notes_delete(app: AppHandle, id: String) -> Result<()
 mod tests {
     use super::*;
 
-    fn note(available_at: u64, recurrence: &str, recurrence_window_ms: Option<u64>) -> CompanionScheduledNote {
+    fn note(
+        available_at: u64,
+        recurrence: &str,
+        recurrence_window_ms: Option<u64>,
+    ) -> CompanionScheduledNote {
         CompanionScheduledNote {
             id: "n1".to_string(),
             character_id: "c1".to_string(),
@@ -498,23 +521,25 @@ mod tests {
     #[test]
     fn feb_29_yearly_rounds_to_feb_28() {
         let start = ms(2024, 2, 29, 8, 0);
-        let occurrence = most_recent_occurrence_on_or_before(start, "yearly", ms(2025, 2, 28, 12, 0))
-            .unwrap();
+        let occurrence =
+            most_recent_occurrence_on_or_before(start, "yearly", ms(2025, 2, 28, 12, 0)).unwrap();
         assert_eq!(occurrence, ms(2025, 2, 28, 8, 0));
     }
 
     #[test]
     fn monthly_note_rounds_to_last_day_of_month() {
         let start = ms(2026, 1, 31, 8, 0);
-        let occurrence = most_recent_occurrence_on_or_before(start, "monthly", ms(2026, 2, 28, 12, 0))
-            .unwrap();
+        let occurrence =
+            most_recent_occurrence_on_or_before(start, "monthly", ms(2026, 2, 28, 12, 0)).unwrap();
         assert_eq!(occurrence, ms(2026, 2, 28, 8, 0));
     }
 
     #[test]
     fn next_occurrence_advances_weekly() {
         let start = ms(2026, 5, 1, 9, 0);
-        let next = next_occurrence_after_ms(start, "weekly", start).unwrap().unwrap();
+        let next = next_occurrence_after_ms(start, "weekly", start)
+            .unwrap()
+            .unwrap();
         assert_eq!(next, ms(2026, 5, 8, 9, 0));
     }
 }
