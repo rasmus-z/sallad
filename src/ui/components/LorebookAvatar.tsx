@@ -33,6 +33,8 @@ export function LorebookAvatar({
       <img
         src={avatarUrl}
         alt={name ? `${name} lorebook image` : "Lorebook image"}
+        loading="lazy"
+        decoding="async"
         className={cn("h-full w-full object-cover", className, imageClassName)}
       />
     );

@@ -740,6 +740,8 @@ const ItemAvatar = memo(({ item, className }: { item: LibraryItem; className?: s
       <img
         src={avatarUrl}
         alt={t("library.card.avatarAlt", { name: getItemName(item) })}
+        loading="lazy"
+        decoding="async"
         className={cn("h-full w-full object-cover", className)}
       />
     );
