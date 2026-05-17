@@ -1061,6 +1061,7 @@ function AppContent() {
               <Route path="/onboarding/provider" element={<OnboardingPage />} />
               <Route path="/onboarding/models" element={<OnboardingPage />} />
               <Route path="/onboarding/memory" element={<OnboardingPage />} />
+              <Route path="/onboarding/sync" element={<OnboardingPage />} />
               <Route path="/wheretofind" element={<WhereToFindPage />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/discover" element={<DiscoveryPage />} />

@@ -1,4 +1,5 @@
-import { useState, useEffect, type ComponentType, type SVGProps, type ReactNode } from "react";
+import { useState, useEffect, useRef, type ComponentType, type SVGProps, type ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import QRCodeImport from "react-qr-code";
@@ -29,6 +30,9 @@ import {
 import { cn, typography, spacing, interactive, radius } from "../../design-tokens";
 import { BottomMenu, MenuButton } from "../../components/BottomMenu";
 import { useI18n } from "../../../core/i18n/context";
+import { storageBridge } from "../../../core/storage/files";
+import { readAdvancedSettings, type AdvancedSettings } from "../../../core/storage/advanced";
+import { DynamicMemoryEmbeddingPrompt } from "../onboarding/components/DynamicMemoryEmbeddingPrompt";
 
 type QRCodeComponentProps = SVGProps<SVGSVGElement> & {
   value: string;
@@ -121,6 +125,10 @@ function formatProgressPercent(ratio: number | null): string | null {
   const normalized = Math.min(1, Math.max(0, ratio)) * 100;
   if (normalized > 0 && normalized < 10) return normalized.toFixed(1);
   return Math.round(normalized).toString();
+}
+
+function requiresEmbeddingModel(advanced: AdvancedSettings): boolean {
+  return advanced.dynamicMemory?.enabled === true || advanced.groupDynamicMemory?.enabled === true;
 }
 
 function SectionHeader({ title, icon, right }: { title: string; icon?: ReactNode; right?: ReactNode }) {
@@ -245,7 +253,7 @@ function SyncingPanel({
 
   return (
     <div className="overflow-hidden rounded-xl border border-fg/10 bg-fg/[0.035]">
-      {/* Header */}
+      {}
       <div className="flex items-center gap-3 px-4 pt-4 pb-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
@@ -270,7 +278,7 @@ function SyncingPanel({
         )}
       </div>
 
-      {/* Progress bar */}
+      {}
       {showProgressBar && (
         <div className="px-4 pb-3.5">
           <div className="relative h-1 w-full overflow-hidden rounded-full bg-fg/8">
@@ -285,7 +293,7 @@ function SyncingPanel({
         </div>
       )}
 
-      {/* Counters */}
+      {}
       {hasCounters && (
         <div className="grid grid-cols-2 border-t border-fg/8">
           <div className="px-4 py-3">
@@ -329,7 +337,7 @@ function SyncingPanel({
         </div>
       )}
 
-      {/* Per-domain breakdown */}
+      {}
       {showBreakdown && breakdown.length > 0 && (
         <div className="border-t border-fg/8 px-4 py-3">
           <p
@@ -385,6 +393,7 @@ function SyncingPanel({
 
 export function SyncPage() {
   const { t } = useI18n();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"host" | "client">("client");
   const [status, setStatus] = useState<SyncStatus>({ status: "Idle" });
   const [hostIp, setHostIp] = useState("");
@@ -397,6 +406,8 @@ export function SyncPage() {
   const [isAccepting, setIsAccepting] = useState(false);
   const [isStartingSyncSession, setIsStartingSyncSession] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showEmbeddingPrompt, setShowEmbeddingPrompt] = useState(false);
+  const handledCompletionRef = useRef(false);
 
   useEffect(() => {
     const checkMobile = async () => {
@@ -439,7 +450,36 @@ export function SyncPage() {
     if (status.status !== "Idle" && status.status !== "Error") setIsConnectingToHost(false);
     if (status.status !== "PendingApproval") setIsAccepting(false);
     if (status.status !== "PendingSyncStart") setIsStartingSyncSession(false);
+    if (status.status !== "SyncCompleted") handledCompletionRef.current = false;
   }, [status]);
+
+  useEffect(() => {
+    if (status.status !== "SyncCompleted" || role !== "client" || handledCompletionRef.current) {
+      return;
+    }
+    handledCompletionRef.current = true;
+
+    let cancelled = false;
+
+    const checkEmbeddingRequirements = async () => {
+      try {
+        const advanced = await readAdvancedSettings();
+        if (!requiresEmbeddingModel(advanced)) return;
+
+        const hasModel = await storageBridge.checkEmbeddingModel();
+        if (!hasModel && !cancelled) {
+          setShowEmbeddingPrompt(true);
+        }
+      } catch (e) {
+        console.error("Failed to check embedding model after sync", e);
+      }
+    };
+
+    void checkEmbeddingRequirements();
+    return () => {
+      cancelled = true;
+    };
+  }, [status.status, role]);
 
   useEffect(() => {
     invoke<string>("get_local_ip").then(setLocalIp).catch(console.error);
@@ -494,8 +534,23 @@ export function SyncPage() {
     try {
       await invoke("stop_sync");
       setStatus({ status: "Idle" });
+      setShowEmbeddingPrompt(false);
     } catch (e) {
       console.error("Failed to stop sync", e);
+    }
+  };
+
+  const handleDownloadEmbedding = () => {
+    setShowEmbeddingPrompt(false);
+    navigate("/settings/embedding-download?returnTo=%2Fsync");
+  };
+
+  const handleContinueWithoutEmbedding = async () => {
+    setShowEmbeddingPrompt(false);
+    try {
+      await storageBridge.backupDisableDynamicMemory();
+    } catch (e) {
+      console.error("Failed to disable dynamic memory", e);
     }
   };
 
@@ -653,7 +708,7 @@ export function SyncPage() {
       </BottomMenu>
 
       <section className={cn("flex-1 overflow-y-auto px-3 pt-3 pb-6", spacing.section)}>
-        {/* Status banners */}
+        {}
         {isError && (
           <div className="flex items-center gap-3 rounded-xl border border-danger/25 bg-danger/8 p-3">
             <AlertTriangle className="h-5 w-5 shrink-0 text-danger/90" />
@@ -684,7 +739,7 @@ export function SyncPage() {
           </div>
         )}
 
-        {/* Idle mode selection */}
+        {}
         {isIdle && (
           <div>
             <SectionHeader title={t("sync.sections.mode")} icon={<Wifi size={12} />} />
@@ -709,7 +764,7 @@ export function SyncPage() {
           </div>
         )}
 
-        {/* Join UI */}
+        {}
         {(isIdle || isError) && activeTab === "client" && (
           <div>
             <SectionHeader title={t("sync.sections.connectToHost")} icon={<Smartphone size={12} />} />
@@ -795,7 +850,7 @@ export function SyncPage() {
           </div>
         )}
 
-        {/* Host setup UI */}
+        {}
         {isIdle && activeTab === "host" && (
           <div>
             <SectionHeader title={t("sync.sections.startHosting")} icon={<Monitor size={12} />} />
@@ -841,7 +896,7 @@ export function SyncPage() {
           </div>
         )}
 
-        {/* Connecting / syncing UI (passenger only) */}
+        {}
         {role === "client" &&
           (isConnecting || isSyncing || isConnected || isWaitingConfirmation) && (
             <div>
@@ -893,7 +948,7 @@ export function SyncPage() {
             </div>
           )}
 
-        {/* Active host UI */}
+        {}
         {role === "host" && (isDriver || isPendingApproval || isReadyToStart || isSyncing) && (
           <div>
             <SectionHeader
@@ -950,7 +1005,7 @@ export function SyncPage() {
                   </div>
 
                   <div className="grid grid-cols-1 divide-y divide-fg/8 border-t border-fg/8 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
-                    {/* Address */}
+                    {}
                     <div className="px-4 py-3.5">
                       <p
                         className={cn(
@@ -992,7 +1047,7 @@ export function SyncPage() {
                       </div>
                     </div>
 
-                    {/* PIN */}
+                    {}
                     <div className="bg-accent/5 px-4 py-3.5">
                       <p
                         className={cn(
@@ -1013,7 +1068,7 @@ export function SyncPage() {
                 </Card>
               )}
 
-              {/* Setup hint */}
+              {}
               {!isSyncing && (
                 <details className="group rounded-xl border border-fg/10 bg-fg/5">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3">
@@ -1067,7 +1122,7 @@ export function SyncPage() {
           </div>
         )}
 
-        {/* Completed */}
+        {}
         {isCompleted && (
           <div>
             <SectionHeader title={t("sync.sections.status")} icon={<CheckCircle size={12} />} />
@@ -1117,7 +1172,7 @@ export function SyncPage() {
         <p className="px-1 pt-2 text-[11px] text-fg/35">{t("sync.disclaimer")}</p>
       </section>
 
-      {/* Scanner overlay */}
+      {}
       {isScanning && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-end bg-transparent pb-20">
           <div className="mb-8 text-center">
@@ -1146,6 +1201,15 @@ export function SyncPage() {
               100% { transform: translateY(256px); opacity: 0.5; }
             }
           `}</style>
+        </div>
+      )}
+
+      {showEmbeddingPrompt && (
+        <div className="fixed inset-0 z-50">
+          <DynamicMemoryEmbeddingPrompt
+            onDownload={handleDownloadEmbedding}
+            onContinueWithout={() => void handleContinueWithoutEmbedding()}
+          />
         </div>
       )}
     </div>

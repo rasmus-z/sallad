@@ -6,6 +6,7 @@ export enum OnboardingStep {
   Provider = 1,
   Model = 2,
   Memory = 3,
+  Sync = 4,
 }
 
 export type TestResult = { success: boolean; message: string } | null;

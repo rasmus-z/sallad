@@ -4436,6 +4436,14 @@ export const enMessages = {
         },
       },
     },
+    syncOnboarding: {
+      title: "Sync from another device",
+      subtitle: "Pair with a device that already has LettuceAI set up. Your data will be copied over your local network.",
+      hostHint: "On the other device, open Settings, then Sync, and start hosting to get an address and PIN.",
+      finalizing: "Finalizing setup...",
+      rejectedTitle: "Connection declined",
+      rejectedMessage: "The host device declined the connection. Check the address and PIN, then try again.",
+    },
     common: {
       back: "Back",
       cancel: "Cancel",

@@ -6,6 +6,7 @@ import { ModelStep } from "./steps/ModelStep";
 import { MemoryStep } from "./steps/MemoryStep";
 import { ModelRecommendations } from "./ModelRecommendations";
 import { WelcomePage } from "./Welcome";
+import { OnboardingSyncStep } from "./OnboardingSyncPage";
 import welcomeBg from "../../../assets/welcomebackground.png";
 import { cn, typography } from "../../design-tokens";
 import { getPlatform } from "../../../core/utils/platform";
@@ -28,11 +29,13 @@ export function OnboardingPage() {
     const nextStep =
       location.pathname === "/welcome"
         ? OnboardingStep.Welcome
-        : location.pathname === "/onboarding/models"
-          ? OnboardingStep.Model
-          : location.pathname === "/onboarding/memory"
-            ? OnboardingStep.Memory
-            : OnboardingStep.Provider;
+        : location.pathname === "/onboarding/sync"
+          ? OnboardingStep.Sync
+          : location.pathname === "/onboarding/models"
+            ? OnboardingStep.Model
+            : location.pathname === "/onboarding/memory"
+              ? OnboardingStep.Memory
+              : OnboardingStep.Provider;
 
     if (state.step !== nextStep) {
       controller.setStep(nextStep);
@@ -127,6 +130,8 @@ export function OnboardingPage() {
   };
 
   const isWelcomeStep = state.step === OnboardingStep.Welcome;
+  const isSyncStep = state.step === OnboardingStep.Sync;
+  const isStandaloneStep = isWelcomeStep || isSyncStep;
 
   return (
     <div className="relative flex min-h-screen flex-col text-gray-200">
@@ -147,7 +152,7 @@ export function OnboardingPage() {
           "fixed top-0 left-0 right-0 z-30 flex items-center justify-between",
           "bg-[linear-gradient(180deg,rgba(5,5,5,0.7)_0%,rgba(5,5,5,0.4)_70%,rgba(5,5,5,0)_100%)]",
           isDesktop ? "px-8 py-6 pb-10" : "px-4 py-4 pb-8 pt-[calc(env(safe-area-inset-top)+16px)]",
-          isWelcomeStep && "hidden",
+          isStandaloneStep && "hidden",
         )}
       >
         <button
@@ -177,7 +182,7 @@ export function OnboardingPage() {
       <main
         className={cn(
           "relative z-10 flex flex-1 flex-col",
-          !isWelcomeStep && (isDesktop ? "pt-[88px]" : "pt-[calc(env(safe-area-inset-top)+72px)] px-4"),
+          !isStandaloneStep && (isDesktop ? "pt-[88px]" : "pt-[calc(env(safe-area-inset-top)+72px)] px-4"),
         )}
       >
         {showRecommendations ? (
@@ -195,6 +200,20 @@ export function OnboardingPage() {
                 className="flex flex-1 flex-col"
               >
                 <WelcomePage />
+              </motion.div>
+            )}
+
+            {state.step === OnboardingStep.Sync && (
+              <motion.div
+                key="sync"
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ duration: 0.2 }}
+                className="flex flex-1 flex-col"
+              >
+                <OnboardingSyncStep />
               </motion.div>
             )}
 
