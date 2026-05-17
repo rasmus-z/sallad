@@ -43,6 +43,7 @@ import {
 } from "../../components/AdvancedModelSettingsForm";
 import { BottomMenu, MenuButton, MenuSection } from "../../components/BottomMenu";
 import { ModelSelectionBottomMenu } from "../../components/ModelSelectionBottomMenu";
+import { NumberInput } from "../../components/NumberInput";
 import {
   Info,
   Brain,
@@ -2468,23 +2469,17 @@ export function EditModelPage() {
                                         {modelAdvancedDraft.sdSteps ?? "28"}
                                       </span>
                                     </div>
-                                    <input
-                                      type="number"
-                                      inputMode="numeric"
+                                    <NumberInput
                                       min={ADVANCED_SD_STEPS_RANGE.min}
                                       max={ADVANCED_SD_STEPS_RANGE.max}
                                       step={1}
-                                      value={modelAdvancedDraft.sdSteps ?? ""}
-                                      onChange={(e) => {
-                                        const raw = e.target.value;
-                                        const next = raw === "" ? null : Number(raw);
+                                      value={modelAdvancedDraft.sdSteps ?? null}
+                                      onChange={(next) =>
                                         updateSdSetting(
                                           "sdSteps",
-                                          next === null || !Number.isFinite(next)
-                                            ? null
-                                            : Math.trunc(next),
-                                        );
-                                      }}
+                                          next === null ? null : Math.trunc(next),
+                                        )
+                                      }
                                       placeholder={t("editModel.placeholders.sdSteps")}
                                       className={numberInputClassName}
                                     />
@@ -2508,20 +2503,13 @@ export function EditModelPage() {
                                         {modelAdvancedDraft.sdCfgScale?.toFixed(1) ?? "6.5"}
                                       </span>
                                     </div>
-                                    <input
-                                      type="number"
-                                      inputMode="decimal"
+                                    <NumberInput
                                       min={ADVANCED_SD_CFG_SCALE_RANGE.min}
                                       max={ADVANCED_SD_CFG_SCALE_RANGE.max}
                                       step={0.1}
-                                      value={modelAdvancedDraft.sdCfgScale ?? ""}
-                                      onChange={(e) => {
-                                        const raw = e.target.value;
-                                        updateSdSetting(
-                                          "sdCfgScale",
-                                          raw === "" ? null : Number(raw),
-                                        );
-                                      }}
+                                      decimals={2}
+                                      value={modelAdvancedDraft.sdCfgScale ?? null}
+                                      onChange={(next) => updateSdSetting("sdCfgScale", next)}
                                       placeholder={t("editModel.placeholders.sdCfgScale")}
                                       className={numberInputClassName}
                                     />
@@ -2589,23 +2577,17 @@ export function EditModelPage() {
                                         {modelAdvancedDraft.sdSeed ?? t("editModel.placeholders.random")}
                                       </span>
                                     </div>
-                                    <input
-                                      type="number"
-                                      inputMode="numeric"
+                                    <NumberInput
                                       min={ADVANCED_SD_SEED_RANGE.min}
                                       max={ADVANCED_SD_SEED_RANGE.max}
                                       step={1}
-                                      value={modelAdvancedDraft.sdSeed ?? ""}
-                                      onChange={(e) => {
-                                        const raw = e.target.value;
-                                        const next = raw === "" ? null : Number(raw);
+                                      value={modelAdvancedDraft.sdSeed ?? null}
+                                      onChange={(next) =>
                                         updateSdSetting(
                                           "sdSeed",
-                                          next === null || !Number.isFinite(next)
-                                            ? null
-                                            : Math.trunc(next),
-                                        );
-                                      }}
+                                          next === null ? null : Math.trunc(next),
+                                        )
+                                      }
                                       placeholder={t("editModel.placeholders.random")}
                                       className={numberInputClassName}
                                     />
@@ -2630,20 +2612,15 @@ export function EditModelPage() {
                                           "0.75"}
                                       </span>
                                     </div>
-                                    <input
-                                      type="number"
-                                      inputMode="decimal"
+                                    <NumberInput
                                       min={ADVANCED_SD_DENOISING_STRENGTH_RANGE.min}
                                       max={ADVANCED_SD_DENOISING_STRENGTH_RANGE.max}
                                       step={0.01}
-                                      value={modelAdvancedDraft.sdDenoisingStrength ?? ""}
-                                      onChange={(e) => {
-                                        const raw = e.target.value;
-                                        updateSdSetting(
-                                          "sdDenoisingStrength",
-                                          raw === "" ? null : Number(raw),
-                                        );
-                                      }}
+                                      decimals={2}
+                                      value={modelAdvancedDraft.sdDenoisingStrength ?? null}
+                                      onChange={(next) =>
+                                        updateSdSetting("sdDenoisingStrength", next)
+                                      }
                                       placeholder={t("editModel.placeholders.sdDenoise")}
                                       className={numberInputClassName}
                                     />
@@ -2701,17 +2678,13 @@ export function EditModelPage() {
                                       {modelAdvancedDraft.temperature?.toFixed(2) ?? "0.70"}
                                     </span>
                                   </div>
-                                  <input
-                                    type="number"
-                                    inputMode="decimal"
+                                  <NumberInput
                                     min={ADVANCED_TEMPERATURE_RANGE.min}
                                     max={ADVANCED_TEMPERATURE_RANGE.max}
                                     step={0.01}
-                                    value={modelAdvancedDraft.temperature ?? ""}
-                                    onChange={(e) => {
-                                      const raw = e.target.value;
-                                      handleTemperatureChange(raw === "" ? null : Number(raw));
-                                    }}
+                                    decimals={2}
+                                    value={modelAdvancedDraft.temperature ?? null}
+                                    onChange={(next) => handleTemperatureChange(next)}
                                     placeholder={t("editModel.placeholders.temperature")}
                                     className={numberInputClassName}
                                   />
@@ -2746,17 +2719,13 @@ export function EditModelPage() {
                                       {modelAdvancedDraft.topP?.toFixed(2) ?? "1.00"}
                                     </span>
                                   </div>
-                                  <input
-                                    type="number"
-                                    inputMode="decimal"
+                                  <NumberInput
                                     min={ADVANCED_TOP_P_RANGE.min}
                                     max={ADVANCED_TOP_P_RANGE.max}
                                     step={0.01}
-                                    value={modelAdvancedDraft.topP ?? ""}
-                                    onChange={(e) => {
-                                      const raw = e.target.value;
-                                      handleTopPChange(raw === "" ? null : Number(raw));
-                                    }}
+                                    decimals={2}
+                                    value={modelAdvancedDraft.topP ?? null}
+                                    onChange={(next) => handleTopPChange(next)}
                                     placeholder={t("editModel.placeholders.topP")}
                                     className={numberInputClassName}
                                   />
@@ -2793,22 +2762,16 @@ export function EditModelPage() {
                                         : t("common.labels.auto")}
                                     </span>
                                   </div>
-                                  <input
-                                    type="number"
-                                    inputMode="numeric"
+                                  <NumberInput
                                     min={ADVANCED_MAX_TOKENS_RANGE.min}
                                     max={ADVANCED_MAX_TOKENS_RANGE.max}
                                     step={1}
-                                    value={modelAdvancedDraft.maxOutputTokens || ""}
-                                    onChange={(e) => {
-                                      const raw = e.target.value;
-                                      const next = raw === "" ? null : Number(raw);
+                                    value={modelAdvancedDraft.maxOutputTokens || null}
+                                    onChange={(next) =>
                                       handleMaxTokensChange(
-                                        next === null || !Number.isFinite(next) || next === 0
-                                          ? null
-                                          : Math.trunc(next),
-                                      );
-                                    }}
+                                        next === null || next === 0 ? null : Math.trunc(next),
+                                      )
+                                    }
                                     placeholder={t("common.labels.auto")}
                                     className={numberInputClassName}
                                   />
@@ -2843,22 +2806,16 @@ export function EditModelPage() {
                                       {modelAdvancedDraft.topK ? modelAdvancedDraft.topK : "Auto"}
                                     </span>
                                   </div>
-                                  <input
-                                    type="number"
-                                    inputMode="numeric"
+                                  <NumberInput
                                     min={ADVANCED_TOP_K_RANGE.min}
                                     max={ADVANCED_TOP_K_RANGE.max}
                                     step={1}
-                                    value={modelAdvancedDraft.topK || ""}
-                                    onChange={(e) => {
-                                      const raw = e.target.value;
-                                      const next = raw === "" ? null : Number(raw);
+                                    value={modelAdvancedDraft.topK || null}
+                                    onChange={(next) =>
                                       handleTopKChange(
-                                        next === null || !Number.isFinite(next) || next === 0
-                                          ? null
-                                          : Math.trunc(next),
-                                      );
-                                    }}
+                                        next === null || next === 0 ? null : Math.trunc(next),
+                                      )
+                                    }
                                     placeholder={t("common.labels.auto")}
                                     className={numberInputClassName}
                                   />
@@ -2893,17 +2850,13 @@ export function EditModelPage() {
                                       {modelAdvancedDraft.frequencyPenalty?.toFixed(2) ?? "0.00"}
                                     </span>
                                   </div>
-                                  <input
-                                    type="number"
-                                    inputMode="decimal"
+                                  <NumberInput
                                     min={ADVANCED_FREQUENCY_PENALTY_RANGE.min}
                                     max={ADVANCED_FREQUENCY_PENALTY_RANGE.max}
                                     step={0.01}
-                                    value={modelAdvancedDraft.frequencyPenalty ?? ""}
-                                    onChange={(e) => {
-                                      const raw = e.target.value;
-                                      handleFrequencyPenaltyChange(raw === "" ? null : Number(raw));
-                                    }}
+                                    decimals={2}
+                                    value={modelAdvancedDraft.frequencyPenalty ?? null}
+                                    onChange={(next) => handleFrequencyPenaltyChange(next)}
                                     placeholder={t("editModel.placeholders.zero")}
                                     className={numberInputClassName}
                                   />
@@ -2938,17 +2891,13 @@ export function EditModelPage() {
                                       {modelAdvancedDraft.presencePenalty?.toFixed(2) ?? "0.00"}
                                     </span>
                                   </div>
-                                  <input
-                                    type="number"
-                                    inputMode="decimal"
+                                  <NumberInput
                                     min={ADVANCED_PRESENCE_PENALTY_RANGE.min}
                                     max={ADVANCED_PRESENCE_PENALTY_RANGE.max}
                                     step={0.01}
-                                    value={modelAdvancedDraft.presencePenalty ?? ""}
-                                    onChange={(e) => {
-                                      const raw = e.target.value;
-                                      handlePresencePenaltyChange(raw === "" ? null : Number(raw));
-                                    }}
+                                    decimals={2}
+                                    value={modelAdvancedDraft.presencePenalty ?? null}
+                                    onChange={(next) => handlePresencePenaltyChange(next)}
                                     placeholder={t("editModel.placeholders.zero")}
                                     className={numberInputClassName}
                                   />
@@ -3011,22 +2960,16 @@ export function EditModelPage() {
                                     </span>
                                   </div>
                                   <div className="space-y-3">
-                                    <input
-                                      type="number"
-                                      inputMode="numeric"
+                                    <NumberInput
                                       min={ADVANCED_CONTEXT_LENGTH_RANGE.min}
                                       max={contextLimit}
                                       step={1}
-                                      value={modelAdvancedDraft.contextLength || ""}
-                                      onChange={(e) => {
-                                        const raw = e.target.value;
-                                        const next = raw === "" ? null : Number(raw);
+                                      value={modelAdvancedDraft.contextLength || null}
+                                      onChange={(next) =>
                                         handleContextLengthChange(
-                                          next === null || !Number.isFinite(next) || next === 0
-                                            ? null
-                                            : Math.trunc(next),
-                                        );
-                                      }}
+                                          next === null || next === 0 ? null : Math.trunc(next),
+                                        )
+                                      }
                                       placeholder={t("common.labels.auto")}
                                       className={numberInputClassName}
                                     />
@@ -3396,19 +3339,12 @@ export function EditModelPage() {
                                         Frequency base override
                                       </span>
                                     </div>
-                                    <input
-                                      type="number"
-                                      inputMode="decimal"
+                                    <NumberInput
                                       min={ADVANCED_LLAMA_ROPE_FREQ_BASE_RANGE.min}
                                       max={ADVANCED_LLAMA_ROPE_FREQ_BASE_RANGE.max}
                                       step={0.1}
-                                      value={modelAdvancedDraft.llamaRopeFreqBase ?? ""}
-                                      onChange={(e) => {
-                                        const raw = e.target.value;
-                                        handleLlamaRopeFreqBaseChange(
-                                          raw === "" ? null : Number(raw),
-                                        );
-                                      }}
+                                      value={modelAdvancedDraft.llamaRopeFreqBase ?? null}
+                                      onChange={(next) => handleLlamaRopeFreqBaseChange(next)}
                                       placeholder={t("common.labels.auto")}
                                       className={numberInputClassName}
                                     />
@@ -3423,19 +3359,12 @@ export function EditModelPage() {
                                         Frequency scale override
                                       </span>
                                     </div>
-                                    <input
-                                      type="number"
-                                      inputMode="decimal"
+                                    <NumberInput
                                       min={ADVANCED_LLAMA_ROPE_FREQ_SCALE_RANGE.min}
                                       max={ADVANCED_LLAMA_ROPE_FREQ_SCALE_RANGE.max}
                                       step={0.01}
-                                      value={modelAdvancedDraft.llamaRopeFreqScale ?? ""}
-                                      onChange={(e) => {
-                                        const raw = e.target.value;
-                                        handleLlamaRopeFreqScaleChange(
-                                          raw === "" ? null : Number(raw),
-                                        );
-                                      }}
+                                      value={modelAdvancedDraft.llamaRopeFreqScale ?? null}
+                                      onChange={(next) => handleLlamaRopeFreqScaleChange(next)}
                                       placeholder={t("common.labels.auto")}
                                       className={numberInputClassName}
                                     />
@@ -3529,22 +3458,16 @@ export function EditModelPage() {
                                           : "Auto"}
                                       </span>
                                     </div>
-                                    <input
-                                      type="number"
-                                      inputMode="numeric"
+                                    <NumberInput
                                       min={ADVANCED_LLAMA_GPU_LAYERS_RANGE.min}
                                       max={ADVANCED_LLAMA_GPU_LAYERS_RANGE.max}
                                       step={1}
-                                      value={modelAdvancedDraft.llamaGpuLayers ?? ""}
-                                      onChange={(e) => {
-                                        const raw = e.target.value;
-                                        const next = raw === "" ? null : Number(raw);
+                                      value={modelAdvancedDraft.llamaGpuLayers ?? null}
+                                      onChange={(next) =>
                                         handleLlamaGpuLayersChange(
-                                          next === null || !Number.isFinite(next) || next < 0
-                                            ? null
-                                            : Math.trunc(next),
-                                        );
-                                      }}
+                                          next === null || next < 0 ? null : Math.trunc(next),
+                                        )
+                                      }
                                       disabled={isCpuOnlyLlamaBackend}
                                       placeholder={t("common.labels.auto")}
                                       className={cn(
@@ -3564,22 +3487,16 @@ export function EditModelPage() {
                                           Inference
                                         </span>
                                       </div>
-                                      <input
-                                        type="number"
-                                        inputMode="numeric"
+                                      <NumberInput
                                         min={ADVANCED_LLAMA_THREADS_RANGE.min}
                                         max={ADVANCED_LLAMA_THREADS_RANGE.max}
                                         step={1}
-                                        value={modelAdvancedDraft.llamaThreads ?? ""}
-                                        onChange={(e) => {
-                                          const raw = e.target.value;
-                                          const next = raw === "" ? null : Number(raw);
+                                        value={modelAdvancedDraft.llamaThreads ?? null}
+                                        onChange={(next) =>
                                           handleLlamaThreadsChange(
-                                            next === null || !Number.isFinite(next) || next <= 0
-                                              ? null
-                                              : Math.trunc(next),
-                                          );
-                                        }}
+                                            next === null || next <= 0 ? null : Math.trunc(next),
+                                          )
+                                        }
                                         placeholder={t("common.labels.auto")}
                                         className={numberInputClassName}
                                       />
@@ -3594,22 +3511,16 @@ export function EditModelPage() {
                                           Processing
                                         </span>
                                       </div>
-                                      <input
-                                        type="number"
-                                        inputMode="numeric"
+                                      <NumberInput
                                         min={ADVANCED_LLAMA_THREADS_BATCH_RANGE.min}
                                         max={ADVANCED_LLAMA_THREADS_BATCH_RANGE.max}
                                         step={1}
-                                        value={modelAdvancedDraft.llamaThreadsBatch ?? ""}
-                                        onChange={(e) => {
-                                          const raw = e.target.value;
-                                          const next = raw === "" ? null : Number(raw);
+                                        value={modelAdvancedDraft.llamaThreadsBatch ?? null}
+                                        onChange={(next) =>
                                           handleLlamaThreadsBatchChange(
-                                            next === null || !Number.isFinite(next) || next <= 0
-                                              ? null
-                                              : Math.trunc(next),
-                                          );
-                                        }}
+                                            next === null || next <= 0 ? null : Math.trunc(next),
+                                          )
+                                        }
                                         placeholder={t("common.labels.auto")}
                                         className={numberInputClassName}
                                       />
@@ -3626,22 +3537,16 @@ export function EditModelPage() {
                                           Prompt chunk
                                         </span>
                                       </div>
-                                      <input
-                                        type="number"
-                                        inputMode="numeric"
+                                      <NumberInput
                                         min={ADVANCED_LLAMA_BATCH_SIZE_RANGE.min}
                                         max={ADVANCED_LLAMA_BATCH_SIZE_RANGE.max}
                                         step={1}
-                                        value={modelAdvancedDraft.llamaBatchSize ?? ""}
-                                        onChange={(e) => {
-                                          const raw = e.target.value;
-                                          const next = raw === "" ? null : Number(raw);
+                                        value={modelAdvancedDraft.llamaBatchSize ?? null}
+                                        onChange={(next) =>
                                           handleLlamaBatchSizeChange(
-                                            next === null || !Number.isFinite(next) || next <= 0
-                                              ? null
-                                              : Math.trunc(next),
-                                          );
-                                        }}
+                                            next === null || next <= 0 ? null : Math.trunc(next),
+                                          )
+                                        }
                                         placeholder={t("editModel.placeholders.batch512")}
                                         className={numberInputClassName}
                                       />
@@ -3755,17 +3660,12 @@ export function EditModelPage() {
                                         Local override
                                       </span>
                                     </div>
-                                    <input
-                                      type="number"
-                                      inputMode="decimal"
+                                    <NumberInput
                                       min={0}
                                       max={1}
-                                      step="0.01"
-                                      value={modelAdvancedDraft.llamaMinP ?? ""}
-                                      onChange={(e) => {
-                                        const raw = e.target.value.trim();
-                                        handleLlamaMinPChange(raw === "" ? null : Number(raw));
-                                      }}
+                                      step={0.01}
+                                      value={modelAdvancedDraft.llamaMinP ?? null}
+                                      onChange={(next) => handleLlamaMinPChange(next)}
                                       placeholder={t("editModel.placeholders.default")}
                                       className={numberInputClassName}
                                     />
@@ -3780,17 +3680,12 @@ export function EditModelPage() {
                                         Local override
                                       </span>
                                     </div>
-                                    <input
-                                      type="number"
-                                      inputMode="decimal"
+                                    <NumberInput
                                       min={0}
                                       max={1}
-                                      step="0.01"
-                                      value={modelAdvancedDraft.llamaTypicalP ?? ""}
-                                      onChange={(e) => {
-                                        const raw = e.target.value.trim();
-                                        handleLlamaTypicalPChange(raw === "" ? null : Number(raw));
-                                      }}
+                                      step={0.01}
+                                      value={modelAdvancedDraft.llamaTypicalP ?? null}
+                                      onChange={(next) => handleLlamaTypicalPChange(next)}
                                       placeholder={t("editModel.placeholders.default")}
                                       className={numberInputClassName}
                                     />
@@ -3807,19 +3702,12 @@ export function EditModelPage() {
                                         `0` disables sequence repetition control
                                       </span>
                                     </div>
-                                    <input
-                                      type="number"
-                                      inputMode="decimal"
+                                    <NumberInput
                                       min={ADVANCED_LLAMA_DRY_MULTIPLIER_RANGE.min}
                                       max={ADVANCED_LLAMA_DRY_MULTIPLIER_RANGE.max}
-                                      step="0.05"
-                                      value={modelAdvancedDraft.llamaDryMultiplier ?? ""}
-                                      onChange={(e) => {
-                                        const raw = e.target.value.trim();
-                                        handleLlamaDryMultiplierChange(
-                                          raw === "" ? null : Number(raw),
-                                        );
-                                      }}
+                                      step={0.05}
+                                      value={modelAdvancedDraft.llamaDryMultiplier ?? null}
+                                      onChange={(next) => handleLlamaDryMultiplierChange(next)}
                                       placeholder="0.80"
                                       className={numberInputClassName}
                                     />
@@ -3834,17 +3722,12 @@ export function EditModelPage() {
                                         Exponential growth factor
                                       </span>
                                     </div>
-                                    <input
-                                      type="number"
-                                      inputMode="decimal"
+                                    <NumberInput
                                       min={ADVANCED_LLAMA_DRY_BASE_RANGE.min}
                                       max={ADVANCED_LLAMA_DRY_BASE_RANGE.max}
-                                      step="0.05"
-                                      value={modelAdvancedDraft.llamaDryBase ?? ""}
-                                      onChange={(e) => {
-                                        const raw = e.target.value.trim();
-                                        handleLlamaDryBaseChange(raw === "" ? null : Number(raw));
-                                      }}
+                                      step={0.05}
+                                      value={modelAdvancedDraft.llamaDryBase ?? null}
+                                      onChange={(next) => handleLlamaDryBaseChange(next)}
                                       placeholder="1.75"
                                       className={numberInputClassName}
                                     />
@@ -3861,19 +3744,12 @@ export function EditModelPage() {
                                         Ignore repeats shorter than this sequence length
                                       </span>
                                     </div>
-                                    <input
-                                      type="number"
-                                      inputMode="numeric"
+                                    <NumberInput
                                       min={ADVANCED_LLAMA_DRY_ALLOWED_LENGTH_RANGE.min}
                                       max={ADVANCED_LLAMA_DRY_ALLOWED_LENGTH_RANGE.max}
-                                      step="1"
-                                      value={modelAdvancedDraft.llamaDryAllowedLength ?? ""}
-                                      onChange={(e) => {
-                                        const raw = e.target.value.trim();
-                                        handleLlamaDryAllowedLengthChange(
-                                          raw === "" ? null : Number(raw),
-                                        );
-                                      }}
+                                      step={1}
+                                      value={modelAdvancedDraft.llamaDryAllowedLength ?? null}
+                                      onChange={(next) => handleLlamaDryAllowedLengthChange(next)}
                                       placeholder="2"
                                       className={numberInputClassName}
                                     />
@@ -3888,19 +3764,12 @@ export function EditModelPage() {
                                         Use `-1` to scan the full context
                                       </span>
                                     </div>
-                                    <input
-                                      type="number"
-                                      inputMode="numeric"
+                                    <NumberInput
                                       min={ADVANCED_LLAMA_DRY_PENALTY_LAST_N_RANGE.min}
                                       max={ADVANCED_LLAMA_DRY_PENALTY_LAST_N_RANGE.max}
-                                      step="1"
-                                      value={modelAdvancedDraft.llamaDryPenaltyLastN ?? ""}
-                                      onChange={(e) => {
-                                        const raw = e.target.value.trim();
-                                        handleLlamaDryPenaltyLastNChange(
-                                          raw === "" ? null : Number(raw),
-                                        );
-                                      }}
+                                      step={1}
+                                      value={modelAdvancedDraft.llamaDryPenaltyLastN ?? null}
+                                      onChange={(next) => handleLlamaDryPenaltyLastNChange(next)}
                                       placeholder="-1"
                                       className={numberInputClassName}
                                     />
@@ -3942,22 +3811,16 @@ export function EditModelPage() {
                                       Leave blank for random
                                     </span>
                                   </div>
-                                  <input
-                                    type="number"
-                                    inputMode="numeric"
+                                  <NumberInput
                                     min={ADVANCED_LLAMA_SEED_RANGE.min}
                                     max={ADVANCED_LLAMA_SEED_RANGE.max}
                                     step={1}
-                                    value={modelAdvancedDraft.llamaSeed ?? ""}
-                                    onChange={(e) => {
-                                      const raw = e.target.value;
-                                      const next = raw === "" ? null : Number(raw);
+                                    value={modelAdvancedDraft.llamaSeed ?? null}
+                                    onChange={(next) =>
                                       handleLlamaSeedChange(
-                                        next === null || !Number.isFinite(next) || next < 0
-                                          ? null
-                                          : Math.trunc(next),
-                                      );
-                                    }}
+                                        next === null || next < 0 ? null : Math.trunc(next),
+                                      )
+                                    }
                                     placeholder={t("editModel.placeholders.random")}
                                     className={numberInputClassName}
                                   />
@@ -4198,22 +4061,16 @@ export function EditModelPage() {
                                         {t("editModel.ollama.numCtxShort")}
                                       </span>
                                     </div>
-                                    <input
-                                      type="number"
-                                      inputMode="numeric"
+                                    <NumberInput
                                       min={ADVANCED_OLLAMA_NUM_CTX_RANGE.min}
                                       max={ADVANCED_OLLAMA_NUM_CTX_RANGE.max}
                                       step={1}
-                                      value={modelAdvancedDraft.ollamaNumCtx ?? ""}
-                                      onChange={(e) => {
-                                        const raw = e.target.value;
-                                        const next = raw === "" ? null : Number(raw);
+                                      value={modelAdvancedDraft.ollamaNumCtx ?? null}
+                                      onChange={(next) =>
                                         handleOllamaNumCtxChange(
-                                          next === null || !Number.isFinite(next) || next < 0
-                                            ? null
-                                            : Math.trunc(next),
-                                        );
-                                      }}
+                                          next === null || next < 0 ? null : Math.trunc(next),
+                                        )
+                                      }
                                       placeholder={t("common.labels.auto")}
                                       className={numberInputClassName}
                                     />
@@ -4228,22 +4085,16 @@ export function EditModelPage() {
                                         Num Predict
                                       </span>
                                     </div>
-                                    <input
-                                      type="number"
-                                      inputMode="numeric"
+                                    <NumberInput
                                       min={ADVANCED_OLLAMA_NUM_PREDICT_RANGE.min}
                                       max={ADVANCED_OLLAMA_NUM_PREDICT_RANGE.max}
                                       step={1}
-                                      value={modelAdvancedDraft.ollamaNumPredict ?? ""}
-                                      onChange={(e) => {
-                                        const raw = e.target.value;
-                                        const next = raw === "" ? null : Number(raw);
+                                      value={modelAdvancedDraft.ollamaNumPredict ?? null}
+                                      onChange={(next) =>
                                         handleOllamaNumPredictChange(
-                                          next === null || !Number.isFinite(next) || next < 0
-                                            ? null
-                                            : Math.trunc(next),
-                                        );
-                                      }}
+                                          next === null || next < 0 ? null : Math.trunc(next),
+                                        )
+                                      }
                                       placeholder={t("common.labels.auto")}
                                       className={numberInputClassName}
                                     />
@@ -4259,22 +4110,16 @@ export function EditModelPage() {
                                       Tokens to keep from prompt
                                     </span>
                                   </div>
-                                  <input
-                                    type="number"
-                                    inputMode="numeric"
+                                  <NumberInput
                                     min={ADVANCED_OLLAMA_NUM_KEEP_RANGE.min}
                                     max={ADVANCED_OLLAMA_NUM_KEEP_RANGE.max}
                                     step={1}
-                                    value={modelAdvancedDraft.ollamaNumKeep ?? ""}
-                                    onChange={(e) => {
-                                      const raw = e.target.value;
-                                      const next = raw === "" ? null : Number(raw);
+                                    value={modelAdvancedDraft.ollamaNumKeep ?? null}
+                                    onChange={(next) =>
                                       handleOllamaNumKeepChange(
-                                        next === null || !Number.isFinite(next) || next < 0
-                                          ? null
-                                          : Math.trunc(next),
-                                      );
-                                    }}
+                                        next === null || next < 0 ? null : Math.trunc(next),
+                                      )
+                                    }
                                     placeholder={t("common.labels.auto")}
                                     className={numberInputClassName}
                                   />
@@ -4299,22 +4144,16 @@ export function EditModelPage() {
                                         Layers offload
                                       </span>
                                     </div>
-                                    <input
-                                      type="number"
-                                      inputMode="numeric"
+                                    <NumberInput
                                       min={ADVANCED_OLLAMA_NUM_GPU_RANGE.min}
                                       max={ADVANCED_OLLAMA_NUM_GPU_RANGE.max}
                                       step={1}
-                                      value={modelAdvancedDraft.ollamaNumGpu ?? ""}
-                                      onChange={(e) => {
-                                        const raw = e.target.value;
-                                        const next = raw === "" ? null : Number(raw);
+                                      value={modelAdvancedDraft.ollamaNumGpu ?? null}
+                                      onChange={(next) =>
                                         handleOllamaNumGpuChange(
-                                          next === null || !Number.isFinite(next) || next < 0
-                                            ? null
-                                            : Math.trunc(next),
-                                        );
-                                      }}
+                                          next === null || next < 0 ? null : Math.trunc(next),
+                                        )
+                                      }
                                       placeholder={t("common.labels.auto")}
                                       className={numberInputClassName}
                                     />
@@ -4329,22 +4168,16 @@ export function EditModelPage() {
                                         CPU threads
                                       </span>
                                     </div>
-                                    <input
-                                      type="number"
-                                      inputMode="numeric"
+                                    <NumberInput
                                       min={ADVANCED_OLLAMA_NUM_THREAD_RANGE.min}
                                       max={ADVANCED_OLLAMA_NUM_THREAD_RANGE.max}
                                       step={1}
-                                      value={modelAdvancedDraft.ollamaNumThread ?? ""}
-                                      onChange={(e) => {
-                                        const raw = e.target.value;
-                                        const next = raw === "" ? null : Number(raw);
+                                      value={modelAdvancedDraft.ollamaNumThread ?? null}
+                                      onChange={(next) =>
                                         handleOllamaNumThreadChange(
-                                          next === null || !Number.isFinite(next) || next < 1
-                                            ? null
-                                            : Math.trunc(next),
-                                        );
-                                      }}
+                                          next === null || next < 1 ? null : Math.trunc(next),
+                                        )
+                                      }
                                       placeholder={t("common.labels.auto")}
                                       className={numberInputClassName}
                                     />
@@ -4360,22 +4193,16 @@ export function EditModelPage() {
                                       Processing batch
                                     </span>
                                   </div>
-                                  <input
-                                    type="number"
-                                    inputMode="numeric"
+                                  <NumberInput
                                     min={ADVANCED_OLLAMA_NUM_BATCH_RANGE.min}
                                     max={ADVANCED_OLLAMA_NUM_BATCH_RANGE.max}
                                     step={1}
-                                    value={modelAdvancedDraft.ollamaNumBatch ?? ""}
-                                    onChange={(e) => {
-                                      const raw = e.target.value;
-                                      const next = raw === "" ? null : Number(raw);
+                                    value={modelAdvancedDraft.ollamaNumBatch ?? null}
+                                    onChange={(next) =>
                                       handleOllamaNumBatchChange(
-                                        next === null || !Number.isFinite(next) || next < 1
-                                          ? null
-                                          : Math.trunc(next),
-                                      );
-                                    }}
+                                        next === null || next < 1 ? null : Math.trunc(next),
+                                      )
+                                    }
                                     placeholder={t("common.labels.auto")}
                                     className={numberInputClassName}
                                   />
@@ -4400,17 +4227,12 @@ export function EditModelPage() {
                                         Tail-free
                                       </span>
                                     </div>
-                                    <input
-                                      type="number"
-                                      inputMode="decimal"
+                                    <NumberInput
                                       min={ADVANCED_OLLAMA_TFS_Z_RANGE.min}
                                       max={ADVANCED_OLLAMA_TFS_Z_RANGE.max}
                                       step={0.01}
-                                      value={modelAdvancedDraft.ollamaTfsZ ?? ""}
-                                      onChange={(e) => {
-                                        const raw = e.target.value;
-                                        handleOllamaTfsZChange(raw === "" ? null : Number(raw));
-                                      }}
+                                      value={modelAdvancedDraft.ollamaTfsZ ?? null}
+                                      onChange={(next) => handleOllamaTfsZChange(next)}
                                       placeholder={t("common.labels.auto")}
                                       className={numberInputClassName}
                                     />
@@ -4425,19 +4247,12 @@ export function EditModelPage() {
                                         Punish repetition
                                       </span>
                                     </div>
-                                    <input
-                                      type="number"
-                                      inputMode="decimal"
+                                    <NumberInput
                                       min={ADVANCED_OLLAMA_REPEAT_PENALTY_RANGE.min}
                                       max={ADVANCED_OLLAMA_REPEAT_PENALTY_RANGE.max}
                                       step={0.01}
-                                      value={modelAdvancedDraft.ollamaRepeatPenalty ?? ""}
-                                      onChange={(e) => {
-                                        const raw = e.target.value;
-                                        handleOllamaRepeatPenaltyChange(
-                                          raw === "" ? null : Number(raw),
-                                        );
-                                      }}
+                                      value={modelAdvancedDraft.ollamaRepeatPenalty ?? null}
+                                      onChange={(next) => handleOllamaRepeatPenaltyChange(next)}
                                       placeholder={t("common.labels.auto")}
                                       className={numberInputClassName}
                                     />
@@ -4454,17 +4269,12 @@ export function EditModelPage() {
                                         Min-p sampling
                                       </span>
                                     </div>
-                                    <input
-                                      type="number"
-                                      inputMode="decimal"
+                                    <NumberInput
                                       min={ADVANCED_OLLAMA_MIN_P_RANGE.min}
                                       max={ADVANCED_OLLAMA_MIN_P_RANGE.max}
                                       step={0.01}
-                                      value={modelAdvancedDraft.ollamaMinP ?? ""}
-                                      onChange={(e) => {
-                                        const raw = e.target.value;
-                                        handleOllamaMinPChange(raw === "" ? null : Number(raw));
-                                      }}
+                                      value={modelAdvancedDraft.ollamaMinP ?? null}
+                                      onChange={(next) => handleOllamaMinPChange(next)}
                                       placeholder={t("common.labels.auto")}
                                       className={numberInputClassName}
                                     />
@@ -4479,17 +4289,12 @@ export function EditModelPage() {
                                         Typical sampling
                                       </span>
                                     </div>
-                                    <input
-                                      type="number"
-                                      inputMode="decimal"
+                                    <NumberInput
                                       min={ADVANCED_OLLAMA_TYPICAL_P_RANGE.min}
                                       max={ADVANCED_OLLAMA_TYPICAL_P_RANGE.max}
                                       step={0.01}
-                                      value={modelAdvancedDraft.ollamaTypicalP ?? ""}
-                                      onChange={(e) => {
-                                        const raw = e.target.value;
-                                        handleOllamaTypicalPChange(raw === "" ? null : Number(raw));
-                                      }}
+                                      value={modelAdvancedDraft.ollamaTypicalP ?? null}
+                                      onChange={(next) => handleOllamaTypicalPChange(next)}
                                       placeholder={t("common.labels.auto")}
                                       className={numberInputClassName}
                                     />
@@ -4545,19 +4350,12 @@ export function EditModelPage() {
                                         Target entropy
                                       </span>
                                     </div>
-                                    <input
-                                      type="number"
-                                      inputMode="decimal"
+                                    <NumberInput
                                       min={ADVANCED_OLLAMA_MIROSTAT_TAU_RANGE.min}
                                       max={ADVANCED_OLLAMA_MIROSTAT_TAU_RANGE.max}
                                       step={0.1}
-                                      value={modelAdvancedDraft.ollamaMirostatTau ?? ""}
-                                      onChange={(e) => {
-                                        const raw = e.target.value;
-                                        handleOllamaMirostatTauChange(
-                                          raw === "" ? null : Number(raw),
-                                        );
-                                      }}
+                                      value={modelAdvancedDraft.ollamaMirostatTau ?? null}
+                                      onChange={(next) => handleOllamaMirostatTauChange(next)}
                                       placeholder={t("common.labels.auto")}
                                       className={numberInputClassName}
                                     />
@@ -4572,19 +4370,12 @@ export function EditModelPage() {
                                         Learning rate
                                       </span>
                                     </div>
-                                    <input
-                                      type="number"
-                                      inputMode="decimal"
+                                    <NumberInput
                                       min={ADVANCED_OLLAMA_MIROSTAT_ETA_RANGE.min}
                                       max={ADVANCED_OLLAMA_MIROSTAT_ETA_RANGE.max}
                                       step={0.01}
-                                      value={modelAdvancedDraft.ollamaMirostatEta ?? ""}
-                                      onChange={(e) => {
-                                        const raw = e.target.value;
-                                        handleOllamaMirostatEtaChange(
-                                          raw === "" ? null : Number(raw),
-                                        );
-                                      }}
+                                      value={modelAdvancedDraft.ollamaMirostatEta ?? null}
+                                      onChange={(next) => handleOllamaMirostatEtaChange(next)}
                                       placeholder={t("common.labels.auto")}
                                       className={numberInputClassName}
                                     />
@@ -4600,22 +4391,16 @@ export function EditModelPage() {
                                       Random if blank
                                     </span>
                                   </div>
-                                  <input
-                                    type="number"
-                                    inputMode="numeric"
+                                  <NumberInput
                                     min={ADVANCED_OLLAMA_SEED_RANGE.min}
                                     max={ADVANCED_OLLAMA_SEED_RANGE.max}
                                     step={1}
-                                    value={modelAdvancedDraft.ollamaSeed ?? ""}
-                                    onChange={(e) => {
-                                      const raw = e.target.value;
-                                      const next = raw === "" ? null : Number(raw);
+                                    value={modelAdvancedDraft.ollamaSeed ?? null}
+                                    onChange={(next) =>
                                       handleOllamaSeedChange(
-                                        next === null || !Number.isFinite(next) || next < 0
-                                          ? null
-                                          : Math.trunc(next),
-                                      );
-                                    }}
+                                        next === null || next < 0 ? null : Math.trunc(next),
+                                      )
+                                    }
                                     placeholder={t("editModel.placeholders.random")}
                                     className={numberInputClassName}
                                   />
@@ -4724,22 +4509,16 @@ export function EditModelPage() {
                                             : t("common.labels.auto")}
                                         </span>
                                       </div>
-                                      <input
-                                        type="number"
-                                        inputMode="numeric"
+                                      <NumberInput
                                         min={ADVANCED_REASONING_BUDGET_RANGE.min}
                                         max={ADVANCED_REASONING_BUDGET_RANGE.max}
                                         step={1024}
-                                        value={modelAdvancedDraft.reasoningBudgetTokens || ""}
-                                        onChange={(e) => {
-                                          const raw = e.target.value;
-                                          const next = raw === "" ? null : Number(raw);
+                                        value={modelAdvancedDraft.reasoningBudgetTokens || null}
+                                        onChange={(next) =>
                                           handleReasoningBudgetChange(
-                                            next === null || !Number.isFinite(next) || next === 0
-                                              ? null
-                                              : Math.trunc(next),
-                                          );
-                                        }}
+                                            next === null || next === 0 ? null : Math.trunc(next),
+                                          )
+                                        }
                                         placeholder={t("common.labels.auto")}
                                         className={numberInputClassName}
                                       />
