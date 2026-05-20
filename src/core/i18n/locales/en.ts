@@ -2424,6 +2424,13 @@ export const enMessages = {
       importSuccessDescription: "Model \"{{name}}\" was imported.",
       importFailed: "Import failed",
     },
+    downloadQueue: {
+      kokoroAsset: "Kokoro asset",
+      cancel: "Cancel download",
+      waiting: "Waiting in queue...",
+      eta: "{{time}} left",
+      completed: "{{size}} downloaded",
+    },
   },
   installedModels: {
     title: "Installed models",

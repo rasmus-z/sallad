@@ -22,6 +22,23 @@ function formatSpeed(bytesPerSec: number): string {
   return `${formatBytes(bytesPerSec)}/s`;
 }
 
+function formatEta(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds <= 0) return "0s";
+
+  const totalSeconds = Math.ceil(seconds);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const secs = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+  if (minutes > 0) {
+    return `${minutes}m ${secs}s`;
+  }
+  return `${secs}s`;
+}
+
 function extractShortName(modelId: string): string {
   const parts = modelId.split("/");
   return parts[parts.length - 1] || modelId;
@@ -52,6 +69,14 @@ function isCreateableModelDownload(item: QueuedDownload): boolean {
 function pct(d: QueuedDownload): number {
   if (d.total === 0) return 0;
   return Math.min(100, Math.round((d.downloaded / d.total) * 100));
+}
+
+function etaSeconds(d: QueuedDownload): number | null {
+  if (d.status !== "downloading") return null;
+  if (d.total <= 0 || d.speedBytesPerSec <= 0) return null;
+  const remainingBytes = d.total - d.downloaded;
+  if (remainingBytes <= 0) return 0;
+  return remainingBytes / d.speedBytesPerSec;
 }
 
 /**
@@ -103,15 +128,17 @@ export function InlineDownloadCards({
     <div className="space-y-2 pb-1">
       <AnimatePresence mode="popLayout">
         {/* Active downloads */}
-        {activeDownloads.map((item) => (
-          <motion.div
-            key={`dl-${item.id}`}
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.15 }}
-            className="overflow-hidden"
-          >
+        {activeDownloads.map((item) => {
+          const eta = etaSeconds(item);
+          return (
+            <motion.div
+              key={`dl-${item.id}`}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.15 }}
+              className="overflow-hidden"
+            >
             <div
               className={cn(
                 "rounded-xl border border-accent/20 bg-accent/5",
@@ -165,6 +192,13 @@ export function InlineDownloadCards({
                         · {formatSpeed(item.speedBytesPerSec)}
                       </span>
                     )}
+                    {eta !== null && (
+                      <span className="ml-1 text-fg/25">
+                        · {t("models.downloadQueue.eta" as TranslationKey, {
+                          time: formatEta(eta),
+                        })}
+                      </span>
+                    )}
                   </span>
                 </div>
               )}
@@ -174,8 +208,9 @@ export function InlineDownloadCards({
                 </p>
               )}
             </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          );
+        })}
 
         {/* Completed downloads */}
         {completedDownloads.map((item) => (
@@ -193,7 +228,7 @@ export function InlineDownloadCards({
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[12px] font-medium text-fg/80">{item.filename}</p>
                   <p className="text-[10px] text-emerald-400/60">
-                    {t("models.downloadQueue.completeBytes" as TranslationKey, {
+                    {t("models.downloadQueue.completed" as TranslationKey, {
                       size: formatBytes(item.total),
                     })}
                   </p>
