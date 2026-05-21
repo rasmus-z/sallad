@@ -25,7 +25,6 @@ import { EditPromptTemplate } from "./ui/pages/settings/EditPromptTemplate";
 import { SecurityPage } from "./ui/pages/settings/SecurityPage";
 import { ResetPage } from "./ui/pages/settings/ResetPage";
 import { BackupRestorePage } from "./ui/pages/settings/BackupRestorePage";
-import { ConvertPage } from "./ui/pages/settings/ConvertPage";
 import { UsagePage } from "./ui/pages/settings/UsagePage";
 import { UsageActivityPage } from "./ui/pages/settings/UsageActivityPage";
 import { AccessibilityPage } from "./ui/pages/settings/AccessibilityPage";
@@ -1152,7 +1151,6 @@ function AppContent() {
               <Route path="/settings/developer" element={<DeveloperPage />} />
               <Route path="/settings/reset" element={<ResetPage />} />
               <Route path="/settings/backup" element={<BackupRestorePage />} />
-              <Route path="/settings/convert" element={<ConvertPage />} />
               <Route path="/settings/sync" element={<SyncPage />} />
               <Route path="/settings/engine/:credentialId" element={<EngineHomePage />} />
               <Route path="/settings/engine/:credentialId/setup" element={<EngineSetupWizard />} />

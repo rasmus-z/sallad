@@ -118,7 +118,6 @@ export function TopNav({
       },
       { match: (p) => p === "/settings/reset", titleKey: "common.nav.reset" },
       { match: (p) => p === "/settings/backup", titleKey: "common.nav.backupRestore" },
-      { match: (p) => p === "/settings/convert", titleKey: "common.nav.convertFiles" },
       {
         match: (p) => p.startsWith("/settings/usage/activity"),
         titleKey: "common.nav.usageAnalytics",

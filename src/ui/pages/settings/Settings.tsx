@@ -226,7 +226,15 @@ export function SettingsPage() {
         icon: <ArrowLeftRight />,
         title: t("settings.items.convert.title"),
         subtitle: t("settings.items.convert.subtitle"),
-        onClick: () => navigate("/settings/convert"),
+        onClick: async () => {
+          const url = "https://www.lettuceai.app/convert";
+          try {
+            const { openUrl } = await import("@tauri-apps/plugin-opener");
+            await openUrl(url);
+          } catch {
+            window.open(url, "_blank");
+          }
+        },
       },
       security: {
         key: "security",

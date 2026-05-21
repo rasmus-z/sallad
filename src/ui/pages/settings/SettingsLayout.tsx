@@ -41,8 +41,8 @@ interface NavItem {
   key: string;
   icon: React.ReactNode;
   label: string;
-  /** Used to determine active state via pathname match. */
-  matchPath: string;
+  /** Used to determine active state via pathname match. Omit for items that don't route. */
+  matchPath?: string;
   /** Additional pathname prefixes that should also activate this item. */
   extraMatchPaths?: string[];
   /** Optional override: when present, this fully decides active state. */
@@ -263,8 +263,15 @@ export function SettingsLayout() {
         key: "convert",
         icon: <ArrowLeftRight />,
         label: t("settings.items.convert.title"),
-        matchPath: "/settings/convert",
-        onSelect: () => navigate("/settings/convert"),
+        onSelect: async () => {
+          const url = "https://www.lettuceai.app/convert";
+          try {
+            const { openUrl } = await import("@tauri-apps/plugin-opener");
+            await openUrl(url);
+          } catch {
+            window.open(url, "_blank");
+          }
+        },
       },
       {
         key: "security",
@@ -453,9 +460,11 @@ export function SettingsLayout() {
     let best: NavItem | undefined;
     let bestLen = 0;
     for (const item of allItems) {
-      if (item.matchPath === "__never__") continue;
+      if (!item.matchPath || item.matchPath === "__never__") continue;
       if (item.yieldsTo?.(path, search)) continue;
-      const candidates = [item.matchPath, ...(item.extraMatchPaths ?? [])];
+      const candidates = [item.matchPath, ...(item.extraMatchPaths ?? [])].filter(
+        (mp): mp is string => typeof mp === "string",
+      );
       const matched = candidates.find(
         (mp) => path === mp || path.startsWith(mp + "/"),
       );

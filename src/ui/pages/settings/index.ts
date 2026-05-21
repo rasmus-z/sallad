@@ -8,7 +8,6 @@ export * from "./ResetPage";
 export * from "./UsagePage";
 export * from "./UsageActivityPage";
 export * from "./BackupRestorePage";
-export * from "./ConvertPage";
 export * from "./LogsPage";
 export * from "./AboutPage";
 export * from "./LorebooksPage";
