@@ -221,7 +221,7 @@ export function ChatAppearanceDrawer({
         <motion.aside
           className={cn(
             "fixed top-0 z-50 flex h-full w-[400px] flex-col",
-            "bg-surface shadow-2xl",
+            "bg-surface/96 backdrop-blur-2xl shadow-2xl",
             isRight ? "right-0 border-l border-fg/10" : "left-0 border-r border-fg/10",
           )}
           initial={{ x: exitX }}

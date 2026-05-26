@@ -2408,6 +2408,7 @@ export function ChatConversationPage() {
         handleTogglePin={chatController.handleTogglePin}
         setMessageAction={setMessageAction}
         onOpenSceneImageFlow={handleOpenSceneImageFlow}
+        onOpenChatAppearance={!isMobile ? () => setAppearanceDrawerOpen(true) : undefined}
         hasSceneImage={Boolean(resolveSceneAttachment(messageAction?.message))}
         sceneGenerationEnabled={sceneGenerationEnabled}
         characterMemoryType={character?.memoryType}

@@ -57,6 +57,7 @@ interface MessageActionsBottomSheetProps {
   handleTogglePin: (message: StoredMessage) => Promise<void>;
   setMessageAction: (value: MessageActionState | null) => void;
   onOpenSceneImageFlow: (message: StoredMessage) => void;
+  onOpenChatAppearance?: () => void;
   hasSceneImage?: boolean;
   sceneGenerationEnabled?: boolean;
   characterMemoryType?: string | null;
@@ -194,6 +195,7 @@ export function MessageActionsBottomSheet({
   handleTogglePin,
   setMessageAction,
   onOpenSceneImageFlow,
+  onOpenChatAppearance,
   hasSceneImage = false,
   sceneGenerationEnabled = false,
   characterMemoryType,
@@ -739,6 +741,10 @@ export function MessageActionsBottomSheet({
                   iconBg="bg-purple-500/20"
                   onClick={() => {
                     closeMessageActions(true);
+                    if (onOpenChatAppearance) {
+                      onOpenChatAppearance();
+                      return;
+                    }
                     navigate(`/settings/accessibility/chat?characterId=${characterId}`);
                   }}
                 />
