@@ -747,7 +747,7 @@ export function ChatAppearancePage() {
         {!isMobileViewport && (
           <div
             ref={previewRef}
-            className="mb-5 lg:mb-0 lg:w-130 lg:shrink-0 lg:will-change-transform"
+            className="mb-5 lg:mb-0 lg:w-130 lg:shrink-0 lg:will-change-transform lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto"
           >
             {previewSurface}
           </div>

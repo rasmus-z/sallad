@@ -64,6 +64,7 @@ import {
   InlineAuthorNoteBar,
   useAuthorNoteInlineEditor,
 } from "./components";
+import { ChatAppearanceDrawer } from "./components/appearance/ChatAppearanceDrawer";
 import { BottomMenu, GuidedTour, MenuButton, useGuidedTour } from "../../components";
 import { AvatarImage } from "../../components/AvatarImage";
 import { useAvatar } from "../../hooks/useAvatar";
@@ -144,7 +145,10 @@ export function ChatConversationPage() {
     theme,
     chatAppearance,
     chatController,
+    setDraftAppearanceOverride,
+    reloadCharacter,
   } = useChatLayoutContext();
+  const [appearanceDrawerOpen, setAppearanceDrawerOpen] = useState(false);
 
   const scrollContainerRef = useRef<HTMLElement | null>(null);
   const pressStartPosition = useRef<{ x: number; y: number } | null>(null);
@@ -2139,6 +2143,7 @@ export function ChatConversationPage() {
           onSessionUpdate={handleSessionUpdate}
           onBeforeSettingsOpen={!isMobile ? captureFooterFocusForDrawer : undefined}
           onSettingsOpen={!isMobile ? () => setSettingsDrawerOpen(true) : undefined}
+          onAppearanceOpen={!isMobile ? () => setAppearanceDrawerOpen(true) : undefined}
         />
       </div>
 
@@ -3159,6 +3164,17 @@ export function ChatConversationPage() {
           onClose={() => setSettingsDrawerOpen(false)}
           character={character}
           onOpenAuthorNote={handleOpenAuthorNoteMenu}
+        />
+      )}
+
+      {/* Desktop Appearance Drawer */}
+      {!isMobile && character && (
+        <ChatAppearanceDrawer
+          open={appearanceDrawerOpen}
+          onClose={() => setAppearanceDrawerOpen(false)}
+          character={character}
+          onCharacterUpdate={() => reloadCharacter()}
+          setDraftOverride={setDraftAppearanceOverride}
         />
       )}
 
