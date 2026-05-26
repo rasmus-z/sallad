@@ -523,6 +523,50 @@ export function TopNav({
     };
   }, [isUnsaved]);
 
+  const triggerActiveSave = useCallback(() => {
+    const globalWindow = window as any;
+    if (isCharacterEdit && typeof globalWindow.__saveCharacter === "function") {
+      globalWindow.__saveCharacter();
+    } else if (isPersonaEdit && typeof globalWindow.__savePersona === "function") {
+      globalWindow.__savePersona();
+    } else if (
+      (isModelEdit || isModelNew) &&
+      typeof globalWindow.__saveModel === "function"
+    ) {
+      globalWindow.__saveModel();
+    } else if (isPromptEdit || isPromptNew) {
+      window.dispatchEvent(new CustomEvent("prompt:save"));
+    } else if (
+      isChatAppearanceEdit &&
+      typeof globalWindow.__saveChatAppearance === "function"
+    ) {
+      globalWindow.__saveChatAppearance();
+    } else if (
+      isColorCustomizationEdit &&
+      typeof globalWindow.__saveColorCustomization === "function"
+    ) {
+      globalWindow.__saveColorCustomization();
+    } else if (isTemplateEdit && typeof globalWindow.__saveCharacter === "function") {
+      globalWindow.__saveCharacter();
+    }
+  }, [
+    isCharacterEdit,
+    isPersonaEdit,
+    isModelEdit,
+    isModelNew,
+    isPromptEdit,
+    isPromptNew,
+    isChatAppearanceEdit,
+    isColorCustomizationEdit,
+    isTemplateEdit,
+  ]);
+
+  useEffect(() => {
+    const handler = () => triggerActiveSave();
+    window.addEventListener("unsaved:save", handler);
+    return () => window.removeEventListener("unsaved:save", handler);
+  }, [triggerActiveSave]);
+
   const ensureUnsavedToast = useCallback(() => {
     if (!toast.isVisible("unsaved-changes")) {
       toast.warningSticky(
@@ -531,9 +575,13 @@ export function TopNav({
         t("common.buttons.discard"),
         () => window.dispatchEvent(new CustomEvent("unsaved:discard")),
         "unsaved-changes",
+        {
+          label: t("topNav.save"),
+          onAction: () => triggerActiveSave(),
+        },
       );
     }
-  }, [t]);
+  }, [t, triggerActiveSave]);
 
   useEffect(() => {
     if (isUnsaved && !wasUnsavedRef.current) {
@@ -890,33 +938,7 @@ export function TopNav({
           )}
           {showSaveButton && (
             <button
-              onClick={() => {
-                const globalWindow = window as any;
-                if (isCharacterEdit && typeof globalWindow.__saveCharacter === "function") {
-                  globalWindow.__saveCharacter();
-                } else if (isPersonaEdit && typeof globalWindow.__savePersona === "function") {
-                  globalWindow.__savePersona();
-                } else if (
-                  (isModelEdit || isModelNew) &&
-                  typeof globalWindow.__saveModel === "function"
-                ) {
-                  globalWindow.__saveModel();
-                } else if (isPromptEdit || isPromptNew) {
-                  window.dispatchEvent(new CustomEvent("prompt:save"));
-                } else if (
-                  isChatAppearanceEdit &&
-                  typeof globalWindow.__saveChatAppearance === "function"
-                ) {
-                  globalWindow.__saveChatAppearance();
-                } else if (
-                  isColorCustomizationEdit &&
-                  typeof globalWindow.__saveColorCustomization === "function"
-                ) {
-                  globalWindow.__saveColorCustomization();
-                } else if (isTemplateEdit && typeof globalWindow.__saveCharacter === "function") {
-                  globalWindow.__saveCharacter();
-                }
-              }}
+              onClick={() => triggerActiveSave()}
               disabled={!canSave || isSaving}
               className={cn(
                 "flex items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5",

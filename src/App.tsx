@@ -936,6 +936,12 @@ function AppContent() {
           window.dispatchEvent(new CustomEvent("unsaved:discard"));
         },
         "unsaved-changes",
+        {
+          label: "Save",
+          onAction: () => {
+            window.dispatchEvent(new CustomEvent("unsaved:save"));
+          },
+        },
       );
       return false;
     }
