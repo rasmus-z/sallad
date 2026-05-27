@@ -1064,13 +1064,26 @@ pub fn character_delete(app: tauri::AppHandle, id: String) -> Result<(), String>
         "character_delete",
         format!("Deleting character {}", id),
     );
-    let conn = open_db(&app)?;
-    let _ = crate::storage_manager::memory_embeddings::delete_all_for_session_app(
-        &app,
+    let mut conn = open_db(&app)?;
+    let tx = conn
+        .transaction()
+        .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+
+    tx.execute(
+        "DELETE FROM memory_embeddings
+         WHERE session_kind = 'session'
+           AND session_id IN (SELECT id FROM sessions WHERE character_id = ?1)",
+        params![id],
+    )
+    .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+
+    crate::storage_manager::memory_embeddings::delete_all_for_session(
+        &tx,
         &id,
         crate::storage_manager::memory_embeddings::SessionKind::CompanionShared,
-    );
-    conn.execute("DELETE FROM characters WHERE id = ?", params![id])
+    )?;
+
+    tx.execute("DELETE FROM characters WHERE id = ?", params![id])
         .map_err(|e| {
             log_error(
                 &app,
@@ -1079,6 +1092,9 @@ pub fn character_delete(app: tauri::AppHandle, id: String) -> Result<(), String>
             );
             e.to_string()
         })?;
+    tx.commit()
+        .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+
     log_info(
         &app,
         "character_delete",

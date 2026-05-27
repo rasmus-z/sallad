@@ -3321,8 +3321,18 @@ pub fn session_upsert(app: tauri::AppHandle, session_json: String) -> Result<(),
 #[tauri::command]
 pub fn session_delete(app: tauri::AppHandle, id: String) -> Result<(), String> {
     log_info(&app, "session_delete", format!("Deleting session {}", id));
-    let conn = open_db(&app)?;
-    conn.execute("DELETE FROM sessions WHERE id = ?", params![id])
+    let mut conn = open_db(&app)?;
+    let tx = conn
+        .transaction()
+        .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+
+    crate::storage_manager::memory_embeddings::delete_all_for_session(
+        &tx,
+        &id,
+        crate::storage_manager::memory_embeddings::SessionKind::Session,
+    )?;
+
+    tx.execute("DELETE FROM sessions WHERE id = ?", params![id])
         .map_err(|e| {
             log_error(
                 &app,
@@ -3331,12 +3341,10 @@ pub fn session_delete(app: tauri::AppHandle, id: String) -> Result<(), String> {
             );
             e.to_string()
         })?;
-    // Cascade-delete memory embeddings (the new table has no FK constraint).
-    let _ = crate::storage_manager::memory_embeddings::delete_all_for_session_app(
-        &app,
-        &id,
-        crate::storage_manager::memory_embeddings::SessionKind::Session,
-    );
+
+    tx.commit()
+        .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+
     Ok(())
 }
 

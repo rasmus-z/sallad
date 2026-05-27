@@ -7,7 +7,7 @@ use crate::storage_manager::settings::{read_settings_typed, write_settings_typed
 use crate::utils::log_info;
 
 /// Current migration version
-pub const CURRENT_MIGRATION_VERSION: u32 = 68;
+pub const CURRENT_MIGRATION_VERSION: u32 = 69;
 
 pub fn run_migrations(app: &AppHandle) -> Result<(), String> {
     log_info(app, "migrations", "Starting migration check");
@@ -717,6 +717,16 @@ pub fn run_migrations(app: &AppHandle) -> Result<(), String> {
         );
         migrate_v67_to_v68(app)?;
         version = 68;
+    }
+
+    if version < 69 {
+        log_info(
+            app,
+            "migrations",
+            "Running migration v68 -> v69: Prune orphaned memory embeddings",
+        );
+        migrate_v68_to_v69(app)?;
+        version = 69;
     }
 
     // Update the stored version
@@ -3886,6 +3896,38 @@ fn migrate_v67_to_v68(app: &AppHandle) -> Result<(), String> {
             "Rebuilt memory_embeddings to allow companion_shared session_kind",
         );
     }
+
+    Ok(())
+}
+
+fn migrate_v68_to_v69(app: &AppHandle) -> Result<(), String> {
+    let conn = crate::storage_manager::db::open_db(app)?;
+
+    conn.execute_batch(
+        r#"
+        DELETE FROM memory_embeddings
+        WHERE session_kind = 'session'
+          AND NOT EXISTS (
+            SELECT 1 FROM sessions
+            WHERE sessions.id = memory_embeddings.session_id
+          );
+
+        DELETE FROM memory_embeddings
+        WHERE session_kind = 'group_session'
+          AND NOT EXISTS (
+            SELECT 1 FROM group_sessions
+            WHERE group_sessions.id = memory_embeddings.session_id
+          );
+
+        DELETE FROM memory_embeddings
+        WHERE session_kind = 'companion_shared'
+          AND NOT EXISTS (
+            SELECT 1 FROM characters
+            WHERE characters.id = memory_embeddings.session_id
+          );
+        "#,
+    )
+    .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
 
     Ok(())
 }

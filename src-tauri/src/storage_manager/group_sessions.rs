@@ -1648,16 +1648,22 @@ pub fn group_session_update(
 
 #[tauri::command]
 pub fn group_session_delete(id: String, pool: State<'_, SwappablePool>) -> Result<(), String> {
-    let conn = pool.get_connection()?;
-
-    conn.execute("DELETE FROM group_sessions WHERE id = ?1", params![id])
+    let mut conn = pool.get_connection()?;
+    let tx = conn
+        .transaction()
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
 
-    let _ = crate::storage_manager::memory_embeddings::delete_all_for_session(
-        &*conn,
+    crate::storage_manager::memory_embeddings::delete_all_for_session(
+        &tx,
         &id,
         crate::storage_manager::memory_embeddings::SessionKind::GroupSession,
-    );
+    )?;
+
+    tx.execute("DELETE FROM group_sessions WHERE id = ?1", params![id])
+        .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+
+    tx.commit()
+        .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
 
     Ok(())
 }

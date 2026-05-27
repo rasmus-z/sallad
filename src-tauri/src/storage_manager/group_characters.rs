@@ -692,15 +692,29 @@ pub fn group_update_starting_scene(
 
 #[tauri::command]
 pub fn group_delete(id: String, pool: State<'_, SwappablePool>) -> Result<(), String> {
-    let conn = pool.get_connection()?;
+    let mut conn = pool.get_connection()?;
+    let tx = conn
+        .transaction()
+        .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
 
-    conn.execute(
+    tx.execute(
+        "DELETE FROM memory_embeddings
+         WHERE session_kind = 'group_session'
+           AND session_id IN (SELECT id FROM group_sessions WHERE group_character_id = ?1)",
+        params![id],
+    )
+    .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+
+    tx.execute(
         "DELETE FROM group_sessions WHERE group_character_id = ?1",
         params![id],
     )
     .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
 
-    conn.execute("DELETE FROM group_characters WHERE id = ?1", params![id])
+    tx.execute("DELETE FROM group_characters WHERE id = ?1", params![id])
+        .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+
+    tx.commit()
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
 
     Ok(())
