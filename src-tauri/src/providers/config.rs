@@ -55,6 +55,8 @@ fn supported_extra_body_keys(provider_id: &str) -> &'static [&'static str] {
             "top_k",
             "frequency_penalty",
             "presence_penalty",
+            "enable_thinking",
+            "chat_template_kwargs",
         ],
         "ollama" => &["options"],
         "anthropic" | "custom-anthropic" | "openrouter" | "openai" | "gemini" | "google"

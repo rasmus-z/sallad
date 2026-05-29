@@ -93,6 +93,7 @@ type ControllerReturn = {
   handleReasoningEnabledChange: (value: boolean) => void;
   handleReasoningEffortChange: (value: "low" | "medium" | "high" | null) => void;
   handleReasoningBudgetChange: (value: number | null) => void;
+  handleForceSendThinkingStateChange: (value: boolean) => void;
   handlePromptCachingEnabledChange: (value: boolean) => void;
   handlePromptCachingTtlChange: (value: string) => void;
   applyLlamaRuntimeSuggestion: () => Promise<boolean>;
@@ -1200,6 +1201,19 @@ export function useModelEditorController(): ControllerReturn {
     [dispatch, state.modelAdvancedDraft],
   );
 
+  const handleForceSendThinkingStateChange = useCallback(
+    (value: boolean) => {
+      dispatch({
+        type: "set_model_advanced_draft",
+        payload: {
+          ...state.modelAdvancedDraft,
+          forceSendThinkingState: value,
+        },
+      });
+    },
+    [dispatch, state.modelAdvancedDraft],
+  );
+
   const handlePromptCachingEnabledChange = useCallback(
     (value: boolean) => {
       dispatch({
@@ -1592,6 +1606,7 @@ export function useModelEditorController(): ControllerReturn {
     handleReasoningEnabledChange,
     handleReasoningEffortChange,
     handleReasoningBudgetChange,
+    handleForceSendThinkingStateChange,
     handlePromptCachingEnabledChange,
     handlePromptCachingTtlChange,
     applyLlamaRuntimeSuggestion,

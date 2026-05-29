@@ -2576,6 +2576,9 @@ export const enMessages = {
       helpLabel: "Help with reasoning mode",
       budgetTokens: "Budget Tokens",
       providerDefault: "Provider default",
+      forceSend: "Force send thinking state",
+      forceSendDescription:
+        "Explicitly send enable_thinking to the model instead of omitting it. Helps local models that default to thinking when no value is sent.",
     },
     runtimeFacts: {
       updated: "Updated",

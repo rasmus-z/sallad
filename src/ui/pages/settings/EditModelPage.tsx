@@ -60,6 +60,7 @@ import {
   CopyCheck,
   Copy,
   Maximize2,
+  SendHorizontal,
 } from "lucide-react";
 import { ProviderParameterSupportInfo } from "../../components/ProviderParameterSupportInfo";
 import { LlamaSamplerOrderEditor } from "../../components/LlamaSamplerOrderEditor";
@@ -487,6 +488,7 @@ export function EditModelPage() {
     handleReasoningEnabledChange,
     handleReasoningEffortChange,
     handleReasoningBudgetChange,
+    handleForceSendThinkingStateChange,
     handlePromptCachingEnabledChange,
     handlePromptCachingTtlChange,
     applyLlamaRuntimeSuggestion,
@@ -4543,6 +4545,24 @@ export function EditModelPage() {
                                     )}
                                 </div>
                               )}
+
+                              <div className="flex items-center justify-between rounded-xl border border-fg/8 bg-surface-el/10 p-4">
+                                <div className="flex items-center gap-3 border-l-2 border-warning/40 pl-3">
+                                  <SendHorizontal size={16} className="text-warning/80" />
+                                  <div className="space-y-0.5">
+                                    <span className="block text-[13px] font-medium text-fg/70">
+                                      {t("editModel.reasoning.forceSend")}
+                                    </span>
+                                    <span className="block text-[13px] text-fg/40">
+                                      {t("editModel.reasoning.forceSendDescription")}
+                                    </span>
+                                  </div>
+                                </div>
+                                <Switch
+                                  checked={modelAdvancedDraft.forceSendThinkingState || false}
+                                  onChange={handleForceSendThinkingStateChange}
+                                />
+                              </div>
                             </div>
                           </div>
                         )}

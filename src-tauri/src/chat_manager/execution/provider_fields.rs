@@ -509,6 +509,27 @@ pub(crate) fn build_provider_extra_fields(
         }
     }
 
+    let force_send_thinking_state = model
+        .advanced_model_settings
+        .as_ref()
+        .and_then(|cfg| cfg.force_send_thinking_state)
+        .or_else(|| {
+            session
+                .advanced_model_settings
+                .as_ref()
+                .and_then(|cfg| cfg.force_send_thinking_state)
+        })
+        .unwrap_or(false);
+
+    if force_send_thinking_state {
+        let enabled = request_settings.reasoning_enabled;
+        extra.insert("enable_thinking".to_string(), json!(enabled));
+        extra.insert(
+            "chat_template_kwargs".to_string(),
+            json!({ "enable_thinking": enabled }),
+        );
+    }
+
     // ─────────────────────────────────────────────────────────────
     // NEW: Prompt caching TTL (used by Claude, Bedrock, Vertex, Gemini, etc.)
     // ─────────────────────────────────────────────────────────────
