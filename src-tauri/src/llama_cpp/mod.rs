@@ -1960,6 +1960,8 @@ mod desktop {
             let mut reached_stop_sequence = false;
             let mut pending_utf8 = Vec::<u8>::new();
             let mut sample_index = prompt_last_logits_index;
+            let mut last_heartbeat_at = Instant::now();
+            let mut heartbeat_emitted = false;
             failure_stage = "generation";
             while n_cur < target_len {
                 check_abort_signal(abort_rx.as_mut())?;
@@ -2105,6 +2107,29 @@ mod desktop {
                 completion_tokens += 1;
                 if first_token_ms.is_none() {
                     first_token_ms = Some(inference_started_at.elapsed().as_millis() as u64);
+                }
+
+                if !heartbeat_emitted || last_heartbeat_at.elapsed().as_secs() >= 1 {
+                    heartbeat_emitted = true;
+                    last_heartbeat_at = Instant::now();
+                    let elapsed_ms = inference_started_at.elapsed().as_millis() as u64;
+                    let tps = if elapsed_ms > 0 {
+                        (completion_tokens as f64) / (elapsed_ms as f64 / 1000.0)
+                    } else {
+                        0.0
+                    };
+                    if let Some(ref id) = request_id {
+                        let _ = app.emit(
+                            "llm-generation-heartbeat",
+                            json!({
+                                "requestId": id,
+                                "tokens": completion_tokens,
+                                "elapsedMs": elapsed_ms,
+                                "tokensPerSecond": tps,
+                                "recentText": output,
+                            }),
+                        );
+                    }
                 }
 
                 batch.clear();

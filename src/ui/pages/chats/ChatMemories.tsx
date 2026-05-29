@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer, useState, useCallback } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState, useCallback } from "react";
 import type { ComponentType, ReactNode } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { useParams, useSearchParams } from "react-router-dom";
@@ -26,6 +26,7 @@ import {
   Cpu,
   EllipsisVertical,
   PinOff,
+  ScrollText,
 } from "lucide-react";
 import type { Character, Session, StoredMessage, Model } from "../../../core/storage/schemas";
 import {
@@ -133,6 +134,10 @@ type UiState = {
   memoryStatus: MemoryStatus; // This is now for local UI transitions, but session.memoryStatus is source of truth
   expandedMemories: Set<number>;
   memoryProgressStep: number | null;
+  generationTokens: number | null;
+  generationTps: number | null;
+  generationLastBeatAt: number | null;
+  generationRecentText: string | null;
   memoryTempBusy: number | null;
   selectedCategory: string | null;
   selectedMemoryId: string | null;
@@ -158,6 +163,14 @@ type UiAction =
   | { type: "SET_ACTION_ERROR"; value: string | null }
   | { type: "SET_MEMORY_STATUS"; value: MemoryStatus }
   | { type: "SET_MEMORY_PROGRESS_STEP"; value: number | null }
+  | {
+      type: "SET_GENERATION_HEARTBEAT";
+      tokens: number;
+      tps: number;
+      at: number;
+      recentText: string | null;
+    }
+  | { type: "RESET_GENERATION_HEARTBEAT" }
   | { type: "TOGGLE_EXPANDED"; index: number }
   | { type: "SHIFT_EXPANDED_AFTER_DELETE"; index: number }
   | { type: "SET_MEMORY_TEMP_BUSY"; value: number | null }
@@ -183,6 +196,10 @@ function initUi(errorParam: string | null): UiState {
     actionError: errorParam,
     memoryStatus: "idle",
     memoryProgressStep: null,
+    generationTokens: null,
+    generationTps: null,
+    generationLastBeatAt: null,
+    generationRecentText: null,
     expandedMemories: new Set<number>(),
     memoryTempBusy: null,
     selectedCategory: null,
@@ -239,9 +256,33 @@ function uiReducer(state: UiState, action: UiAction): UiState {
         memoryStatus: action.value,
         memoryProgressStep:
           action.value === "idle" || action.value === "failed" ? null : state.memoryProgressStep,
+        generationTokens:
+          action.value === "idle" || action.value === "failed" ? null : state.generationTokens,
+        generationTps:
+          action.value === "idle" || action.value === "failed" ? null : state.generationTps,
+        generationLastBeatAt:
+          action.value === "idle" || action.value === "failed"
+            ? null
+            : state.generationLastBeatAt,
       };
     case "SET_MEMORY_PROGRESS_STEP":
       return { ...state, memoryProgressStep: action.value };
+    case "SET_GENERATION_HEARTBEAT":
+      return {
+        ...state,
+        generationTokens: action.tokens,
+        generationTps: action.tps,
+        generationLastBeatAt: action.at,
+        generationRecentText: action.recentText,
+      };
+    case "RESET_GENERATION_HEARTBEAT":
+      return {
+        ...state,
+        generationTokens: null,
+        generationTps: null,
+        generationLastBeatAt: null,
+        generationRecentText: null,
+      };
     case "TOGGLE_EXPANDED": {
       const next = new Set(state.expandedMemories);
       if (next.has(action.index)) next.delete(action.index);
@@ -976,8 +1017,25 @@ export function ChatMemoriesPage() {
   const { backgroundImageData } = useChatLayoutContext();
   const isMemoryCycleActive =
     isDynamic && (session?.memoryStatus === "processing" || ui.retryStatus === "retrying");
+  const [nowTick, setNowTick] = useState(0);
+  useEffect(() => {
+    if (!isMemoryCycleActive) return;
+    const id = window.setInterval(() => setNowTick((n) => n + 1), 1000);
+    return () => window.clearInterval(id);
+  }, [isMemoryCycleActive]);
+  const generationStalledMs =
+    ui.generationLastBeatAt != null ? Date.now() - ui.generationLastBeatAt : null;
+  const generationStalled = generationStalledMs != null && generationStalledMs > 15000;
+  void nowTick;
   const [allModels, setAllModels] = useState<Model[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
+  const [developerMode, setDeveloperMode] = useState(false);
+  const [showLiveOutput, setShowLiveOutput] = useState(false);
+  const liveOutputRef = useRef<HTMLPreElement | null>(null);
+  useEffect(() => {
+    const el = liveOutputRef.current;
+    if (el && showLiveOutput) el.scrollTop = el.scrollHeight;
+  }, [ui.generationRecentText, showLiveOutput]);
   const [revertingEventId, setRevertingEventId] = useState<string | null>(null);
 
   const handleSetColdState = useCallback(
@@ -1040,7 +1098,20 @@ export function ChatMemoriesPage() {
             dispatch({ type: "SET_MEMORY_PROGRESS_STEP", value: e.payload.step });
           }
         });
-        unlisteners.push(u1, u2, u3, u4, u5);
+        const u6 = await listen("llm-generation-heartbeat", (e: any) => {
+          const requestId: string = e.payload?.requestId ?? "";
+          if (requestId.startsWith("dynamic-memory:")) {
+            dispatch({
+              type: "SET_GENERATION_HEARTBEAT",
+              tokens: Number(e.payload?.tokens ?? 0),
+              tps: Number(e.payload?.tokensPerSecond ?? 0),
+              at: Date.now(),
+              recentText:
+                typeof e.payload?.recentText === "string" ? e.payload.recentText : null,
+            });
+          }
+        });
+        unlisteners.push(u1, u2, u3, u4, u5, u6);
       } catch (err) {
         console.error("Failed to setup memory event listeners", err);
       }
@@ -1297,6 +1368,7 @@ export function ChatMemoriesPage() {
       try {
         const settings = await readSettings();
         setAllModels(settings.models);
+        setDeveloperMode(settings.advancedSettings?.developerModeEnabled ?? false);
       } catch (err) {
         console.error("Failed to load models:", err);
       } finally {
@@ -1652,6 +1724,31 @@ export function ChatMemoriesPage() {
                           <div className="h-full w-1/3 rounded-full bg-blue-400/70 animate-[indeterminate_1.5s_ease-in-out_infinite]" />
                         )}
                       </div>
+                      {ui.generationTokens != null &&
+                        (generationStalled ? (
+                          <p className="flex items-center gap-1.5 text-[11px] text-amber-300/80 tabular-nums">
+                            <AlertTriangle size={11} className="shrink-0" />
+                            no response from model · stalled{" "}
+                            {Math.round((generationStalledMs ?? 0) / 1000)}s
+                          </p>
+                        ) : (
+                          <p className="text-[11px] text-blue-300/60 tabular-nums">
+                            generating · {ui.generationTokens} tokens
+                            {ui.generationTps && ui.generationTps > 0
+                              ? ` · ${ui.generationTps.toFixed(1)} tok/s`
+                              : ""}
+                          </p>
+                        ))}
+                      {developerMode && ui.generationRecentText != null && (
+                        <button
+                          type="button"
+                          onClick={() => setShowLiveOutput(true)}
+                          className="mt-1 inline-flex items-center gap-1.5 self-start rounded-md border border-blue-500/25 bg-blue-500/10 px-2 py-1 text-[11px] font-medium text-blue-200/80 transition hover:bg-blue-500/20"
+                        >
+                          <ScrollText size={12} />
+                          View live output
+                        </button>
+                      )}
                     </>
                   );
                 })()}
@@ -2647,6 +2744,37 @@ export function ChatMemoriesPage() {
           handleRetryWithModel(modelId);
         }}
       />
+
+      <BottomMenu
+        isOpen={showLiveOutput}
+        onClose={() => setShowLiveOutput(false)}
+        title="Live model output"
+      >
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-[11px] text-fg/45">
+            {isMemoryCycleActive ? (
+              <>
+                <RefreshCw className="h-3 w-3 animate-spin text-blue-400" />
+                <span>
+                  generating
+                  {ui.generationTokens != null ? ` · ${ui.generationTokens} tokens` : ""}
+                  {ui.generationTps && ui.generationTps > 0
+                    ? ` · ${ui.generationTps.toFixed(1)} tok/s`
+                    : ""}
+                </span>
+              </>
+            ) : (
+              <span>generation finished</span>
+            )}
+          </div>
+          <pre
+            ref={liveOutputRef}
+            className="max-h-[55vh] overflow-y-auto whitespace-pre-wrap break-words rounded-lg border border-fg/10 bg-black/40 p-3 font-mono text-[11px] leading-relaxed text-fg/75"
+          >
+            {ui.generationRecentText || "Waiting for output…"}
+          </pre>
+        </div>
+      </BottomMenu>
     </div>
   );
 }

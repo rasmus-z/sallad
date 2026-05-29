@@ -57,9 +57,27 @@ const DYNAMIC_MEMORY_LLAMA_OVERWRITE_ORDER = [
   "top_k",
   "top_p",
   "temp",
+  "dry",
   "min_p",
   "typical",
 ] as const;
+
+const DYNAMIC_MEMORY_OVERWRITE_SAMPLING: ReadonlyArray<[string, string]> = [
+  ["Temperature", "0.4"],
+  ["Top P", "1.0"],
+  ["Top K", "40"],
+  ["Min P", "off"],
+  ["Typical P", "off"],
+  ["Frequency penalty", "0.0"],
+  ["Presence penalty", "0.0"],
+];
+
+const DYNAMIC_MEMORY_OVERWRITE_DRY: ReadonlyArray<[string, string]> = [
+  ["Multiplier", "0.8"],
+  ["Base", "1.75"],
+  ["Allowed length", "2"],
+  ["Range", "full context"],
+];
 
 const DEFAULT_DYNAMIC_MEMORY_SETTINGS: DynamicMemorySettings = {
   enabled: false,
@@ -1370,8 +1388,10 @@ export function DynamicMemoryPage() {
                           Overwrite Sampler Configuration
                         </div>
                         <div className="mt-1 text-[11px] leading-relaxed text-fg/45">
-                          Use a fixed llama.cpp sampler setup for dynamic memory instead of the
-                          summarisation model&apos;s saved configuration.
+                          Use a fixed, loop-resistant llama.cpp sampler setup for dynamic memory
+                          instead of the summarisation model&apos;s saved configuration. Enables DRY
+                          repetition suppression to stop models (e.g. Gemma) from getting stuck in
+                          repeating loops during memory generation.
                         </div>
                       </div>
                       <Switch
@@ -1381,26 +1401,36 @@ export function DynamicMemoryPage() {
                     </div>
 
                     {dynamicMemoryLlamaSamplerOverwriteEnabled && (
-                      <div className="rounded-lg border border-fg/10 bg-surface-el/20 px-3 py-2.5 space-y-2">
-                        <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-fg/40">
-                          Overwrite Values
+                      <details className="group border-t border-fg/8 pt-2.5">
+                        <summary className="flex cursor-pointer list-none items-center gap-1.5 text-[11px] text-fg/40 transition-colors hover:text-fg/70">
+                          <ChevronDown className="h-3 w-3 -rotate-90 text-fg/30 transition-transform group-open:rotate-0" />
+                          Sampler values
+                        </summary>
+                        <div className="mt-2.5 space-y-3 text-[11px]">
+                          <div className="grid grid-cols-1 gap-x-8 gap-y-1.5 sm:grid-cols-2">
+                            {[
+                              ...DYNAMIC_MEMORY_OVERWRITE_SAMPLING,
+                              ...DYNAMIC_MEMORY_OVERWRITE_DRY.map(
+                                ([l, v]) => [`DRY ${l.toLowerCase()}`, v] as [string, string],
+                              ),
+                            ].map(([label, value]) => (
+                              <div
+                                key={label}
+                                className="flex items-baseline justify-between gap-3 border-b border-fg/5 pb-1"
+                              >
+                                <span className="text-fg/45">{label}</span>
+                                <span className="font-mono text-fg/75">{value}</span>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex items-baseline gap-2 text-fg/40">
+                            <span className="shrink-0">order</span>
+                            <span className="font-mono text-fg/60">
+                              {DYNAMIC_MEMORY_LLAMA_OVERWRITE_ORDER.join(" → ")}
+                            </span>
+                          </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-fg/65">
-                          <div>Temperature: 0.4</div>
-                          <div>Top P: 1.0</div>
-                          <div>Top K: 40</div>
-                          <div>Frequency Penalty: 0.0</div>
-                          <div>Presence Penalty: 0.0</div>
-                          <div>Min P: disabled</div>
-                          <div>Typical P: disabled</div>
-                        </div>
-                        <div className="text-[11px] text-fg/55">
-                          Order:{" "}
-                          <span className="font-mono text-fg/70">
-                            {DYNAMIC_MEMORY_LLAMA_OVERWRITE_ORDER.join(" → ")}
-                          </span>
-                        </div>
-                      </div>
+                      </details>
                     )}
                   </div>
                 )}
