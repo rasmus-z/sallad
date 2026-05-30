@@ -611,9 +611,9 @@ function ChatMessageInner({
     displayContent ?? replacePlaceholders(message.content, effectiveCharName, effectivePersonaName);
 
   const messageHeaderPlacement = chatAppearance?.messageHeaderPlacement ?? "inside";
-  const showMessageHeader =
-    !!(chatAppearance?.showMessageAuthor || chatAppearance?.showMessageTimestamp) &&
-    !computed.isPlaceholder;
+  const showMessageHeader = !!(
+    chatAppearance?.showMessageAuthor || chatAppearance?.showMessageTimestamp
+  );
   const headerAuthorName = computed.isUser
     ? effectivePersonaName
     : computed.isAssistant || computed.isScene
