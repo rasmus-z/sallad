@@ -656,16 +656,26 @@ function ChatMessageInner({
   const headerAbove = messageHeaderPlacement === "above" && !!messageHeaderNode;
 
   const messageUsage = message.usage;
-  const showInfoModel = !!chatAppearance?.showMessageModel && !!modelName;
+  const infoEligible = computed.isAssistant || computed.isScene;
+  const showInfoModel = infoEligible && !!chatAppearance?.showMessageModel && !!modelName;
   const showInfoInput =
-    !!chatAppearance?.showMessageInputTokens && typeof messageUsage?.promptTokens === "number";
+    infoEligible &&
+    !!chatAppearance?.showMessageInputTokens &&
+    typeof messageUsage?.promptTokens === "number";
   const showInfoOutput =
-    !!chatAppearance?.showMessageOutputTokens && typeof messageUsage?.completionTokens === "number";
+    infoEligible &&
+    !!chatAppearance?.showMessageOutputTokens &&
+    typeof messageUsage?.completionTokens === "number";
   const showInfoTotal =
-    !!chatAppearance?.showMessageTotalTokens && typeof messageUsage?.totalTokens === "number";
+    infoEligible &&
+    !!chatAppearance?.showMessageTotalTokens &&
+    typeof messageUsage?.totalTokens === "number";
   const showInfoTtft =
-    !!chatAppearance?.showMessageTtft && typeof messageUsage?.firstTokenMs === "number";
+    infoEligible &&
+    !!chatAppearance?.showMessageTtft &&
+    typeof messageUsage?.firstTokenMs === "number";
   const showInfoTps =
+    infoEligible &&
     !!chatAppearance?.showMessageTokensPerSecond &&
     typeof messageUsage?.tokensPerSecond === "number";
   const hasMessageInfo =
