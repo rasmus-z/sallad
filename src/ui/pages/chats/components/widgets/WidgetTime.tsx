@@ -6,6 +6,10 @@ import { cn, interactive } from "../../../../design-tokens";
 import { useWidgetContext } from "./WidgetContext";
 import { useWidgetEdit } from "./WidgetEditContext";
 import { widgetCardClass } from "./widgetSurface";
+import {
+  effectiveOverrideMs,
+  toLocalInputValue,
+} from "../../utils/companionTimeOverride";
 
 type OverrideMode = CompanionTimeOverride["mode"];
 
@@ -14,20 +18,6 @@ const MODE_OPTIONS: { mode: OverrideMode; label: string }[] = [
   { mode: "frozen", label: "Frozen" },
   { mode: "ticking", label: "Ticking" },
 ];
-
-function effectiveMs(override: CompanionTimeOverride | undefined, nowMs: number): number {
-  if (!override || override.mode === "off") return nowMs;
-  if (override.mode === "frozen") return override.anchorMs;
-  return override.anchorMs + (nowMs - override.setAtMs);
-}
-
-function toLocalInputValue(ms: number): string {
-  const d = new Date(ms);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
-    d.getHours(),
-  )}:${pad(d.getMinutes())}`;
-}
 
 export function WidgetTime({ node }: { node: TimeNode }) {
   const { hasBackground, character, session, onUpdateCompanionTimeOverride } =
@@ -50,7 +40,7 @@ export function WidgetTime({ node }: { node: TimeNode }) {
     setSelectedMode(activeMode);
   }, [activeMode]);
 
-  const shownMs = effectiveMs(override, nowMs);
+  const shownMs = effectiveOverrideMs(override, nowMs);
   const isOverridden = activeMode !== "off";
 
   const timeFormatter = useMemo(

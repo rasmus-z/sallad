@@ -20,6 +20,7 @@ import { motion } from "framer-motion";
 import type {
   AdvancedModelSettings,
   Character,
+  CompanionTimeOverride,
   Model,
   Persona,
   Session,
@@ -59,6 +60,7 @@ import { storageBridge } from "../../../core/storage/files";
 import { ChatTemplateSelector } from "./components/ChatTemplateSelector";
 import { AuthorNoteBottomMenu } from "./components/AuthorNoteBottomMenu";
 import { CompanionScheduledNotesEditor } from "../characters/components/CompanionScheduledNotesEditor";
+import { CompanionTimeOverrideCard } from "./components/CompanionTimeOverrideCard";
 import { CalendarClock, Clock } from "lucide-react";
 import { useI18n } from "../../../core/i18n/context";
 import { isRenderableImageUrl } from "../../../core/utils/image";
@@ -613,6 +615,37 @@ export function ChatSettingsContent({
     }
   }, [companionTimeAwarenessEnabled, currentSession]);
 
+  const handleApplyCompanionTimeOverride = useCallback(
+    async (override: CompanionTimeOverride | null) => {
+      if (!currentSession) {
+        return;
+      }
+
+      const nextCompanionState = CompanionSessionStateSchema.parse({
+        ...(currentSession.companionState ?? {}),
+        preferences: {
+          ...(currentSession.companionState?.preferences ?? {}),
+          timeOverride: override ?? undefined,
+        },
+        updatedAt: Date.now(),
+      });
+
+      const updatedSession: Session = {
+        ...currentSession,
+        companionState: nextCompanionState,
+        updatedAt: Date.now(),
+      };
+
+      try {
+        await saveSession(updatedSession);
+        setCurrentSession(updatedSession);
+      } catch (error) {
+        console.error("Failed to update companion time override:", error);
+      }
+    },
+    [currentSession],
+  );
+
   const handleViewHistory = useCallback(() => {
     if (!characterId) return;
     const base = Routes.chatHistory(characterId);
@@ -1059,6 +1092,12 @@ export function ChatSettingsContent({
                   disabled={!currentSession}
                 />
               </div>
+
+              <CompanionTimeOverrideCard
+                session={currentSession ?? null}
+                onApply={handleApplyCompanionTimeOverride}
+                disabled={!currentSession}
+              />
 
               {characterId ? (
                 <button
