@@ -356,6 +356,24 @@ pub fn save_session(app: &AppHandle, session: &Session) -> Result<(), String> {
     if !owner.shared {
         meta.memory_embeddings = Vec::new();
     }
+
+    if let Some(state_obj) = meta
+        .companion_state
+        .as_mut()
+        .and_then(|value| value.as_object_mut())
+    {
+        if let Ok(Some(persisted)) = session_get_meta_internal(app, &session.id) {
+            if let Some(prefs) = persisted
+                .companion_state
+                .as_ref()
+                .and_then(|value| value.get("preferences"))
+                .cloned()
+            {
+                state_obj.insert("preferences".to_string(), prefs);
+            }
+        }
+    }
+
     session_upsert_meta_internal(app, &meta)?;
 
     if let Some(last) = session.messages.last() {
