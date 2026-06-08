@@ -38,9 +38,19 @@ import { useI18n } from "../../../core/i18n/context";
 // Main Component
 // ============================================================================
 
-export function GroupChatSettingsPage() {
+export function GroupChatSettingsPage({
+  mode = "page",
+  onClose,
+  groupSessionId: groupSessionIdProp,
+}: {
+  mode?: "page" | "drawer";
+  onClose?: () => void;
+  groupSessionId?: string;
+} = {}) {
   const { t } = useI18n();
-  const { groupSessionId } = useParams<{ groupSessionId: string }>();
+  const params = useParams<{ groupSessionId: string }>();
+  const groupSessionId = groupSessionIdProp ?? params.groupSessionId;
+  const isDrawer = mode === "drawer";
   const navigate = useNavigate();
   const { backOrReplace } = useNavigationManager();
 
@@ -158,6 +168,10 @@ export function GroupChatSettingsPage() {
   } = ui;
 
   const handleBack = () => {
+    if (isDrawer) {
+      onClose?.();
+      return;
+    }
     if (groupSessionId) {
       backOrReplace(Routes.groupChat(groupSessionId));
     } else {
@@ -317,7 +331,7 @@ export function GroupChatSettingsPage() {
       )}
     >
       {/* Background image + scrim overlay */}
-      {backgroundImagePath && (
+      {backgroundImagePath && !isDrawer && (
         <>
           <div
             className="pointer-events-none fixed inset-0 z-0"
@@ -337,30 +351,32 @@ export function GroupChatSettingsPage() {
       )}
 
       {/* Header */}
-      <header
-        className={cn(
-          "z-20 shrink-0 border-b border-fg/10 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)] shrink-0",
-          !backgroundImagePath ? "bg-surface" : "",
-        )}
-      >
-        <div className="flex items-center gap-3">
-          <div className="flex flex-1 items-center min-w-0">
-            <button
-              onClick={handleBack}
-              className="flex shrink-0 px-[0.6em] py-[0.3em] items-center justify-center -ml-2 text-fg transition hover:text-fg/80"
-              aria-label="Back"
-            >
-              <ArrowLeft size={14} strokeWidth={2.5} />
-            </button>
-            <div className="min-w-0 flex-1 text-left">
-              <p className="truncate text-xl font-bold text-fg/90">{t("common.nav.settings")}</p>
-              <p className="mt-0.5 truncate text-xs text-fg/50">
-                {t("groupChats.sessionSettings.subtitle")}
-              </p>
+      {!isDrawer && (
+        <header
+          className={cn(
+            "z-20 shrink-0 border-b border-fg/10 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)] shrink-0",
+            !backgroundImagePath ? "bg-surface" : "",
+          )}
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex flex-1 items-center min-w-0">
+              <button
+                onClick={handleBack}
+                className="flex shrink-0 px-[0.6em] py-[0.3em] items-center justify-center -ml-2 text-fg transition hover:text-fg/80"
+                aria-label="Back"
+              >
+                <ArrowLeft size={14} strokeWidth={2.5} />
+              </button>
+              <div className="min-w-0 flex-1 text-left">
+                <p className="truncate text-xl font-bold text-fg/90">{t("common.nav.settings")}</p>
+                <p className="mt-0.5 truncate text-xs text-fg/50">
+                  {t("groupChats.sessionSettings.subtitle")}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       {/* Content */}
       <main className="relative z-10 flex-1 overflow-y-auto px-3 pt-4 pb-16">

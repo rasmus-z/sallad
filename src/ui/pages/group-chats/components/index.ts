@@ -7,4 +7,5 @@ export {
 } from "./GroupChatMessage";
 export { GroupChatHeader } from "./GroupChatHeader";
 export { GroupChatAppearanceDrawer } from "./appearance/GroupChatAppearanceDrawer";
+export { GroupChatSettingsDrawer } from "./GroupChatSettingsDrawer";
 export { GroupChatMessageActionsBottomSheet } from "./GroupChatMessageActionsBottomSheet";

@@ -44,6 +44,7 @@ import {
   GroupChatFooter,
   GroupChatHeader,
   GroupChatAppearanceDrawer,
+  GroupChatSettingsDrawer,
   GroupChatMessage,
   GroupChatMessageActionsBottomSheet,
   type VariantState,
@@ -143,6 +144,7 @@ export function GroupChatPage() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [heldMessageId, setHeldMessageId] = useState<string | null>(null);
   const [appearanceDrawerOpen, setAppearanceDrawerOpen] = useState(false);
+  const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isAtBottomRef = useRef(true);
@@ -214,6 +216,15 @@ export function GroupChatPage() {
       navigate(Routes.groupChatAppearance(session.id));
     } else {
       setAppearanceDrawerOpen(true);
+    }
+  }, [isMobilePlatform, navigate, session]);
+
+  const handleOpenSettings = useCallback(() => {
+    if (!session) return;
+    if (isMobilePlatform) {
+      navigate(Routes.groupChatSettings(session.id));
+    } else {
+      setSettingsDrawerOpen(true);
     }
   }, [isMobilePlatform, navigate, session]);
 
@@ -1675,7 +1686,7 @@ export function GroupChatPage() {
             session={session}
             characters={groupCharacters}
             onBack={() => navigate(Routes.groupChats)}
-            onSettings={() => navigate(Routes.groupChatSettings(session.id))}
+            onSettings={handleOpenSettings}
             onMemories={() => navigate(Routes.groupChatMemories(session.id))}
             onLorebooks={() => navigate(Routes.groupChatLorebook(session.id))}
             onAppearance={group ? handleOpenAppearance : undefined}
@@ -1973,6 +1984,14 @@ export function GroupChatPage() {
           onGroupUpdate={updateGroup}
           setDraftOverride={setDraftAppearanceOverride}
           registerFieldUpdater={registerAppearanceFieldUpdater}
+        />
+      )}
+
+      {!isMobilePlatform && (
+        <GroupChatSettingsDrawer
+          isOpen={settingsDrawerOpen}
+          onClose={() => setSettingsDrawerOpen(false)}
+          groupSessionId={session.id}
         />
       )}
     </div>
