@@ -1947,6 +1947,86 @@ export function GroupChatPage() {
   const footerBottomOffset = `calc(env(safe-area-inset-bottom) + ${keyboardInset}px)`;
   const scrollButtonBottomOffset = `calc(env(safe-area-inset-bottom) + ${keyboardInset}px + 88px)`;
 
+  const columnLayout = getChatColumnLayout(chatAppearance);
+  const headerInside = widgetsOn && chatAppearance.chatHeaderMoves;
+  const footerInside = widgetsOn && chatAppearance.chatFooterMoves;
+  const applyHeaderColumnClass = !widgetsOn && chatAppearance.chatHeaderMoves;
+  const applyFooterColumnClass = !widgetsOn && chatAppearance.chatFooterMoves;
+
+  const headerNode = (
+    <div
+      className={`relative z-20 shrink-0 ${applyHeaderColumnClass ? columnLayout.className : ""}`}
+      style={applyHeaderColumnClass ? columnLayout.style : undefined}
+    >
+      <GroupChatHeader
+        session={session}
+        characters={groupCharacters}
+        onBack={() => navigate(Routes.groupChats)}
+        onSettings={handleOpenSettings}
+        onMemories={() => navigate(Routes.groupChatMemories(session.id))}
+        onLorebooks={() => navigate(Routes.groupChatLorebook(session.id))}
+        onAppearance={group ? handleOpenAppearance : undefined}
+        onSearch={() => navigate(Routes.groupChatSearch(session.id))}
+        onEditWidgets={!isMobilePlatform ? requestWidgetEdit : undefined}
+        hasBackgroundImage={!!backgroundImageData}
+        headerOverlayClassName={theme.headerOverlay}
+        transparentHeader={chatAppearance.transparentHeader}
+      />
+    </div>
+  );
+
+  const footerNode = (
+    <div
+      className={`relative z-20 shrink-0 ${applyFooterColumnClass ? columnLayout.className : ""}`}
+      style={{
+        paddingBottom: footerBottomOffset,
+        ...(applyFooterColumnClass ? columnLayout.style : {}),
+      }}
+    >
+      <GroupChatFooter
+        draft={draft}
+        setDraft={setDraft}
+        error={error}
+        setError={setError}
+        sending={sending}
+        characters={groupCharacters}
+        persona={currentPersona}
+        onSendMessage={handleSend}
+        onContinue={messages.length > 0 ? () => handleContinue() : undefined}
+        onAbort={handleAbort}
+        hasBackgroundImage={!!backgroundImageData}
+        footerOverlayClassName={theme.footerOverlay}
+        pendingAttachments={pendingAttachments}
+        onAddAttachment={supportsImageInput ? addPendingAttachment : undefined}
+        onRemoveAttachment={supportsImageInput ? removePendingAttachment : undefined}
+        onOpenPlusMenu={handleOpenPlusMenu}
+        triggerFileInput={shouldTriggerFileInput}
+        onFileInputTriggered={() => setShouldTriggerFileInput(false)}
+        inlinePanel={footerInlinePanel}
+        onMicClick={
+          installedWhisperModels.length === 0
+            ? undefined
+            : () => {
+                void handleFooterMicClick();
+              }
+        }
+        onMicCancel={cancelFooterRecording}
+        micActive={footerAsrMode === "recording" || footerAsrMode === "transcribing"}
+        micDisabled={footerAsrBusy}
+        recordingElapsedMs={footerRecordingMs}
+        recordingAnalyser={footerAnalyser}
+        recordingTranscribing={footerAsrMode === "transcribing"}
+        composerDisabled={footerAsrMode !== "idle"}
+        mutedCharacterIds={mutedCharacterIds}
+        onToggleMute={handleToggleMute}
+        participantsBarEnabled={chatAppearance.participantsBarEnabled}
+        participantsBarSize={chatAppearance.participantsBarAvatarSize}
+        participantsBarGap={chatAppearance.participantsBarGap}
+        participantsBarAlign={chatAppearance.participantsBarAlign}
+      />
+    </div>
+  );
+
   return (
     <div
       className={cn(
@@ -1959,26 +2039,7 @@ export function GroupChatPage() {
       <div
         className="relative z-10 flex h-full flex-col"
       >
-        {/* Header */}
-        <div
-          className={`relative z-20 shrink-0 ${chatAppearance.chatHeaderMoves ? getChatColumnLayout(chatAppearance).className : ""}`}
-          style={chatAppearance.chatHeaderMoves ? getChatColumnLayout(chatAppearance).style : undefined}
-        >
-          <GroupChatHeader
-            session={session}
-            characters={groupCharacters}
-            onBack={() => navigate(Routes.groupChats)}
-            onSettings={handleOpenSettings}
-            onMemories={() => navigate(Routes.groupChatMemories(session.id))}
-            onLorebooks={() => navigate(Routes.groupChatLorebook(session.id))}
-            onAppearance={group ? handleOpenAppearance : undefined}
-            onSearch={() => navigate(Routes.groupChatSearch(session.id))}
-            onEditWidgets={!isMobilePlatform ? requestWidgetEdit : undefined}
-            hasBackgroundImage={!!backgroundImageData}
-            headerOverlayClassName={theme.headerOverlay}
-            transparentHeader={chatAppearance.transparentHeader}
-          />
-        </div>
+        {!headerInside && headerNode}
 
         {/* Main content area - flex-1 takes remaining space */}
         <WidgetContextProvider value={widgetCtxValue}>
@@ -1995,6 +2056,7 @@ export function GroupChatPage() {
               viewportWidth={viewportWidth}
               onResizeColumn={(px) => void persistColumnWidthPx(px)}
             >
+        {headerInside && headerNode}
         <main
           ref={scrollContainerRef}
           onScroll={handleScroll}
@@ -2063,6 +2125,7 @@ export function GroupChatPage() {
             )}
           </div>
         </main>
+        {footerInside && footerNode}
             </ChatWidgetArea>
           </WidgetEditProvider>
         </WidgetContextProvider>
@@ -2091,58 +2154,7 @@ export function GroupChatPage() {
           )}
         </AnimatePresence>
 
-        {/* Footer */}
-        <div
-          className={`relative z-20 shrink-0 ${chatAppearance.chatFooterMoves ? getChatColumnLayout(chatAppearance).className : ""}`}
-          style={{
-            paddingBottom: footerBottomOffset,
-            ...(chatAppearance.chatFooterMoves ? getChatColumnLayout(chatAppearance).style : {}),
-          }}
-        >
-          <GroupChatFooter
-            draft={draft}
-            setDraft={setDraft}
-            error={error}
-            setError={setError}
-            sending={sending}
-            characters={groupCharacters}
-            persona={currentPersona}
-            onSendMessage={handleSend}
-            onContinue={messages.length > 0 ? () => handleContinue() : undefined}
-            onAbort={handleAbort}
-            hasBackgroundImage={!!backgroundImageData}
-            footerOverlayClassName={theme.footerOverlay}
-            pendingAttachments={pendingAttachments}
-            onAddAttachment={supportsImageInput ? addPendingAttachment : undefined}
-            onRemoveAttachment={supportsImageInput ? removePendingAttachment : undefined}
-            onOpenPlusMenu={handleOpenPlusMenu}
-            triggerFileInput={shouldTriggerFileInput}
-            onFileInputTriggered={() => setShouldTriggerFileInput(false)}
-            inlinePanel={footerInlinePanel}
-            onMicClick={
-              installedWhisperModels.length === 0
-                ? undefined
-                : () => {
-                    void handleFooterMicClick();
-                  }
-            }
-            onMicCancel={cancelFooterRecording}
-            micActive={
-              footerAsrMode === "recording" || footerAsrMode === "transcribing"
-            }
-            micDisabled={footerAsrBusy}
-            recordingElapsedMs={footerRecordingMs}
-            recordingAnalyser={footerAnalyser}
-            recordingTranscribing={footerAsrMode === "transcribing"}
-            composerDisabled={footerAsrMode !== "idle"}
-            mutedCharacterIds={mutedCharacterIds}
-            onToggleMute={handleToggleMute}
-            participantsBarEnabled={chatAppearance.participantsBarEnabled}
-            participantsBarSize={chatAppearance.participantsBarAvatarSize}
-            participantsBarGap={chatAppearance.participantsBarGap}
-            participantsBarAlign={chatAppearance.participantsBarAlign}
-          />
-        </div>
+        {!footerInside && footerNode}
       </div>
 
       {/* Plus Menu - Upload Image & Help Me Reply */}
