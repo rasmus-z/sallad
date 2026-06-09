@@ -122,11 +122,18 @@ export function GroupChatParticipantsBar({
 
   if (characters.length < 2) return null;
 
+  const actions = (
+    <DirectorActions
+      onConfirm={() => selectedId && onConfirmSpeaker?.(selectedId)}
+      onCancel={() => onCancelSpeaker?.()}
+    />
+  );
+
   return (
-    <div className="mb-2">
+    <div className="mb-1">
       {directorMode && (
-        <div className="mb-1.5 flex items-center gap-1.5 px-1.5 text-[11px] text-fg/45">
-          <Clapperboard size={12} className="text-accent/70" />
+        <div className="mb-1.5 flex items-center gap-1.5 px-1.5 text-[11px] text-fg/55 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
+          <Clapperboard size={12} className="text-accent/80" />
           <AnimatePresence mode="wait" initial={false}>
             <motion.span
               key={selectedName ?? "none"}
@@ -142,56 +149,48 @@ export function GroupChatParticipantsBar({
           </AnimatePresence>
         </div>
       )}
-      <div
-        className={cn(
-          "flex items-center overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-          GAP_CLASS[gap],
-          ALIGN_CLASS[align],
+      <div className="flex items-center gap-2">
+        {actionSide === "left" && (
+          <AnimatePresence>{!!selectedId && actions}</AnimatePresence>
         )}
-      >
-        {characters.map((character) => {
-          const isSelected = directorMode && selectedId === character.id;
-          const otherSelected = directorMode && !!selectedId && selectedId !== character.id;
-          const avatar = (
-            <ParticipantAvatar
-              character={character}
-              muted={mutedCharacterIds.has(character.id)}
-              mentioned={mentionedIds.has(character.id)}
-              selected={isSelected}
-              dimmed={
-                mutedCharacterIds.has(character.id) ||
-                (hasActiveMention && !mentionedIds.has(character.id)) ||
-                otherSelected
-              }
-              disabled={disabled || otherSelected}
-              sizeClass={SIZE_CLASS[size]}
-              directorMode={directorMode}
-              onMention={() =>
-                directorMode
-                  ? onSelectSpeaker?.(character.id)
-                  : setDraft(toggleMention(draft, character.name))
-              }
-              onToggleMute={(muted) => onToggleMute(character.id, muted)}
-            />
-          );
-          const actions = (
-            <DirectorActions
-              onConfirm={() => onConfirmSpeaker?.(character.id)}
-              onCancel={() => onCancelSpeaker?.()}
-            />
-          );
-          return (
-            <div key={character.id} className="flex shrink-0 items-center gap-1.5">
-              {actionSide === "left" && (
-                <AnimatePresence>{isSelected && actions}</AnimatePresence>
-              )}
-              {avatar}
-              {actionSide === "right" && (
-                <AnimatePresence>{isSelected && actions}</AnimatePresence>
-              )}
-            </div>
-          );
-        })}
+        <div
+          className={cn(
+            "flex min-w-0 flex-1 items-center overflow-x-auto px-1 py-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+            GAP_CLASS[gap],
+            ALIGN_CLASS[align],
+          )}
+        >
+          {characters.map((character) => {
+            const isSelected = directorMode && selectedId === character.id;
+            const otherSelected = directorMode && !!selectedId && selectedId !== character.id;
+            return (
+              <ParticipantAvatar
+                key={character.id}
+                character={character}
+                muted={mutedCharacterIds.has(character.id)}
+                mentioned={mentionedIds.has(character.id)}
+                selected={isSelected}
+                dimmed={
+                  mutedCharacterIds.has(character.id) ||
+                  (hasActiveMention && !mentionedIds.has(character.id)) ||
+                  otherSelected
+                }
+                disabled={disabled || otherSelected}
+                sizeClass={SIZE_CLASS[size]}
+                directorMode={directorMode}
+                onMention={() =>
+                  directorMode
+                    ? onSelectSpeaker?.(character.id)
+                    : setDraft(toggleMention(draft, character.name))
+                }
+                onToggleMute={(muted) => onToggleMute(character.id, muted)}
+              />
+            );
+          })}
+        </div>
+        {actionSide === "right" && (
+          <AnimatePresence>{!!selectedId && actions}</AnimatePresence>
+        )}
       </div>
     </div>
   );
@@ -284,7 +283,7 @@ function ParticipantAvatar({
           "h-full w-full rounded-full overflow-hidden bg-transparent",
           "ring-2 transition-all",
           selected
-            ? "ring-accent ring-offset-2 ring-offset-surface shadow-[0_0_12px_-2px_var(--color-accent)]"
+            ? "ring-accent shadow-[0_0_10px_-1px_var(--color-accent)]"
             : mentioned
               ? "ring-accent"
               : directorMode

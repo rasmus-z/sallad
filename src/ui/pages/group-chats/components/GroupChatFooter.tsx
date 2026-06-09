@@ -329,7 +329,7 @@ export function GroupChatFooter({
   return (
     <footer
       className={cn(
-        "z-20 shrink-0 px-4 pb-3 pt-3",
+        "relative z-20 shrink-0 px-4 pb-3 pt-3",
         hasBackgroundImage ? "bg-transparent" : "bg-surface",
       )}
     >
@@ -416,23 +416,27 @@ export function GroupChatFooter({
       />
 
       {!micActive && onToggleMute && (participantsBarEnabled || directorMode) && (
-        <GroupChatParticipantsBar
-          characters={characters}
-          draft={draft}
-          setDraft={setDraft}
-          mutedCharacterIds={mutedCharacterIds ?? EMPTY_MUTED_SET}
-          onToggleMute={onToggleMute}
-          disabled={sending || composerDisabled}
-          size={participantsBarSize}
-          gap={participantsBarGap}
-          align={participantsBarAlign}
-          directorMode={directorMode}
-          selectedId={directorSelectedId}
-          actionSide={directorActionSide}
-          onSelectSpeaker={onSelectSpeaker}
-          onConfirmSpeaker={onConfirmSpeaker}
-          onCancelSpeaker={onCancelSpeaker}
-        />
+        <div className="pointer-events-none absolute inset-x-0 bottom-full px-4">
+          <div className="pointer-events-auto">
+            <GroupChatParticipantsBar
+              characters={characters}
+              draft={draft}
+              setDraft={setDraft}
+              mutedCharacterIds={mutedCharacterIds ?? EMPTY_MUTED_SET}
+              onToggleMute={onToggleMute}
+              disabled={sending || composerDisabled}
+              size={participantsBarSize}
+              gap={participantsBarGap}
+              align={participantsBarAlign}
+              directorMode={directorMode}
+              selectedId={directorSelectedId}
+              actionSide={directorActionSide}
+              onSelectSpeaker={onSelectSpeaker}
+              onConfirmSpeaker={onConfirmSpeaker}
+              onCancelSpeaker={onCancelSpeaker}
+            />
+          </div>
+        </div>
       )}
 
       <div
