@@ -62,6 +62,7 @@ interface GroupChatFooterProps {
   participantsBarAlign?: ParticipantsBarAlign;
   directorMode?: boolean;
   directorSelectedId?: string | null;
+  directorWiggleNonce?: number;
   onSelectSpeaker?: (characterId: string) => void;
 }
 
@@ -100,6 +101,7 @@ export function GroupChatFooter({
   participantsBarAlign = "left",
   directorMode = false,
   directorSelectedId = null,
+  directorWiggleNonce = 0,
   onSelectSpeaker,
 }: GroupChatFooterProps) {
   const { t } = useI18n();
@@ -434,6 +436,7 @@ export function GroupChatFooter({
               align={participantsBarAlign}
               directorMode={directorMode}
               selectedId={directorSelectedId}
+              wiggleNonce={directorWiggleNonce}
               onSelectSpeaker={onSelectSpeaker}
             />
           </div>

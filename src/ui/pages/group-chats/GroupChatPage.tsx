@@ -148,6 +148,7 @@ export function GroupChatPage() {
   >([]);
   const [keyboardInset, setKeyboardInset] = useState(0);
   const [directorSelectedId, setDirectorSelectedId] = useState<string | null>(null);
+  const [directorWiggleNonce, setDirectorWiggleNonce] = useState(0);
   const helpMeReplyRequestIdRef = useRef<string | null>(null);
   const helpMeReplyUnlistenRef = useRef<UnlistenFn | null>(null);
   const helpMeReplyLoadingTimeoutRef = useRef<number | null>(null);
@@ -995,7 +996,7 @@ export function GroupChatPage() {
   const handleDirectorTap = useCallback(
     (characterId: string) => {
       if (sending) return;
-      setDirectorSelectedId((prev) => (prev === characterId ? null : characterId));
+      setDirectorSelectedId(characterId);
     },
     [sending],
   );
@@ -1003,18 +1004,21 @@ export function GroupChatPage() {
   const handleDirectorSend = useCallback(async () => {
     if (sending) return;
     const text = draft.trim();
-    const selected = directorSelectedId;
-    if (!text && !selected) return;
-    if (text) setDraft("");
-    setDirectorSelectedId(null);
+    const selected =
+      directorSelectedId && session?.characterIds.includes(directorSelectedId)
+        ? directorSelectedId
+        : null;
+    if (!selected) {
+      setDirectorWiggleNonce((n) => n + 1);
+      return;
+    }
     if (text) {
+      setDraft("");
       const added = await handleAddUserMessage(text);
       if (!added) return;
     }
-    if (selected) {
-      await handleContinue(selected);
-    }
-  }, [sending, draft, directorSelectedId, handleAddUserMessage, handleContinue]);
+    await handleContinue(selected);
+  }, [sending, draft, directorSelectedId, session, handleAddUserMessage, handleContinue]);
 
   useEffect(() => {
     if (!isDirectorMode) setDirectorSelectedId(null);
@@ -2074,6 +2078,7 @@ export function GroupChatPage() {
         onAbort={handleAbort}
         directorMode={isDirectorMode}
         directorSelectedId={directorSelectedId}
+        directorWiggleNonce={directorWiggleNonce}
         onSelectSpeaker={handleDirectorTap}
         hasBackgroundImage={!!backgroundImageData}
         footerOverlayClassName={theme.footerOverlay}

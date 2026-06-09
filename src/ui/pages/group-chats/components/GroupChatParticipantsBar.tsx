@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { motion, AnimatePresence, useAnimationControls } from "framer-motion";
 import { VolumeX, Clapperboard } from "lucide-react";
 import { useI18n } from "../../../../core/i18n/context";
 import type { Character } from "../../../../core/storage/schemas";
@@ -82,6 +82,7 @@ interface GroupChatParticipantsBarProps {
   align?: ParticipantsBarAlign;
   directorMode?: boolean;
   selectedId?: string | null;
+  wiggleNonce?: number;
   onSelectSpeaker?: (characterId: string) => void;
 }
 
@@ -97,9 +98,20 @@ export function GroupChatParticipantsBar({
   align = "left",
   directorMode = false,
   selectedId = null,
+  wiggleNonce = 0,
   onSelectSpeaker,
 }: GroupChatParticipantsBarProps) {
   const { t } = useI18n();
+  const wiggleControls = useAnimationControls();
+
+  useEffect(() => {
+    if (wiggleNonce > 0) {
+      void wiggleControls.start({
+        x: [0, -8, 8, -7, 7, -4, 4, 0],
+        transition: { duration: 0.45, ease: "easeInOut" },
+      });
+    }
+  }, [wiggleNonce, wiggleControls]);
   const mentionedIds = useMemo(() => {
     if (directorMode) return new Set<string>();
     const set = new Set<string>();
@@ -118,7 +130,8 @@ export function GroupChatParticipantsBar({
 
   return (
     <div className="mb-1">
-      <div
+      <motion.div
+        animate={wiggleControls}
         className={cn(
           "flex items-center overflow-x-auto px-1 py-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
           GAP_CLASS[gap],
@@ -127,7 +140,6 @@ export function GroupChatParticipantsBar({
       >
         {characters.map((character) => {
             const isSelected = directorMode && selectedId === character.id;
-            const otherSelected = directorMode && !!selectedId && selectedId !== character.id;
             return (
               <ParticipantAvatar
                 key={character.id}
@@ -137,10 +149,9 @@ export function GroupChatParticipantsBar({
                 selected={isSelected}
                 dimmed={
                   mutedCharacterIds.has(character.id) ||
-                  (hasActiveMention && !mentionedIds.has(character.id)) ||
-                  otherSelected
+                  (hasActiveMention && !mentionedIds.has(character.id))
                 }
-                disabled={disabled || otherSelected}
+                disabled={disabled}
                 sizeClass={SIZE_CLASS[size]}
                 directorMode={directorMode}
                 onMention={() =>
@@ -152,7 +163,7 @@ export function GroupChatParticipantsBar({
               />
             );
           })}
-      </div>
+      </motion.div>
       {directorMode && (
         <div className="mt-1 flex items-center gap-1.5 px-1.5 text-[11px] text-fg/55 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
           <Clapperboard size={12} className="text-accent/80" />
