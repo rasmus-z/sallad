@@ -1756,8 +1756,13 @@ pub async fn hf_search_models(
     let sort_field = sort.unwrap_or_else(|| "trendingScore".to_string());
     let offset = offset.unwrap_or(0);
 
+    let direct_repo_query = query.trim().contains('/');
     let filter = if mode.as_deref() == Some("sd") {
-        "pipeline_tag=text-to-image"
+        if direct_repo_query {
+            ""
+        } else {
+            "pipeline_tag=text-to-image"
+        }
     } else {
         "filter=gguf"
     };
