@@ -30,7 +30,7 @@ interface GroupChatCreateFormState {
   groupName: string;
   chatType: "conversation" | "roleplay";
   memoryType: "manual" | "dynamic";
-  speakerSelectionMethod: "llm" | "heuristic" | "round_robin" | "director";
+  speakerSelectionMethod: "llm" | "heuristic" | "round_robin" | "director" | "director_action";
   backgroundImagePath: string;
 
   // Step 3: Starting Scene
@@ -51,7 +51,7 @@ type GroupChatCreateFormAction =
   | { type: "SET_GROUP_NAME"; payload: string }
   | { type: "SET_CHAT_TYPE"; payload: "conversation" | "roleplay" }
   | { type: "SET_MEMORY_TYPE"; payload: "manual" | "dynamic" }
-  | { type: "SET_SPEAKER_SELECTION_METHOD"; payload: "llm" | "heuristic" | "round_robin" | "director" }
+  | { type: "SET_SPEAKER_SELECTION_METHOD"; payload: "llm" | "heuristic" | "round_robin" | "director" | "director_action" }
   | { type: "SET_BACKGROUND_IMAGE_PATH"; payload: string }
   | { type: "SET_SCENE_SOURCE"; payload: "none" | "custom" | "character" }
   | { type: "SET_CUSTOM_SCENE"; payload: string }
@@ -212,7 +212,7 @@ export function useGroupChatCreateForm(options: UseGroupChatCreateFormOptions = 
   }, []);
 
   const setSpeakerSelectionMethod = useCallback(
-    (value: "llm" | "heuristic" | "round_robin" | "director") => {
+    (value: "llm" | "heuristic" | "round_robin" | "director" | "director_action") => {
       dispatch({ type: "SET_SPEAKER_SELECTION_METHOD", payload: value });
     },
     [],

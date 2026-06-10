@@ -1072,6 +1072,10 @@ export const enMessages = {
         noCharactersYet: "No characters yet",
         noCharactersDesc: "Create some characters first to start a group chat",
         continueToSetup: "Continue to Group Setup",
+        searchPlaceholder: "Search characters...",
+        noResults: "No characters match your search",
+        selectedCount: "{{count}} selected",
+        minHint: "Select at least 2 characters to continue",
       },
       groupSetup: {
         title: "Group Setup",
@@ -1102,6 +1106,8 @@ export const enMessages = {
         groupNameAutoGenerate: "Leave empty to auto-generate from character names",
         continueToScene: "Continue to Starting Scene",
         createGroupChat: "Create Group Chat",
+        castCount: "{{count}} characters",
+        directorRowDesc: "You choose which character responds to each message",
       },
       startingScene: {
         title: "Starting Scene",
@@ -1118,6 +1124,7 @@ export const enMessages = {
         sceneReferenceTip: "Tip: Type {{@\" to reference characters",
         selectScene: "Select a Scene",
         sceneLabel: "'s Scene",
+        sceneNumber: "Scene {{number}}",
         copyToCustom: "Copy to Custom & Edit",
       },
     },
