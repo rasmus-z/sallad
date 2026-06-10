@@ -2533,6 +2533,61 @@ export function EditModelPage() {
                                     className={textAreaInputClassName}
                                   />
                                 </div>
+
+                                {isLocalDiffusionModel ? (
+                                  <div className="space-y-4">
+                                    <div className="space-y-0.5">
+                                      <span className="block text-[13px] font-medium text-fg/70">
+                                        {t("editModel.generationDescriptions.sdOffloadTitle")}
+                                      </span>
+                                      <span className="block text-[13px] text-fg/40">
+                                        {t("editModel.generationDescriptions.sdOffloadMode")}
+                                      </span>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2">
+                                      {(
+                                        [
+                                          ["auto", t("editModel.sdOffload.auto"), t("editModel.sdOffload.autoHint")],
+                                          ["gpu", t("editModel.sdOffload.gpu"), t("editModel.sdOffload.gpuHint")],
+                                          ["mixed", t("editModel.sdOffload.mixed"), t("editModel.sdOffload.mixedHint")],
+                                        ] as const
+                                      ).map(([value, label, hint]) => {
+                                        const active =
+                                          (modelAdvancedDraft.sdOffloadMode ?? "auto") === value;
+                                        return (
+                                          <button
+                                            key={value}
+                                            type="button"
+                                            onClick={() =>
+                                              updateSdSetting(
+                                                "sdOffloadMode",
+                                                value === "auto" ? null : value,
+                                              )
+                                            }
+                                            className={cn(
+                                              "rounded-lg border px-3 py-2.5 text-left transition",
+                                              active
+                                                ? "border-accent/30 bg-accent/10"
+                                                : "border-fg/10 bg-fg/5 hover:border-fg/20 hover:bg-fg/8",
+                                            )}
+                                          >
+                                            <span
+                                              className={cn(
+                                                "block text-[13px] font-medium",
+                                                active ? "text-accent" : "text-fg/70",
+                                              )}
+                                            >
+                                              {label}
+                                            </span>
+                                            <span className="mt-0.5 block text-[12px] leading-snug text-fg/40">
+                                              {hint}
+                                            </span>
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                ) : null}
                               </div>
                             ) : (
                               <div className="grid grid-cols-1 gap-x-6 gap-y-8 md:grid-cols-2 xl:grid-cols-3 xl:gap-x-8">

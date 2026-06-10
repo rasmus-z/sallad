@@ -101,6 +101,11 @@ fn encoder_overhead_bytes(family: &str) -> f64 {
     }
 }
 
+pub(crate) fn estimate_activation_bytes(family: &str, width: u32, height: u32) -> f64 {
+    let pixels_ratio = (width as f64 * height as f64) / (1024.0 * 1024.0);
+    activation_bytes_at_1024(family) * pixels_ratio.max(0.25)
+}
+
 fn activation_bytes_at_1024(family: &str) -> f64 {
     match family {
         "flux" | "chroma" | "qwen-image" => 5.0 * GIB,

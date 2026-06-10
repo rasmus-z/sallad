@@ -358,6 +358,7 @@ export const AdvancedModelSettingsSchema = z.object({
   sdNegativePrompt: z.string().trim().min(1).nullable().optional(),
   sdDenoisingStrength: z.number().min(0).max(1).nullable().optional(),
   sdSize: z.string().trim().min(3).nullable().optional(),
+  sdOffloadMode: z.enum(["auto", "gpu", "mixed"]).nullable().optional(),
   // llama.cpp specific settings
   llamaGpuLayers: z.number().int().min(0).max(512).nullable().optional(),
   llamaThreads: z.number().int().min(1).max(256).nullable().optional(),
@@ -3536,5 +3537,6 @@ export function createDefaultAdvancedModelSettings(): AdvancedModelSettings {
     sdNegativePrompt: null,
     sdDenoisingStrength: null,
     sdSize: null,
+    sdOffloadMode: null,
   };
 }

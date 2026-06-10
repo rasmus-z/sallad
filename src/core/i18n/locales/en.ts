@@ -2665,6 +2665,14 @@ export const enMessages = {
       mmprojEmptyHint:
         "Download a multimodal projector from the Model Browser, or enter a path manually.",
     },
+    sdOffload: {
+      auto: "Auto",
+      autoHint: "Pick the fastest mode that fits your memory",
+      gpu: "GPU",
+      gpuHint: "Keep everything in VRAM, fail if it does not fit",
+      mixed: "Mixed",
+      mixedHint: "Stream weights from RAM, slower but always fits",
+    },
     localDiffusion: {
       selectModel: "Select Local Model",
       pathPlaceholder: "/path/to/model.safetensors",
@@ -2785,6 +2793,8 @@ export const enMessages = {
       sdSeed: "Leave blank for random generations",
       sdDenoise: "Edit strength for reference-based generations",
       sdNegativePrompt: "Applied to every AUTOMATIC1111 request for this model",
+      sdOffloadTitle: "Memory Offload",
+      sdOffloadMode: "Where model weights live during generation",
       temperature: "Higher = more creative",
       topP: "Lower = more focused",
       maxOutputTokens: "Limit response length",

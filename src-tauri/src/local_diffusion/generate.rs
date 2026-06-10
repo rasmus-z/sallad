@@ -45,6 +45,62 @@ fn parse_size(size: Option<&str>) -> Option<(u32, u32)> {
     Some((round_to_64(parsed.0), round_to_64(parsed.1)))
 }
 
+fn file_size(path: Option<&String>) -> f64 {
+    path.and_then(|value| std::fs::metadata(value).ok())
+        .map(|meta| meta.len() as f64)
+        .unwrap_or(0.0)
+}
+
+fn offload_args(entry: &SdModelEntry, width: u32, height: u32, mode: &str) -> Vec<String> {
+    const GIB: f64 = 1024.0 * 1024.0 * 1024.0;
+    let mixed: Vec<String> = vec![
+        "--offload-to-cpu".into(),
+        "--diffusion-fa".into(),
+        "--vae-tiling".into(),
+    ];
+    match mode {
+        "gpu" => return Vec::new(),
+        "mixed" => return mixed,
+        _ => {}
+    }
+
+    let vram = crate::llama_cpp::available_vram_bytes().unwrap_or(0) as f64;
+    if vram <= 0.0 {
+        return Vec::new();
+    }
+    if crate::llama_cpp::is_unified_memory() {
+        return Vec::new();
+    }
+    let budget = vram * 0.9;
+
+    let files = &entry.files;
+    let main = file_size(files.checkpoint.as_ref()).max(file_size(files.diffusion_model.as_ref()));
+    let encoders = file_size(files.clip_l.as_ref())
+        + file_size(files.clip_g.as_ref())
+        + file_size(files.t5xxl.as_ref())
+        + file_size(files.llm.as_ref())
+        + file_size(files.llm_vision.as_ref());
+    let vae = file_size(files.vae.as_ref());
+    let activations = crate::hf_browser::sd::estimate_activation_bytes(&entry.family, width, height);
+    let overhead = 0.6 * GIB;
+
+    if main + encoders + vae + activations + overhead <= budget {
+        return Vec::new();
+    }
+    if main + vae + activations + overhead <= budget {
+        return vec!["--clip-on-cpu".into(), "--diffusion-fa".into()];
+    }
+    if main + activations + overhead <= budget {
+        return vec![
+            "--clip-on-cpu".into(),
+            "--vae-on-cpu".into(),
+            "--diffusion-fa".into(),
+            "--vae-tiling".into(),
+        ];
+    }
+    mixed
+}
+
 fn round_to_64(value: u32) -> u32 {
     ((value.clamp(64, 2048) + 32) / 64) * 64
 }
@@ -127,10 +183,17 @@ fn build_args(
             args.extend(["-n".into(), negative.clone()]);
         }
     }
-    if let Some((width, height)) = parse_size(size) {
+    let parsed_size = parse_size(size);
+    if let Some((width, height)) = parsed_size {
         args.extend(["-W".into(), width.to_string()]);
         args.extend(["-H".into(), height.to_string()]);
     }
+
+    let (est_width, est_height) = parsed_size.unwrap_or((1024, 1024));
+    let offload_mode = settings
+        .and_then(|s| s.sd_offload_mode.as_deref())
+        .unwrap_or("auto");
+    args.extend(offload_args(entry, est_width, est_height, offload_mode));
 
     let distilled = is_distilled(entry);
     let steps = settings
@@ -219,6 +282,32 @@ async fn run_generation(
 
     let out_path = tmp_dir.join("out.png");
     let args = build_args(entry, request, &out_path, init_image.as_ref());
+    let offload_flags: Vec<&String> = args
+        .iter()
+        .filter(|arg| {
+            matches!(
+                arg.as_str(),
+                "--offload-to-cpu" | "--clip-on-cpu" | "--vae-on-cpu" | "--diffusion-fa" | "--vae-tiling"
+            )
+        })
+        .collect();
+    crate::utils::log_info(
+        app,
+        "local_diffusion",
+        format!(
+            "generating with {} (offload: {})",
+            entry.name,
+            if offload_flags.is_empty() {
+                "full GPU".to_string()
+            } else {
+                offload_flags
+                    .iter()
+                    .map(|s| s.as_str())
+                    .collect::<Vec<_>>()
+                    .join(" ")
+            }
+        ),
+    );
 
     {
         let mut slot = RUNNING.lock().await;
