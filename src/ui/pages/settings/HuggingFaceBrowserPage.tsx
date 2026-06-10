@@ -1245,6 +1245,27 @@ export function HuggingFaceBrowserPage() {
 
   const sdModeParam = searchParams.get("mode");
   const isSdMode = sdModeParam === "sd";
+  const HF_MODE_STORAGE_KEY = "hfBrowser:mode";
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (sdModeParam) {
+      window.localStorage.setItem(HF_MODE_STORAGE_KEY, sdModeParam);
+      return;
+    }
+    const stored = window.localStorage.getItem(HF_MODE_STORAGE_KEY);
+    if (stored === "sd") {
+      setSearchParams(
+        (current) => {
+          const next = new URLSearchParams(current);
+          next.set("mode", "sd");
+          return next;
+        },
+        { replace: true },
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sdModeParam]);
 
   // Helper to preserve returnTo across param changes
   const preserveParams = useCallback(
@@ -1258,6 +1279,9 @@ export function HuggingFaceBrowserPage() {
 
   const setSdMode = useCallback(
     (enabled: boolean) => {
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(HF_MODE_STORAGE_KEY, enabled ? "sd" : "llm");
+      }
       const next: Record<string, string> = {};
       if (returnTo) next.returnTo = returnTo;
       if (enabled) next.mode = "sd";
