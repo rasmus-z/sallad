@@ -74,18 +74,68 @@ function extractShortName(modelId: string): string {
   return parts[parts.length - 1] || modelId;
 }
 
-function isMmprojFilename(filename: string): boolean {
+export function isMmprojDownloadFilename(filename: string): boolean {
   return filename.toLowerCase().includes("mmproj");
 }
 
-function isCreateableModelDownload(item: QueuedDownload): boolean {
+export function isMtpDownloadFilename(filename: string): boolean {
+  const base = filename.toLowerCase().split("/").pop() ?? "";
+  return base.startsWith("mtp-") || base.includes("-mtp.") || base.includes("_mtp.");
+}
+
+export function isSidecarDownload(item: QueuedDownload): boolean {
+  return (
+    item.downloadRole === "mmproj" ||
+    item.downloadRole === "mtp" ||
+    isMmprojDownloadFilename(item.filename) ||
+    isMtpDownloadFilename(item.filename)
+  );
+}
+
+export function isCreateableModelDownload(item: QueuedDownload): boolean {
   return (
     item.queueKind !== "kokoro" &&
     item.queueKind !== "whisper" &&
     item.queueKind !== "sd" &&
     item.queueKind !== "sdcpp" &&
-    !isMmprojFilename(item.filename)
+    !isSidecarDownload(item)
   );
+}
+
+export interface DownloadGroup {
+  installId: string;
+  model: QueuedDownload | null;
+  items: QueuedDownload[];
+}
+
+export function groupQueueDownloads(queue: QueuedDownload[]): {
+  groups: DownloadGroup[];
+  singles: QueuedDownload[];
+} {
+  const byInstall = new Map<string, QueuedDownload[]>();
+  const singles: QueuedDownload[] = [];
+  for (const item of queue) {
+    if (item.installId) {
+      const list = byInstall.get(item.installId) ?? [];
+      list.push(item);
+      byInstall.set(item.installId, list);
+    } else {
+      singles.push(item);
+    }
+  }
+  const groups: DownloadGroup[] = [];
+  for (const [installId, items] of byInstall) {
+    if (items.length < 2) {
+      singles.push(...items);
+      continue;
+    }
+    const model =
+      items.find((item) => item.downloadRole === "model") ??
+      items.find((item) => !isSidecarDownload(item)) ??
+      null;
+    groups.push({ installId, model, items });
+  }
+  return { groups, singles };
 }
 
 const registeredSdDownloads = new Set<string>();

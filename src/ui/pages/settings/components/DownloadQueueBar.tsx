@@ -6,8 +6,11 @@ import { cn, interactive } from "../../../design-tokens";
 import { Routes } from "../../../navigation";
 import {
   useDownloadQueue,
+  isCreateableModelDownload,
+  groupQueueDownloads,
   type QueuedDownload,
 } from "../../../../core/downloads/DownloadQueueContext";
+import { DownloadGroupCard } from "./DownloadGroupCard";
 import { useI18n, type TranslationKey } from "../../../../core/i18n/context";
 
 function formatBytes(bytes: number): string {
@@ -44,10 +47,6 @@ function extractShortName(modelId: string): string {
   return parts[parts.length - 1] || modelId;
 }
 
-function isMmprojFilename(filename: string): boolean {
-  return filename.toLowerCase().includes("mmproj");
-}
-
 function queueSubtitle(
   item: QueuedDownload,
   t: (key: TranslationKey, params?: Record<string, string | number>) => string,
@@ -56,14 +55,6 @@ function queueSubtitle(
     return item.displayName || t("models.downloadQueue.kokoroAsset" as TranslationKey);
   }
   return extractShortName(item.modelId);
-}
-
-function isCreateableModelDownload(item: QueuedDownload): boolean {
-  return (
-    item.queueKind !== "kokoro" &&
-    item.queueKind !== "whisper" &&
-    !isMmprojFilename(item.filename)
-  );
 }
 
 function pct(d: QueuedDownload): number {
@@ -102,7 +93,7 @@ export function InlineDownloadCards({
 
   const createModel = useCallback(
     (item: QueuedDownload) => {
-      if (isMmprojFilename(item.filename)) return;
+      if (!isCreateableModelDownload(item)) return;
       if (!item.resultPath) return;
       const displayName = extractShortName(item.modelId).replace(/-GGUF$/i, "");
       const params = new URLSearchParams();
@@ -115,9 +106,12 @@ export function InlineDownloadCards({
     [navigate, dismissItem],
   );
 
-  const activeDownloads = queue.filter((d) => d.status === "downloading" || d.status === "queued");
-  const completedDownloads = queue.filter((d) => d.status === "complete");
-  const failedDownloads = queue.filter((d) => d.status === "error" || d.status === "cancelled");
+  const { groups, singles } = groupQueueDownloads(queue);
+  const activeDownloads = singles.filter(
+    (d) => d.status === "downloading" || d.status === "queued",
+  );
+  const completedDownloads = singles.filter((d) => d.status === "complete");
+  const failedDownloads = singles.filter((d) => d.status === "error" || d.status === "cancelled");
 
   if (queue.length === 0) return null;
 
@@ -127,6 +121,19 @@ export function InlineDownloadCards({
   return (
     <div className="space-y-2 pb-1">
       <AnimatePresence mode="popLayout">
+        {groups.map((group) => (
+          <motion.div
+            key={`grp-${group.installId}`}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.15 }}
+            className="overflow-hidden"
+          >
+            <DownloadGroupCard group={group} compact={compact} />
+          </motion.div>
+        ))}
+
         {/* Active downloads */}
         {activeDownloads.map((item) => {
           const eta = etaSeconds(item);

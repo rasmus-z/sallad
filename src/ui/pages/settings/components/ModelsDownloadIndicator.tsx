@@ -6,8 +6,11 @@ import { cn, interactive } from "../../../design-tokens";
 import { Routes } from "../../../navigation";
 import {
   useDownloadQueueOptional,
+  isCreateableModelDownload,
+  groupQueueDownloads,
   type QueuedDownload,
 } from "../../../../core/downloads/DownloadQueueContext";
+import { DownloadGroupCard } from "./DownloadGroupCard";
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) return "0 B";
@@ -27,10 +30,6 @@ function extractShortName(modelId: string): string {
   return parts[parts.length - 1] || modelId;
 }
 
-function isCreateableModelDownload(item: QueuedDownload): boolean {
-  return item.queueKind !== "kokoro";
-}
-
 function goToModel(navigate: ReturnType<typeof useNavigate>, modelId: string) {
   const params = new URLSearchParams();
   params.set("model", modelId);
@@ -48,7 +47,7 @@ export function ModelsDownloadIndicator() {
 
   const createModel = useCallback(
     (item: QueuedDownload) => {
-      if (!item.resultPath || !ctx) return;
+      if (!item.resultPath || !ctx || !isCreateableModelDownload(item)) return;
       const displayName = extractShortName(item.modelId).replace(/-GGUF$/i, "");
       const params = new URLSearchParams();
       params.set("hfModelPath", item.resultPath);
@@ -64,9 +63,13 @@ export function ModelsDownloadIndicator() {
 
   const { queue, cancelItem, dismissItem } = ctx;
   const visibleQueue = queue.filter((d) => d.queueKind !== "kokoro");
-  const activeItems = visibleQueue.filter((d) => d.status === "downloading" || d.status === "queued");
-  const completedItems = visibleQueue.filter((d) => d.status === "complete");
-  const failedItems = visibleQueue.filter((d) => d.status === "error" || d.status === "cancelled");
+  const { groups, singles } = groupQueueDownloads(visibleQueue);
+  const activeItems = singles.filter((d) => d.status === "downloading" || d.status === "queued");
+  const completedItems = singles.filter((d) => d.status === "complete");
+  const failedItems = singles.filter((d) => d.status === "error" || d.status === "cancelled");
+  const activeCount = visibleQueue.filter(
+    (d) => d.status === "downloading" || d.status === "queued",
+  ).length;
 
   if (visibleQueue.length === 0) return null;
 
@@ -77,14 +80,30 @@ export function ModelsDownloadIndicator() {
         <Download size={12} className="text-accent/60" />
         <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-fg/40">
           Downloads
-          {activeItems.length > 0 && (
-            <span className="ml-1.5 text-accent/70">({activeItems.length} active)</span>
+          {activeCount > 0 && (
+            <span className="ml-1.5 text-accent/70">({activeCount} active)</span>
           )}
         </span>
         <div className="h-px flex-1 bg-fg/5" />
       </div>
 
       <AnimatePresence mode="popLayout">
+        {groups.map((group) => (
+          <motion.div
+            key={`grp-${group.installId}`}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.15 }}
+            className="overflow-hidden"
+          >
+            <DownloadGroupCard
+              group={group}
+              onClick={() => goToModel(navigate, (group.model ?? group.items[0]).modelId)}
+            />
+          </motion.div>
+        ))}
+
         {/* Active downloads */}
         {activeItems.map((item) => (
           <motion.div
@@ -270,7 +289,7 @@ export function ModelsDownloadIndicator() {
       </AnimatePresence>
 
       {/* Browse more link */}
-      {activeItems.length > 0 && (
+      {activeCount > 0 && (
         <button
           onClick={() => navigate(Routes.settingsModelsBrowse)}
           className={cn(

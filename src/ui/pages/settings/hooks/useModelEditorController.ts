@@ -247,6 +247,7 @@ export function useModelEditorController(): ControllerReturn {
           const hfModelName = searchParams.get("hfModelName");
           const hfDisplayName = searchParams.get("hfDisplayName");
           const hfMmprojPath = searchParams.get("hfMmprojPath");
+          const hfMtpPath = searchParams.get("hfMtpPath");
 
           const isFromHfBrowser = !!hfModelPath;
 
@@ -282,10 +283,11 @@ export function useModelEditorController(): ControllerReturn {
               ...hardCappedScopes,
             };
           }
-          if (hfMmprojPath) {
+          if (hfMmprojPath || hfMtpPath) {
             nextDraft = sanitizeAdvancedModelSettings({
               ...defaultAdvanced,
-              llamaMmprojPath: hfMmprojPath,
+              ...(hfMmprojPath ? { llamaMmprojPath: hfMmprojPath } : {}),
+              ...(hfMtpPath ? { llamaMtpEnabled: true, llamaMtpModelPath: hfMtpPath } : {}),
             });
           }
         } else {
