@@ -120,7 +120,7 @@ export function WhatsNewDrawer({
             aria-modal="true"
             aria-labelledby="whats-new-title"
             className={cn(
-              "fixed inset-y-0 left-0 z-[110] flex flex-col",
+              "fixed bottom-0 left-0 top-[var(--titlebar-h,0px)] z-[110] flex flex-col",
               "w-full bg-surface text-fg shadow-2xl",
               "border-r border-fg/10",
               "lg:w-[480px] xl:w-[560px]",

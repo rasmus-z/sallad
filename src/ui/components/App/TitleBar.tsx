@@ -105,6 +105,10 @@ function persistChrome(key: string, value: string) {
 }
 
 export function setTitleBarDesign(design: TitleBarDesign) {
+  if (design === "native") {
+    document.documentElement.classList.remove("window-rounded");
+    document.body.style.clipPath = "";
+  }
   persistChrome(DESIGN_KEY, design);
   void applyDecorations(design);
 }
@@ -430,16 +434,20 @@ export function TitleBar() {
     document.body.style.clipPath = roundedActive
       ? `inset(0 round ${CORNER_RADII[corners]})`
       : "";
-    const key = `${roundedActive}:${corners}`;
-    if (prevRoundedKey.current !== null && prevRoundedKey.current !== key) {
-      void nudgeWindowSurface();
+    const key = `${design}:${roundedActive}:${corners}`;
+    const prev = prevRoundedKey.current;
+    if (prev !== null && prev !== key) {
+      const prevDesign = prev.split(":")[0];
+      if (prevDesign === design && design !== "native") {
+        void nudgeWindowSurface();
+      }
     }
     prevRoundedKey.current = key;
     return () => {
       root.classList.remove("window-rounded");
       document.body.style.clipPath = "";
     };
-  }, [roundedActive, corners]);
+  }, [design, roundedActive, corners]);
 
   if (!showStrip) return null;
 

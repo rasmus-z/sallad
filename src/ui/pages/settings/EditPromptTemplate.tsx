@@ -1695,7 +1695,7 @@ function DesktopEntryEditorDrawer({
             onClick={onClose}
           />
           <motion.aside
-            className="fixed inset-y-0 left-0 z-50 hidden w-[min(560px,48vw)] border-r border-fg/10 bg-surface lg:flex lg:flex-col"
+            className="fixed bottom-0 left-0 top-[var(--titlebar-h,0px)] z-50 hidden w-[min(560px,48vw)] border-r border-fg/10 bg-surface lg:flex lg:flex-col"
             initial={{ x: "-100%" }}
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
