@@ -18,6 +18,7 @@ import {
 import { motion } from "framer-motion";
 
 import { setOnboardingCompleted, setOnboardingSkipped } from "../../../core/storage/appState";
+import { hasConfiguredModel } from "../../../core/storage/repo";
 import { storageBridge } from "../../../core/storage/files";
 import logoSvg from "../../../assets/logo.svg";
 import { typography, radius, spacing, interactive, shadows, cn } from "../../design-tokens";
@@ -76,6 +77,14 @@ export function WelcomePage({ onContinue, onGoToSync }: WelcomePageProps = {}) {
     // Small delay to ensure state is persisted before navigation
     await new Promise((resolve) => setTimeout(resolve, 100));
     navigate("/");
+  };
+
+  const handleSkipRequest = async () => {
+    if (await hasConfiguredModel()) {
+      await handleConfirmSkip();
+      return;
+    }
+    setShowSkipWarning(true);
   };
 
   const handleRestoreComplete = async () => {
@@ -200,7 +209,7 @@ export function WelcomePage({ onContinue, onGoToSync }: WelcomePageProps = {}) {
             <span className="lai-link-sep" />
 
             <button
-              onClick={() => setShowSkipWarning(true)}
+              onClick={() => void handleSkipRequest()}
               className="lai-link group inline-flex items-center py-1"
             >
               <span className="lai-link-text">
@@ -608,27 +617,27 @@ function SkipWarning({
         {/* Warning content */}
         <div
           className={cn(
-            "flex items-start gap-3 border border-amber-400/20 bg-amber-400/5 p-4 mb-6",
+            "flex items-start gap-3 border border-red-500/40 bg-red-500/10 p-4 mb-6",
             radius.md,
           )}
         >
           <div
             className={cn(
-              "flex h-10 w-10 shrink-0 items-center justify-center bg-amber-400/20 text-amber-300",
+              "flex h-10 w-10 shrink-0 items-center justify-center bg-red-500/25 text-red-300",
               radius.md,
             )}
           >
             <AlertTriangle size={20} strokeWidth={2.5} />
           </div>
           <div className={spacing.tight}>
-            <h4 className={cn(typography.body.size, typography.h3.weight, "text-white")}>
+            <h4 className={cn(typography.body.size, typography.h3.weight, "text-red-200")}>
               {t("onboarding.welcome.skipWarning.warningTitle")}
             </h4>
             <p
               className={cn(
                 typography.bodySmall.size,
                 typography.bodySmall.lineHeight,
-                "text-white/60",
+                "text-red-100/80",
               )}
             >
               {t("onboarding.welcome.skipWarning.warningMessage")}

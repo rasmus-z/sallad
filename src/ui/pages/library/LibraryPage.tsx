@@ -18,6 +18,8 @@ import { useAvatarGradient } from "../../hooks/useAvatarGradient";
 import { useRocketEasterEgg } from "../../hooks/useRocketEasterEgg";
 import { useLocation, useNavigate } from "react-router-dom";
 import { BottomMenu, CharacterExportMenu } from "../../components";
+import { NoModelMenu } from "../../components/CreateMenus/NoModelMenu";
+import { hasConfiguredModel } from "../../../core/storage/repo";
 import { LorebookAvatar } from "../../components/LorebookAvatar";
 import { ImageLibraryPanel } from "./ImageLibraryPage";
 import {
@@ -89,6 +91,7 @@ export function LibraryPage() {
   const [deleting, setDeleting] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const [showNoModel, setShowNoModel] = useState(false);
   const [exportTarget, setExportTarget] = useState<LibraryItem | null>(null);
   const [importingLorebook, setImportingLorebook] = useState(false);
   const lorebookImportRef = useRef<HTMLInputElement | null>(null);
@@ -429,9 +432,16 @@ export function LibraryPage() {
             )}
             {filter !== "Lorebooks" && (
               <button
-                onClick={() =>
-                  navigate(filter === "Personas" ? "/create/persona" : "/characters/create")
-                }
+                onClick={() => {
+                  if (filter === "Personas") {
+                    navigate("/create/persona");
+                    return;
+                  }
+                  void hasConfiguredModel().then((ok) => {
+                    if (ok) navigate("/create/character");
+                    else setShowNoModel(true);
+                  });
+                }}
                 className="flex items-center gap-2 rounded-xl border border-accent/40 bg-accent/20 px-5 py-2.5 text-sm font-medium text-accent/70 transition active:scale-95 active:bg-accent/30"
               >
                 <Users className="h-4 w-4" />
@@ -597,6 +607,8 @@ export function LibraryPage() {
         onSelect={handleExportFormat}
         exporting={exporting}
       />
+
+      <NoModelMenu isOpen={showNoModel} onClose={() => setShowNoModel(false)} />
 
       {/* Delete Confirmation */}
       <BottomMenu

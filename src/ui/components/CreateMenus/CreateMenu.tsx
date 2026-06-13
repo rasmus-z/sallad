@@ -10,12 +10,14 @@ import {
   Upload,
 } from "lucide-react";
 import { BottomMenu, MenuButton, MenuDivider, MenuSection } from "../BottomMenu";
+import { NoModelPanel } from "./NoModelMenu";
 import { useNavigate } from "react-router-dom";
 import { useRef, useState } from "react";
 import {
   listCharacters,
   listPersonas,
   saveLorebook,
+  hasConfiguredModel,
 } from "../../../core/storage/repo";
 import { invoke } from "@tauri-apps/api/core";
 import { AvatarImage } from "../AvatarImage";
@@ -87,6 +89,7 @@ export function CreateMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     | "ai-helper-actions"
     | "ai-helper-history"
     | "ai-helper-edit-select"
+    | "no-model"
   >("menu");
   const [lorebookName, setLorebookName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -112,6 +115,14 @@ export function CreateMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () =
       setEditTargets([]);
       setLoadingEditTargets(false);
     }, 300);
+  };
+
+  const ensureModelThen = async (proceed: () => void) => {
+    if (!(await hasConfiguredModel())) {
+      setMode("no-model");
+      return;
+    }
+    proceed();
   };
 
   const handleCreateLorebook = async () => {
@@ -264,7 +275,9 @@ export function CreateMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                 ? historyTitle
                 : mode === "ai-helper-edit-select"
                   ? t("components.createMenu.editTitle", { goal: selectedGoalLabel })
-                  : t("components.createMenu.nameLorebookTitle")
+                  : mode === "no-model"
+                    ? t("components.createMenu.noModel.title")
+                    : t("components.createMenu.nameLorebookTitle")
       }
       includeExitIcon={false}
       location="bottom"
@@ -306,8 +319,10 @@ export function CreateMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () =
             description={t("components.createMenu.characterDesc")}
             color="from-blue-500 to-blue-600"
             onClick={() => {
-              onClose();
-              navigate("/create/character");
+              void ensureModelThen(() => {
+                onClose();
+                navigate("/create/character");
+              });
             }}
           />
 
@@ -328,8 +343,10 @@ export function CreateMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () =
             description={t("components.createMenu.groupChatDesc")}
             color="from-emerald-500 to-emerald-600"
             onClick={() => {
-              onClose();
-              navigate("/group-chats/new");
+              void ensureModelThen(() => {
+                onClose();
+                navigate("/group-chats/new");
+              });
             }}
           />
 
@@ -504,6 +521,8 @@ export function CreateMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () =
             {t("common.buttons.back")}
           </button>
         </MenuSection>
+      ) : mode === "no-model" ? (
+        <NoModelPanel onClose={handleClose} />
       ) : (
         <div className="space-y-4">
           <input

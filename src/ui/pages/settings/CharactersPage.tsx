@@ -1,8 +1,11 @@
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { Trash2, Edit2, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Character } from "../../../core/storage/schemas";
 import { BottomMenu } from "../../components";
+import { NoModelMenu } from "../../components/CreateMenus/NoModelMenu";
+import { hasConfiguredModel } from "../../../core/storage/repo";
 import { AvatarImage } from "../../components/AvatarImage";
 import { typography, radius, interactive, cn } from "../../design-tokens";
 import { useCharactersController } from "../characters/hooks/useCharactersController";
@@ -69,12 +72,20 @@ function CharacterAvatar({ character }: { character: Character }) {
 export function CharactersPage() {
   const navigate = useNavigate();
   const { t } = useI18n();
+  const [showNoModel, setShowNoModel] = useState(false);
   const {
     state: { characters, loading, selectedCharacter, showDeleteConfirm, deleting },
     setSelectedCharacter,
     setShowDeleteConfirm,
     handleDelete,
   } = useCharactersController();
+
+  const handleCreateCharacter = () => {
+    void hasConfiguredModel().then((ok) => {
+      if (ok) navigate("/create/character");
+      else setShowNoModel(true);
+    });
+  };
 
   // Get gradients for all characters at once (follows React rules of hooks)
   const { getGradientCss, hasGradient, getTextColor, getTextSecondary } =
@@ -98,7 +109,7 @@ export function CharactersPage() {
         {loading ? (
           <CharacterSkeleton />
         ) : characters.length === 0 ? (
-          <EmptyState onCreate={() => navigate("/create/character")} />
+          <EmptyState onCreate={handleCreateCharacter} />
         ) : (
           <div className="space-y-3">
             {/* Characters List */}
@@ -238,6 +249,8 @@ export function CharactersPage() {
           </div>
         </div>
       </BottomMenu>
+
+      <NoModelMenu isOpen={showNoModel} onClose={() => setShowNoModel(false)} />
     </div>
   );
 }

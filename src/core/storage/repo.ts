@@ -646,6 +646,15 @@ export function readSettingsCached(): Settings | null {
   return lastKnownGoodSettings ? cloneSettingsSnapshot(lastKnownGoodSettings) : null;
 }
 
+export async function hasConfiguredModel(): Promise<boolean> {
+  if ((readSettingsCached()?.models.length ?? 0) > 0) return true;
+  try {
+    return (await readSettings()).models.length > 0;
+  } catch {
+    return true;
+  }
+}
+
 export async function readSettings(): Promise<Settings> {
   const fallback = lastKnownGoodSettings
     ? cloneSettingsSnapshot(lastKnownGoodSettings)
