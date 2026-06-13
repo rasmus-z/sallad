@@ -12,6 +12,7 @@ export enum OnboardingStep {
   Path = 7,
   GeminiSetup = 8,
   OpenRouterSetup = 9,
+  MemorySetup = 10,
 }
 
 export type TestResult = { success: boolean; message: string } | null;

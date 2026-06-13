@@ -209,7 +209,7 @@ function ModelChoiceStep({
       });
       await setProviderSetupCompleted(true);
       await setModelSetupCompleted(true);
-      navigate("/onboarding/memory");
+      navigate("/onboarding/finish");
     } catch {
       setError(t("onboarding.openrouter.model.createFailed"));
       setCreating(null);

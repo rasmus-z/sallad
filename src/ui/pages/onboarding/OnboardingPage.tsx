@@ -8,6 +8,7 @@ import { LearnStep } from "./steps/LearnStep";
 import { PathStep } from "./steps/PathStep";
 import { GeminiSetupStep } from "./steps/GeminiSetupStep";
 import { OpenRouterSetupStep } from "./steps/OpenRouterSetupStep";
+import { MemorySetupStep } from "./steps/MemorySetupStep";
 import { ModelRecommendations } from "./ModelRecommendations";
 import { WelcomePage } from "./Welcome";
 import { OnboardingSyncStep } from "./OnboardingSyncPage";
@@ -137,10 +138,11 @@ export function OnboardingPage() {
 
   const isWelcomeStep = state.step === OnboardingStep.Welcome;
   const isSyncStep = state.step === OnboardingStep.Sync;
-  const isStandaloneStep = isWelcomeStep || isSyncStep;
+  const isStandaloneStep =
+    isWelcomeStep || isSyncStep || state.step === OnboardingStep.MemorySetup;
 
   return (
-    <div className="relative flex min-h-full flex-1 flex-col text-gray-200">
+    <div className="relative flex min-h-full flex-1 flex-col text-gray-200 lg:h-full lg:min-h-0">
       {/* Background image + overlay */}
       <div
         aria-hidden="true"
@@ -257,6 +259,12 @@ export function OnboardingPage() {
                 <OpenRouterSetupStep
                   onExitBack={() => goToStep(OnboardingStep.Path, "/onboarding/path")}
                 />
+              </div>
+            )}
+
+            {state.step === OnboardingStep.MemorySetup && (
+              <div key="memory-setup" className="flex flex-1 flex-col">
+                <MemorySetupStep />
               </div>
             )}
 

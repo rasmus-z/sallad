@@ -1118,6 +1118,7 @@ function AppContent() {
               <Route path="/onboarding/path" element={<OnboardingPage />} />
               <Route path="/onboarding/gemini" element={<OnboardingPage />} />
               <Route path="/onboarding/openrouter" element={<OnboardingPage />} />
+              <Route path="/onboarding/finish" element={<OnboardingPage />} />
               <Route path="/onboarding/provider" element={<OnboardingPage />} />
               <Route path="/onboarding/models" element={<OnboardingPage />} />
               <Route path="/onboarding/memory" element={<OnboardingPage />} />

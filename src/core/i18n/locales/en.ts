@@ -4696,6 +4696,16 @@ export const enMessages = {
         footnote: "Not sure? Start with GLM 5. You can switch any time.",
       },
     },
+    memorySetup: {
+      kicker: "One last thing",
+      title: "Help your characters remember",
+      body: "Long chats stay coherent thanks to a tiny memory model that helps your characters recall what happened earlier. The app downloads and sets it up for you automatically, with nothing to configure.",
+      point0: "Set up for you, no choices to make",
+      point1: "Runs privately on your device, only about 138 MB",
+      point2: "Keeps your characters consistent across long sessions",
+      download: "Download and finish setup",
+      skip: "Skip for now",
+    },
     provider: {
       availableProviders: "Available Providers",
       chooseProvider: "Choose a provider",

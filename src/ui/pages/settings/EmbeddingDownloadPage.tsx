@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Download, X, Zap } from "lucide-react";
 import { storageBridge } from "../../../core/storage/files";
@@ -26,14 +26,19 @@ export function EmbeddingDownloadPage() {
   const [searchParams] = useSearchParams();
   const returnTo = searchParams.get("returnTo");
   const isUpgrade = searchParams.get("upgrade") === "true";
+  const autoStart = searchParams.get("auto") === "1";
+  const capacityParam = Number(searchParams.get("capacity"));
+  const initialCapacity: Capacity = ([1024, 2048, 4096].includes(capacityParam)
+    ? capacityParam
+    : 2048) as Capacity;
   // v3 is no longer offered as a download option; the page always installs v4.
   // The `?version=` query param is ignored aside from logging legacy callers.
   const downloadVersion = "v4" as const;
   const downloadVersionLabel = "V4";
   const downloadApproxSize = "~138 MB";
 
-  const [showCapacitySelection, setShowCapacitySelection] = useState(true);
-  const [selectedCapacity, setSelectedCapacity] = useState<Capacity>(2048);
+  const [showCapacitySelection, setShowCapacitySelection] = useState(!autoStart);
+  const [selectedCapacity, setSelectedCapacity] = useState<Capacity>(initialCapacity);
   const [preStepStatus, setPreStepStatus] = useState<"idle" | "preparing" | "ready">("idle");
   const [testStatus, setTestStatus] = useState<"idle" | "testing" | "passed" | "failed">("idle");
   const [testResults, setTestResults] = useState<{
@@ -112,6 +117,14 @@ export function EmbeddingDownloadPage() {
       setPreStepStatus("idle");
     }
   };
+
+  const autoStartedRef = useRef(false);
+  useEffect(() => {
+    if (!autoStart || autoStartedRef.current || download.attached) return;
+    autoStartedRef.current = true;
+    void startDownload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoStart, download.attached]);
 
   useEffect(() => {
     let unlisten: (() => void) | null = null;

@@ -151,7 +151,7 @@ function ApiKeyStep() {
 
       await setProviderSetupCompleted(true);
       await setModelSetupCompleted(true);
-      navigate("/onboarding/memory");
+      navigate("/onboarding/finish");
     } catch {
       setError(t("onboarding.gemini.key.failed"));
       setBusy(false);
@@ -341,9 +341,9 @@ export function GeminiSetupStep({ onExitBack }: { onExitBack: () => void }) {
       </>
     );
   } else if (isDesktop) {
-    containerClass = "mx-auto flex w-full max-w-6xl flex-1 flex-col px-6";
+    containerClass = "mx-auto flex w-full max-w-7xl flex-1 flex-col px-8";
     inner = (
-      <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
+      <div className="grid items-center gap-14 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
         <div>
           {lead}
           {title}

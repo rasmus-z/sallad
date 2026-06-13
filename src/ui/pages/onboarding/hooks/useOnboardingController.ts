@@ -85,7 +85,9 @@ export function useOnboardingController(): OnboardingController {
                         ? OnboardingStep.GeminiSetup
                         : path === "/onboarding/openrouter"
                           ? OnboardingStep.OpenRouterSetup
-                          : init.step;
+                          : path === "/onboarding/finish"
+                            ? OnboardingStep.MemorySetup
+                            : init.step;
     return { ...init, step };
   });
 
