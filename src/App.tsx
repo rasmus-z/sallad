@@ -1113,6 +1113,11 @@ function AppContent() {
             <Routes>
               <Route path="/" element={<OnboardingCheck />} />
               <Route path="/welcome" element={<OnboardingPage />} />
+              <Route path="/onboarding/start" element={<OnboardingPage />} />
+              <Route path="/onboarding/learn" element={<OnboardingPage />} />
+              <Route path="/onboarding/path" element={<OnboardingPage />} />
+              <Route path="/onboarding/gemini" element={<OnboardingPage />} />
+              <Route path="/onboarding/openrouter" element={<OnboardingPage />} />
               <Route path="/onboarding/provider" element={<OnboardingPage />} />
               <Route path="/onboarding/models" element={<OnboardingPage />} />
               <Route path="/onboarding/memory" element={<OnboardingPage />} />

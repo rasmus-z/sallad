@@ -3,6 +3,11 @@ import { useOnboardingController, OnboardingStep } from "./hooks/useOnboardingCo
 import { ProviderStep } from "./steps/ProviderStep";
 import { ModelStep } from "./steps/ModelStep";
 import { MemoryStep } from "./steps/MemoryStep";
+import { IntroStep } from "./steps/IntroStep";
+import { LearnStep } from "./steps/LearnStep";
+import { PathStep } from "./steps/PathStep";
+import { GeminiSetupStep } from "./steps/GeminiSetupStep";
+import { OpenRouterSetupStep } from "./steps/OpenRouterSetupStep";
 import { ModelRecommendations } from "./ModelRecommendations";
 import { WelcomePage } from "./Welcome";
 import { OnboardingSyncStep } from "./OnboardingSyncPage";
@@ -38,15 +43,45 @@ export function OnboardingPage() {
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [showRecommendations, setShowRecommendations] = useState(false);
 
+  const showStepCounter =
+    state.step === OnboardingStep.Provider ||
+    state.step === OnboardingStep.Model ||
+    state.step === OnboardingStep.Memory;
+
   const stepLabel =
     state.step === OnboardingStep.Provider
       ? t("onboarding.steps.provider")
       : state.step === OnboardingStep.Model
         ? t("onboarding.steps.model")
-        : t("onboarding.steps.memory");
+        : state.step === OnboardingStep.Memory
+          ? t("onboarding.steps.memory")
+          : state.step === OnboardingStep.GeminiSetup
+            ? t("onboarding.gemini.kicker")
+            : state.step === OnboardingStep.OpenRouterSetup
+              ? t("onboarding.openrouter.kicker")
+              : t("onboarding.steps.gettingStarted");
 
   const stepNumber =
     state.step === OnboardingStep.Provider ? 1 : state.step === OnboardingStep.Model ? 2 : 3;
+
+  const goToStep = useCallback(
+    (step: OnboardingStep, path: string) => {
+      controller.setStep(step);
+      window.history.replaceState(null, "", path);
+    },
+    [controller],
+  );
+
+  const handleChoosePath = useCallback(
+    (choice: "free" | "paid") => {
+      if (choice === "free") {
+        goToStep(OnboardingStep.GeminiSetup, "/onboarding/gemini");
+      } else {
+        goToStep(OnboardingStep.OpenRouterSetup, "/onboarding/openrouter");
+      }
+    },
+    [goToStep],
+  );
 
   const handleBrowseModelLibrary = useCallback(async () => {
     await setProviderSetupCompleted(true);
@@ -91,7 +126,7 @@ export function OnboardingPage() {
 
   if (state.capabilitiesLoading && state.step === OnboardingStep.Provider) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-surface text-gray-200">
+      <div className="flex min-h-full flex-1 flex-col items-center justify-center bg-surface text-gray-200">
         <div className="flex items-center gap-3">
           <Loader size={20} className="animate-spin" />
           <span>{t("onboarding.loading")}</span>
@@ -105,7 +140,7 @@ export function OnboardingPage() {
   const isStandaloneStep = isWelcomeStep || isSyncStep;
 
   return (
-    <div className="relative flex min-h-screen flex-col text-gray-200">
+    <div className="relative flex min-h-full flex-1 flex-col text-gray-200">
       {/* Background image + overlay */}
       <div
         aria-hidden="true"
@@ -136,14 +171,16 @@ export function OnboardingPage() {
           <ArrowLeft size={isDesktop ? 18 : 16} />
         </button>
         <div className="text-center">
-          <p
-            className={cn(
-              typography.caption.size,
-              "font-medium uppercase tracking-[0.25em] text-white/55",
-            )}
-          >
-            {t("onboarding.stepIndicator", { current: stepNumber, total: 3 })}
-          </p>
+          {showStepCounter && (
+            <p
+              className={cn(
+                typography.caption.size,
+                "font-medium uppercase tracking-[0.25em] text-white/55",
+              )}
+            >
+              {t("onboarding.stepIndicator", { current: stepNumber, total: 3 })}
+            </p>
+          )}
           <p className="text-[13px] text-white/70 mt-0.5">{stepLabel}</p>
         </div>
         <div className={isDesktop ? "w-11" : "w-10"} />
@@ -164,8 +201,8 @@ export function OnboardingPage() {
               <div key="welcome" className="flex flex-1 flex-col">
                 <WelcomePage
                   onContinue={() => {
-                    controller.setStep(OnboardingStep.Provider);
-                    window.history.replaceState(null, "", "/onboarding/provider");
+                    controller.setStep(OnboardingStep.Intro);
+                    window.history.replaceState(null, "", "/onboarding/start");
                   }}
                   onGoToSync={() => {
                     controller.setStep(OnboardingStep.Sync);
@@ -178,6 +215,48 @@ export function OnboardingPage() {
             {state.step === OnboardingStep.Sync && (
               <div key="sync" className="flex flex-1 flex-col">
                 <OnboardingSyncStep />
+              </div>
+            )}
+
+            {state.step === OnboardingStep.Intro && (
+              <div key="intro" className="flex flex-1 flex-col">
+                <IntroStep
+                  onFirstTime={() => goToStep(OnboardingStep.Learn, "/onboarding/learn")}
+                  onExperienced={() =>
+                    goToStep(OnboardingStep.Provider, "/onboarding/provider")
+                  }
+                />
+              </div>
+            )}
+
+            {state.step === OnboardingStep.Learn && (
+              <div key="learn" className="flex flex-1 flex-col">
+                <LearnStep
+                  onDone={() => goToStep(OnboardingStep.Path, "/onboarding/path")}
+                  onExitBack={() => goToStep(OnboardingStep.Intro, "/onboarding/start")}
+                />
+              </div>
+            )}
+
+            {state.step === OnboardingStep.Path && (
+              <div key="path" className="flex flex-1 flex-col">
+                <PathStep onChoose={handleChoosePath} />
+              </div>
+            )}
+
+            {state.step === OnboardingStep.GeminiSetup && (
+              <div key="gemini" className="flex flex-1 flex-col">
+                <GeminiSetupStep
+                  onExitBack={() => goToStep(OnboardingStep.Path, "/onboarding/path")}
+                />
+              </div>
+            )}
+
+            {state.step === OnboardingStep.OpenRouterSetup && (
+              <div key="openrouter" className="flex flex-1 flex-col">
+                <OpenRouterSetupStep
+                  onExitBack={() => goToStep(OnboardingStep.Path, "/onboarding/path")}
+                />
               </div>
             )}
 

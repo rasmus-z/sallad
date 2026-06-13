@@ -75,7 +75,17 @@ export function useOnboardingController(): OnboardingController {
               ? OnboardingStep.Memory
               : path === "/onboarding/provider"
                 ? OnboardingStep.Provider
-                : init.step;
+                : path === "/onboarding/start"
+                  ? OnboardingStep.Intro
+                  : path === "/onboarding/learn"
+                    ? OnboardingStep.Learn
+                    : path === "/onboarding/path"
+                      ? OnboardingStep.Path
+                      : path === "/onboarding/gemini"
+                        ? OnboardingStep.GeminiSetup
+                        : path === "/onboarding/openrouter"
+                          ? OnboardingStep.OpenRouterSetup
+                          : init.step;
     return { ...init, step };
   });
 
@@ -158,6 +168,24 @@ export function useOnboardingController(): OnboardingController {
     } else if (state.step === OnboardingStep.Model) {
       dispatch({ type: "SET_STEP", payload: OnboardingStep.Provider });
       window.history.replaceState(null, "", "/onboarding/provider");
+    } else if (state.step === OnboardingStep.GeminiSetup) {
+      dispatch({ type: "SET_STEP", payload: OnboardingStep.Path });
+      window.history.replaceState(null, "", "/onboarding/path");
+    } else if (state.step === OnboardingStep.OpenRouterSetup) {
+      dispatch({ type: "SET_STEP", payload: OnboardingStep.Path });
+      window.history.replaceState(null, "", "/onboarding/path");
+    } else if (state.step === OnboardingStep.Provider) {
+      dispatch({ type: "SET_STEP", payload: OnboardingStep.Path });
+      window.history.replaceState(null, "", "/onboarding/path");
+    } else if (state.step === OnboardingStep.Path) {
+      dispatch({ type: "SET_STEP", payload: OnboardingStep.Learn });
+      window.history.replaceState(null, "", "/onboarding/learn");
+    } else if (state.step === OnboardingStep.Learn) {
+      dispatch({ type: "SET_STEP", payload: OnboardingStep.Intro });
+      window.history.replaceState(null, "", "/onboarding/start");
+    } else if (state.step === OnboardingStep.Intro) {
+      dispatch({ type: "SET_STEP", payload: OnboardingStep.Welcome });
+      window.history.replaceState(null, "", "/welcome");
     } else {
       dispatch({ type: "SET_STEP", payload: OnboardingStep.Welcome });
       window.history.replaceState(null, "", "/welcome");
