@@ -144,7 +144,7 @@ export function OnboardingPage() {
   const isStandaloneStep = isWelcomeStep || isSyncStep;
 
   return (
-    <div className="relative flex min-h-full flex-1 flex-col text-gray-200 lg:h-full lg:min-h-0">
+    <div className="relative flex h-[calc(100dvh-var(--titlebar-h,0px))] flex-col text-gray-200">
       {/* Background image + overlay */}
       <div
         aria-hidden="true"
@@ -198,8 +198,11 @@ export function OnboardingPage() {
       {/* Main Content */}
       <main
         className={cn(
-          "relative z-10 flex flex-1 flex-col",
-          !isStandaloneStep && (isDesktop ? "pt-[88px]" : "pt-[calc(env(safe-area-inset-top)+72px)] px-4"),
+          "relative z-10 flex flex-1 flex-col overflow-y-auto",
+          !isStandaloneStep &&
+            (isDesktop
+              ? "pt-[88px] pb-6"
+              : "pt-[calc(env(safe-area-inset-top)+92px)] px-4 pb-[calc(env(safe-area-inset-bottom)+16px)]"),
         )}
       >
         {showRecommendations ? (

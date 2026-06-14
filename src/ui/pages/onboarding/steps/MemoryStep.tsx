@@ -35,12 +35,12 @@ export function MemoryStep({
     <button
       onClick={() => onSelectType("dynamic")}
       className={cn(
-        "w-full h-full flex flex-col text-left relative overflow-hidden group transition-all duration-300",
+        "w-full flex flex-col text-left relative overflow-hidden group transition-all duration-300",
         radius.lg,
-        "border p-1",
+        "border p-1 shadow-lg backdrop-blur-md",
         selectedType === "dynamic"
-          ? "border-emerald-500/60 bg-emerald-500/20 ring-1 ring-emerald-400/40"
-          : "border-white/15 bg-black/35 hover:border-white/25 hover:bg-black/45",
+          ? "border-emerald-500/60 bg-emerald-600/30 ring-1 ring-emerald-400/40"
+          : "border-white/15 bg-black/60 hover:border-white/25 hover:bg-black/70",
       )}
     >
       <div
@@ -127,12 +127,12 @@ export function MemoryStep({
     <button
       onClick={() => onSelectType("manual")}
       className={cn(
-        "w-full h-full flex flex-col text-left relative overflow-hidden group transition-all duration-300",
+        "w-full flex flex-col text-left relative overflow-hidden group transition-all duration-300",
         radius.lg,
-        "border p-1",
+        "border p-1 shadow-lg backdrop-blur-md",
         selectedType === "manual"
-          ? "border-blue-500/60 bg-blue-500/20 ring-1 ring-blue-400/40"
-          : "border-white/15 bg-black/35 hover:border-white/25 hover:bg-black/45",
+          ? "border-blue-500/60 bg-blue-600/30 ring-1 ring-blue-400/40"
+          : "border-white/15 bg-black/60 hover:border-white/25 hover:bg-black/70",
       )}
     >
       <div
@@ -277,10 +277,16 @@ export function MemoryStep({
       <div className="flex flex-col items-center max-w-md mx-auto w-full pb-8">
         {/* Title */}
         <div className="text-center space-y-3 mb-10">
-          <h1 className={cn(typography.h3.size, typography.h3.weight, "text-white")}>
+          <h1
+            className={cn(
+              typography.h3.size,
+              typography.h3.weight,
+              "text-white [text-shadow:0_1px_16px_rgba(0,0,0,0.85)]",
+            )}
+          >
             Choose your memory style
           </h1>
-          <p className="text-[15px] text-white/70 max-w-xs mx-auto leading-relaxed">
+          <p className="text-[15px] text-white/85 max-w-xs mx-auto leading-relaxed [text-shadow:0_1px_12px_rgba(0,0,0,0.75)]">
             How should your AI companions remember details about you and your conversations?
           </p>
         </div>

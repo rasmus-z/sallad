@@ -222,7 +222,7 @@ export function ProviderStep({
       <button
         type="button"
         onClick={openHelp}
-        className="mb-8 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.04] px-3 py-1.5 text-[12px] font-medium text-white/75 transition hover:bg-white/[0.08] hover:text-white"
+        className="mb-8 inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/55 px-3.5 py-1.5 text-[12px] font-medium text-white/90 shadow-lg backdrop-blur-md transition hover:border-white/30 hover:bg-black/65 hover:text-white"
       >
         <HelpCircle size={13} strokeWidth={2} />
         New to this? Read the FAQ

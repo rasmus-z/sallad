@@ -176,19 +176,19 @@ function ApiKeyStep() {
         autoCapitalize="off"
         disabled={busy}
         className={cn(
-          "w-full border bg-black/40 px-4 py-3 text-[14px] text-white placeholder-white/35 transition focus:outline-none",
+          "w-full border bg-black/60 px-4 py-3 text-[14px] text-white placeholder-white/45 shadow-lg backdrop-blur-md transition focus:outline-none",
           radius.md,
-          error ? "border-danger/50 focus:border-danger/70" : "border-white/15 focus:border-white/30",
+          error ? "border-danger/50 focus:border-danger/70" : "border-white/20 focus:border-white/40",
         )}
       />
-      {error && <p className="mt-2 text-[12px] leading-relaxed text-danger/80">{error}</p>}
+      {error && <p className="mt-2 flex items-start gap-1.5 rounded-lg border border-red-400/30 bg-red-950/60 px-3 py-2 text-[12px] leading-relaxed text-red-200 shadow-lg backdrop-blur-md">{error}</p>}
 
       <button
         type="button"
         onClick={() => void handleConnect()}
         disabled={busy || !apiKey.trim()}
         className={cn(
-          "mt-5 flex items-center justify-center gap-2 border border-emerald-500/50 bg-emerald-500/25 py-3 text-[14px] font-semibold text-emerald-100 transition hover:bg-emerald-500/35 active:scale-[0.99]",
+          "mt-5 flex items-center justify-center gap-2 border border-emerald-400/50 bg-emerald-500/40 shadow-lg backdrop-blur-md py-3 text-[14px] font-semibold text-emerald-50 transition hover:bg-emerald-500/50 active:scale-[0.99]",
           radius.md,
           "disabled:cursor-not-allowed disabled:opacity-50",
         )}
@@ -290,7 +290,7 @@ export function GeminiSetupStep({ onExitBack }: { onExitBack: () => void }) {
           type="button"
           onClick={() => void openExternal(step.openUrl!)}
           className={cn(
-            "flex items-center justify-center gap-2 border border-white/15 bg-white/10 py-3 text-[14px] font-medium text-white transition hover:border-white/25 hover:bg-white/15 active:scale-[0.99]",
+            "flex items-center justify-center gap-2 border border-white/15 bg-black/55 shadow-lg backdrop-blur-md py-3 text-[14px] font-medium text-white transition hover:border-white/25 hover:bg-black/65 active:scale-[0.99]",
             radius.md,
           )}
         >
@@ -302,7 +302,7 @@ export function GeminiSetupStep({ onExitBack }: { onExitBack: () => void }) {
         type="button"
         onClick={goNext}
         className={cn(
-          "flex items-center justify-center gap-2 border border-emerald-500/50 bg-emerald-500/25 py-3 text-[14px] font-semibold text-emerald-100 transition hover:bg-emerald-500/35 active:scale-[0.99]",
+          "flex items-center justify-center gap-2 border border-emerald-400/50 bg-emerald-500/40 shadow-lg backdrop-blur-md py-3 text-[14px] font-semibold text-emerald-50 transition hover:bg-emerald-500/50 active:scale-[0.99]",
           radius.md,
         )}
       >
@@ -316,7 +316,7 @@ export function GeminiSetupStep({ onExitBack }: { onExitBack: () => void }) {
     <button
       type="button"
       onClick={goPrev}
-      className="mt-4 flex items-center justify-center gap-1.5 self-center text-[13px] font-medium text-white/45 transition hover:text-white/70"
+      className="mt-4 flex items-center justify-center gap-1.5 self-center text-[13px] font-medium text-white/70 [text-shadow:0_1px_8px_rgba(0,0,0,0.7)] transition hover:text-white/70"
     >
       <ArrowLeft size={14} />
       {t("common.buttons.back")}
@@ -353,7 +353,7 @@ export function GeminiSetupStep({ onExitBack }: { onExitBack: () => void }) {
           <button
             type="button"
             onClick={goPrev}
-            className="mt-4 flex items-center gap-1.5 text-[13px] font-medium text-white/45 transition hover:text-white/70"
+            className="mt-4 flex items-center gap-1.5 text-[13px] font-medium text-white/70 [text-shadow:0_1px_8px_rgba(0,0,0,0.7)] transition hover:text-white/70"
           >
             <ArrowLeft size={14} />
             {t("common.buttons.back")}

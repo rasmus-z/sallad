@@ -66,7 +66,7 @@ export function GuidedCarousel({
 
   return (
     <div className="flex flex-col items-center">
-      <div className={cn("relative w-full", isDesktop ? "max-w-none" : "max-w-[210px]")}>
+      <div className={cn("relative w-full", isDesktop ? "max-w-none" : "max-w-[250px]")}>
         <button
           type="button"
           onClick={() => setZoomed(true)}
