@@ -156,7 +156,8 @@ export function AboutPage() {
     };
   }, []);
 
-  const isDevChannel = detectUpdateChannel(appVersion) === "dev";
+  const isDevBuild = import.meta.env.DEV;
+  const isDevChannel = isDevBuild || detectUpdateChannel(appVersion) === "dev";
   const buildChannel = isDevChannel
     ? t("about.buildChannel.dev")
     : t("about.buildChannel.release");
@@ -276,7 +277,7 @@ export function AboutPage() {
                         "font-medium tabular-nums text-fg/65",
                       )}
                     >
-                      {appVersion}
+                      {isDevBuild ? t("about.devVersion") : appVersion}
                     </span>
                     {isDevChannel && (
                       <span
@@ -380,7 +381,10 @@ export function AboutPage() {
                 <div className="flex flex-col gap-2">
                   <GroupLabel>Information</GroupLabel>
                   <Group>
-                    <InfoRow label={t("about.info.version")} value={appVersion} />
+                    <InfoRow
+                      label={t("about.info.version")}
+                      value={isDevBuild ? t("about.devVersion") : appVersion}
+                    />
                     <InfoRow label={t("about.info.channel")} value={buildChannel} />
                     <InfoRow label={t("about.info.platform")} value={platform.os} />
                   </Group>

@@ -335,6 +335,7 @@ export const enMessages = {
     kicker: "App Info",
     appName: "LettuceAI",
     description: "Version details, update checks, and useful links.",
+    devVersion: "dev",
     info: {
       version: "Version",
       channel: "Channel",
