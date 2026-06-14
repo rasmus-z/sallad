@@ -4903,6 +4903,14 @@ export const enMessages = {
       skipForNow: "Skip for now",
       restoreFromBackup: "Restore from Backup",
       syncFromDevice: "Sync from another device",
+      moreOptions: "Other options",
+      readFaq: "New here? Read the FAQ",
+      moreMenu: {
+        restoreDesc: "Restore your chats and settings from a backup file",
+        syncDesc: "Bring everything over from another device",
+        faqDesc: "Learn how setup works in plain language",
+        skipDesc: "Set up later, the app will not work until you do",
+      },
       headline: {
         lead: "Your private AI",
         accent: "companion.",

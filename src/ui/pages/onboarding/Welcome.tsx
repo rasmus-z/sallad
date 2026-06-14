@@ -14,6 +14,7 @@ import {
   EyeOff,
   CheckCircle,
   HelpCircle,
+  ChevronDown,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -24,6 +25,7 @@ import logoSvg from "../../../assets/logo.svg";
 import { typography, radius, spacing, interactive, shadows, cn } from "../../design-tokens";
 import { useI18n } from "../../../core/i18n/context";
 import { LocaleSelector } from "../../components/LocaleSelector";
+import { BottomMenu, MenuButton, MenuDivider, MenuSection } from "../../components/BottomMenu";
 import { DynamicMemoryEmbeddingPrompt } from "./components/DynamicMemoryEmbeddingPrompt";
 
 interface WelcomePageProps {
@@ -36,6 +38,7 @@ export function WelcomePage({ onContinue, onGoToSync }: WelcomePageProps = {}) {
   const navigate = useNavigate();
   const [showSkipWarning, setShowSkipWarning] = useState(false);
   const [showRestoreBackup, setShowRestoreBackup] = useState(false);
+  const [showMoreOptions, setShowMoreOptions] = useState(false);
 
   // Ctrl+Shift+L to open logs page during onboarding
   useEffect(() => {
@@ -179,52 +182,19 @@ export function WelcomePage({ onContinue, onGoToSync }: WelcomePageProps = {}) {
             </span>
           </motion.button>
 
-          {/* Secondary actions */}
+          {/* Secondary actions — collapsed into a single bottom menu */}
           <motion.div
-            className="lai-secondary mt-3 lg:mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2"
+            className="mt-3 lg:mt-5"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.28 }}
           >
             <button
-              onClick={() => setShowRestoreBackup(true)}
+              onClick={() => setShowMoreOptions(true)}
               className="lai-link group inline-flex items-center gap-1.5 py-1"
             >
-              <Upload size={13} strokeWidth={2} />
-              <span className="lai-link-text">
-                {t("onboarding.welcome.restoreFromBackup")}
-              </span>
-            </button>
-
-            <span className="lai-link-sep" />
-
-            <button
-              onClick={() => (onGoToSync ? onGoToSync() : navigate("/onboarding/sync"))}
-              className="lai-link group inline-flex items-center gap-1.5 py-1"
-            >
-              <Smartphone size={13} strokeWidth={2} />
-              <span className="lai-link-text">{t("onboarding.welcome.syncFromDevice")}</span>
-            </button>
-
-            <span className="lai-link-sep" />
-
-            <button
-              onClick={() => void handleSkipRequest()}
-              className="lai-link group inline-flex items-center py-1"
-            >
-              <span className="lai-link-text">
-                {t("onboarding.welcome.skipForNow")}
-              </span>
-            </button>
-
-            <span className="lai-link-sep" />
-
-            <button
-              onClick={() => navigate("/settings/help", { state: { fromWelcome: true } })}
-              className="lai-link group inline-flex items-center gap-1.5 py-1"
-            >
-              <HelpCircle size={13} strokeWidth={2} />
-              <span className="lai-link-text">New here? Read the FAQ</span>
+              <span className="lai-link-text">{t("onboarding.welcome.moreOptions")}</span>
+              <ChevronDown size={14} strokeWidth={2} />
             </button>
           </motion.div>
 
@@ -276,6 +246,58 @@ export function WelcomePage({ onContinue, onGoToSync }: WelcomePageProps = {}) {
           </p>
         </div>
       </motion.div>
+
+      <BottomMenu
+        isOpen={showMoreOptions}
+        onClose={() => setShowMoreOptions(false)}
+        title={t("onboarding.welcome.moreOptions")}
+        location="bottom"
+      >
+        <MenuSection>
+          <MenuButton
+            icon={Upload}
+            title={t("onboarding.welcome.restoreFromBackup")}
+            description={t("onboarding.welcome.moreMenu.restoreDesc")}
+            color="from-blue-500 to-blue-600"
+            onClick={() => {
+              setShowMoreOptions(false);
+              setShowRestoreBackup(true);
+            }}
+          />
+          <MenuButton
+            icon={Smartphone}
+            title={t("onboarding.welcome.syncFromDevice")}
+            description={t("onboarding.welcome.moreMenu.syncDesc")}
+            color="from-purple-500 to-purple-600"
+            onClick={() => {
+              setShowMoreOptions(false);
+              if (onGoToSync) onGoToSync();
+              else navigate("/onboarding/sync");
+            }}
+          />
+          <MenuButton
+            icon={HelpCircle}
+            title={t("onboarding.welcome.readFaq")}
+            description={t("onboarding.welcome.moreMenu.faqDesc")}
+            color="from-emerald-500 to-emerald-600"
+            onClick={() => {
+              setShowMoreOptions(false);
+              navigate("/settings/help", { state: { fromWelcome: true } });
+            }}
+          />
+          <MenuDivider />
+          <MenuButton
+            icon={ArrowRight}
+            title={t("onboarding.welcome.skipForNow")}
+            description={t("onboarding.welcome.moreMenu.skipDesc")}
+            color="from-white/20 to-white/10"
+            onClick={() => {
+              setShowMoreOptions(false);
+              void handleSkipRequest();
+            }}
+          />
+        </MenuSection>
+      </BottomMenu>
 
       {showSkipWarning && (
         <SkipWarning
@@ -433,11 +455,7 @@ const LAI_WELCOME_STYLES = `
   .lai-cta-solo:active { transform: scale(0.985); }
 
   .lai-secondary {
-    padding: 6px 14px;
-    border-radius: 999px;
-    background: rgba(10, 10, 10, 0.55);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(14px);
+    padding: 4px 0;
   }
   .lai-band-arrow {
     display: inline-flex;
