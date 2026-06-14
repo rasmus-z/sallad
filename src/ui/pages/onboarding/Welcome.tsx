@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
   ArrowRight,
-  ShieldCheck,
-  Sparkles,
   Upload,
   Smartphone,
   FileArchive,
@@ -96,8 +94,11 @@ export function WelcomePage({ onContinue, onGoToSync }: WelcomePageProps = {}) {
   };
 
   return (
-    <div className="lai-welcome relative flex flex-col text-white">
-      <style>{LAI_WELCOME_STYLES}</style>
+    <div className="relative flex h-[calc(100dvh-var(--titlebar-h,0px))] flex-col overflow-hidden text-white antialiased pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] font-['Noto_Sans',ui-sans-serif,system-ui,sans-serif]">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-3/4 bg-[linear-gradient(180deg,transparent_0%,rgba(5,5,5,0.12)_40%,rgba(5,5,5,0.68)_100%)] lg:hidden"
+      />
 
       {/* Top bar */}
       <motion.div
@@ -108,11 +109,10 @@ export function WelcomePage({ onContinue, onGoToSync }: WelcomePageProps = {}) {
       >
         <div className="flex items-center gap-2.5">
           <img src={logoSvg} alt="" className="h-7 w-7" />
-          <span className="lai-wordmark-sm">LettuceAI</span>
+          <span className="text-[18px] font-bold tracking-[-0.02em] text-[#f4f4f5]">LettuceAI</span>
         </div>
 
-        {/* Mobile-only language selector — bare text + icon */}
-        <div className="lai-locale-bare lg:hidden">
+        <div className="[&_.tabular-nums]:hidden lg:hidden">
           <LocaleSelector
             value={locale}
             onChange={setLocale}
@@ -121,23 +121,21 @@ export function WelcomePage({ onContinue, onGoToSync }: WelcomePageProps = {}) {
             title={t("components.localeSelector.title")}
             labelClassName="hidden"
             descriptionClassName="hidden"
-            triggerClassName="lai-locale-trigger-bare"
+            triggerClassName="bg-transparent! border-0! p-0! py-1! text-[14px]! text-white/[0.62]! shadow-none! [backdrop-filter:none]! hover:bg-transparent! hover:text-[#f4f4f5]!"
             menuClassName=""
           />
         </div>
       </motion.div>
 
-      {/* Main content — centered hero + action band */}
-      <div className="relative z-10 flex flex-1 items-center justify-center px-6 py-6 lg:px-16 lg:py-12">
+      <div className="relative z-10 flex flex-1 flex-col items-center justify-end px-6 pb-10 pt-6 lg:justify-center lg:px-16 lg:py-12">
         <div className="w-full max-w-2xl flex flex-col items-center text-center">
-          {/* Logo */}
           <motion.div
-            className="relative overflow-visible"
+            className="relative hidden overflow-visible lg:block"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
           >
-            <div className="lai-logo-halo absolute" aria-hidden="true" />
+            <div className="absolute inset-[-30px] rounded-full blur-[22px] bg-[radial-gradient(closest-side,rgba(0,210,148,0.20),transparent_70%)]" aria-hidden="true" />
             <img
               src={logoSvg}
               alt={t("onboarding.welcome.appName")}
@@ -147,20 +145,20 @@ export function WelcomePage({ onContinue, onGoToSync }: WelcomePageProps = {}) {
 
           {/* Headline */}
           <motion.h1
-            className="lai-headline mt-5 lg:mt-9"
+            className="mt-5 lg:mt-9 font-bold tracking-[-0.03em] text-[#f4f4f5] text-[clamp(29px,8vw,37px)] leading-[1.05] max-w-[14ch] [text-shadow:0_2px_18px_rgba(0,0,0,0.45)] lg:text-[clamp(37px,5vw,57px)] lg:leading-[1.08] lg:max-w-[18ch]"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.05 }}
           >
             {t("onboarding.welcome.headline.lead")}{" "}
-            <span className="lai-headline-accent">
+            <span className="font-['Fraunces','Iowan_Old_Style',Georgia,serif] italic font-medium text-[#00d294] tracking-[-0.02em] [font-variation-settings:'opsz'_96]">
               {t("onboarding.welcome.headline.accent")}
             </span>
           </motion.h1>
 
           {/* Tagline */}
           <motion.p
-            className="lai-tagline mt-3 lg:mt-5 max-w-lg"
+            className="mt-3 lg:mt-5 max-w-sm lg:max-w-lg font-normal text-white/[0.72] text-[14px] leading-[1.45] [text-shadow:0_1px_10px_rgba(0,0,0,0.6)] lg:text-[16.5px] lg:leading-[1.55] lg:[text-shadow:none]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.15 }}
@@ -170,65 +168,51 @@ export function WelcomePage({ onContinue, onGoToSync }: WelcomePageProps = {}) {
 
           {/* Primary CTA */}
           <motion.button
-            className="lai-cta-solo group mt-6 lg:mt-10 inline-flex items-center gap-2.5"
+            className="group mt-6 lg:mt-10 inline-flex items-center gap-2.5 w-full justify-between cursor-pointer rounded-xl border border-[rgba(0,210,148,0.45)] bg-[linear-gradient(180deg,rgba(0,210,148,0.28),rgba(0,210,148,0.16))] backdrop-blur-[10px] transition-all py-3 px-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_10px_28px_-8px_rgba(0,210,148,0.40),0_18px_44px_-12px_rgba(0,0,0,0.6)] hover:border-[rgba(0,210,148,0.65)] hover:bg-[linear-gradient(180deg,rgba(0,210,148,0.36),rgba(0,210,148,0.22))] active:scale-[0.985] lg:w-auto lg:justify-start lg:py-3 lg:pr-[18px] lg:pl-[22px]"
             onClick={handleAddProvider}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.22 }}
           >
-            <span className="lai-cta-label">{t("onboarding.welcome.getStarted")}</span>
-            <span className="lai-band-arrow">
+            <span className="text-[16px] font-semibold tracking-[-0.005em] text-white">{t("onboarding.welcome.getStarted")}</span>
+            <span className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-full bg-white/10 text-white transition group-hover:translate-x-0.5 group-hover:bg-white/[0.18]">
               <ArrowRight size={16} strokeWidth={2.25} />
             </span>
           </motion.button>
 
-          {/* Secondary actions — collapsed into a single bottom menu */}
           <motion.div
-            className="mt-3 lg:mt-5"
+            className="mt-3 w-full lg:mt-5 lg:w-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.28 }}
           >
             <button
               onClick={() => setShowMoreOptions(true)}
-              className="lai-link group inline-flex items-center gap-1.5 py-1"
+              className="group flex w-full items-center justify-center gap-1.5 lg:hidden cursor-pointer rounded-xl border border-white/[0.18] bg-white/[0.07] backdrop-blur-[10px] py-[13px] px-4 text-[15px] font-semibold text-[#f4f4f5] transition hover:border-white/[0.28] hover:bg-white/[0.11] active:scale-[0.985]"
             >
-              <span className="lai-link-text">{t("onboarding.welcome.moreOptions")}</span>
+              <span>{t("onboarding.welcome.moreOptions")}</span>
+              <ChevronDown size={15} strokeWidth={2} />
+            </button>
+            <button
+              onClick={() => setShowMoreOptions(true)}
+              className="group hidden items-center gap-1.5 py-1 lg:inline-flex cursor-pointer bg-transparent text-[13.5px] text-white/[0.62] transition-colors hover:text-[#f4f4f5]"
+            >
+              <span className="underline decoration-white/[0.18] underline-offset-4 transition group-hover:decoration-[rgba(0,210,148,0.55)]">{t("onboarding.welcome.moreOptions")}</span>
               <ChevronDown size={14} strokeWidth={2} />
             </button>
-          </motion.div>
-
-          {/* Trust line */}
-          <motion.div
-            className="lai-trust mt-4 lg:mt-7 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            <span className="inline-flex items-center gap-1.5">
-              <ShieldCheck size={12} className="lai-accent-text" strokeWidth={2.25} />
-              {t("onboarding.welcome.features.onDevice")}
-            </span>
-            <span className="lai-trust-sep">·</span>
-            <span className="inline-flex items-center gap-1.5">
-              <Sparkles size={12} className="lai-accent-text" strokeWidth={2.25} />
-              {t("onboarding.welcome.features.characterReady")}
-            </span>
-            <span className="lai-trust-sep">·</span>
-            <span>{t("onboarding.welcome.setupTime")}</span>
           </motion.div>
         </div>
       </div>
 
       {/* Bottom footer strip — desktop only */}
       <motion.div
-        className="lai-footer relative z-10 hidden lg:block px-6 py-4 lg:px-12 lg:py-5"
+        className="relative z-10 hidden lg:block px-6 py-4 lg:px-12 lg:py-5 border-t border-white/[0.08]"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4, delay: 0.3 }}
       >
         <div className="flex flex-col-reverse gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="lai-locale-bare flex items-center w-full lg:w-auto">
+          <div className="[&_.tabular-nums]:hidden flex items-center w-full lg:w-auto">
             <LocaleSelector
               value={locale}
               onChange={setLocale}
@@ -237,11 +221,11 @@ export function WelcomePage({ onContinue, onGoToSync }: WelcomePageProps = {}) {
               title={t("components.localeSelector.title")}
               labelClassName="hidden"
               descriptionClassName="hidden"
-              triggerClassName="lai-locale-trigger-bare"
+              triggerClassName="bg-transparent! border-0! p-0! py-1! text-[14px]! text-white/[0.62]! shadow-none! [backdrop-filter:none]! hover:bg-transparent! hover:text-[#f4f4f5]!"
               menuClassName=""
             />
           </div>
-          <p className="lai-footnote text-center lg:text-right">
+          <p className="text-[12px] font-normal text-white/40 text-center lg:text-right">
             {t("onboarding.welcome.languageSelector.description")}
           </p>
         </div>
@@ -316,260 +300,6 @@ export function WelcomePage({ onContinue, onGoToSync }: WelcomePageProps = {}) {
     </div>
   );
 }
-
-const LAI_WELCOME_STYLES = `
-  .lai-welcome {
-    --lai-accent: #00d294;
-    --lai-accent-soft: rgba(0, 210, 148, 0.85);
-    --lai-accent-dim: rgba(0, 210, 148, 0.55);
-    --lai-bg-0: #050505;
-    --lai-ink: #f4f4f5;
-    --lai-ink-2: rgba(244, 244, 245, 0.62);
-    --lai-ink-3: rgba(244, 244, 245, 0.40);
-    --lai-ink-4: rgba(244, 244, 245, 0.22);
-    --lai-line: rgba(244, 244, 245, 0.08);
-    background: transparent;
-    font-family: "Noto Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    overflow: hidden;
-    height: 100vh;
-    height: 100dvh;
-    box-sizing: border-box;
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-
-  .lai-bg-image {
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-  }
-  .lai-bg-overlay {
-    background:
-      linear-gradient(180deg, rgba(5,5,5,0.45) 0%, rgba(5,5,5,0.50) 60%, rgba(5,5,5,0.65) 100%);
-  }
-
-  .lai-wordmark-sm {
-    font-family: "Noto Sans", ui-sans-serif, system-ui, sans-serif;
-    font-weight: 700;
-    font-size: 18px;
-    letter-spacing: -0.02em;
-    color: var(--lai-ink);
-  }
-
-  .lai-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 5px 12px 5px 10px;
-    border-radius: 999px;
-    border: 1px solid rgba(0, 210, 148, 0.35);
-    background: rgba(8, 24, 18, 0.78);
-    backdrop-filter: blur(14px);
-  }
-  .lai-pill-dot {
-    width: 6px; height: 6px; border-radius: 999px;
-    background: var(--lai-accent);
-    box-shadow: 0 0 8px rgba(0, 210, 148, 0.55);
-    animation: lai-pulse 2.4s ease-in-out infinite;
-  }
-  .lai-pill-label {
-    font-size: 12.5px; font-weight: 500; letter-spacing: 0.01em;
-    color: rgba(0, 210, 148, 0.95);
-  }
-  @keyframes lai-pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.55; }
-  }
-
-  .lai-logo-halo {
-    inset: -30px;
-    border-radius: 9999px;
-    background: radial-gradient(closest-side, rgba(0, 210, 148, 0.20), transparent 70%);
-    filter: blur(22px);
-  }
-
-  .lai-headline {
-    font-family: "Noto Sans", ui-sans-serif, system-ui, sans-serif;
-    font-weight: 700;
-    font-size: clamp(37px, 5vw, 57px);
-    letter-spacing: -0.03em;
-    line-height: 1.08;
-    color: var(--lai-ink);
-    max-width: 18ch;
-  }
-  .lai-headline-accent {
-    font-family: "Fraunces", "Iowan Old Style", Georgia, serif;
-    font-style: italic;
-    font-weight: 500;
-    color: var(--lai-accent);
-    letter-spacing: -0.02em;
-    font-variation-settings: "opsz" 96;
-  }
-
-  .lai-tagline {
-    font-family: "Noto Sans", sans-serif;
-    font-size: 16.5px;
-    line-height: 1.55;
-    color: var(--lai-ink-2);
-    font-weight: 400;
-  }
-
-  .lai-trust {
-    font-size: 12.5px;
-    color: var(--lai-ink-3);
-    font-weight: 500;
-  }
-  .lai-trust-sep { color: var(--lai-ink-4); }
-  .lai-accent-text { color: var(--lai-accent); }
-
-  .lai-cta-label {
-    font-family: "Noto Sans", sans-serif;
-    font-weight: 600;
-    font-size: 16px;
-    letter-spacing: -0.005em;
-    color: #ffffff;
-  }
-
-  .lai-cta-solo {
-    padding: 12px 18px 12px 22px;
-    border-radius: 12px;
-    background: linear-gradient(180deg, rgba(0, 210, 148, 0.28), rgba(0, 210, 148, 0.16));
-    border: 1px solid rgba(0, 210, 148, 0.45);
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,0.10),
-      0 10px 28px -8px rgba(0, 210, 148, 0.40),
-      0 18px 44px -12px rgba(0,0,0,0.6);
-    transition: background 200ms ease, border-color 200ms ease, transform 200ms ease, box-shadow 240ms ease;
-    cursor: pointer;
-    backdrop-filter: blur(10px);
-  }
-  .lai-cta-solo:hover {
-    background: linear-gradient(180deg, rgba(0, 210, 148, 0.36), rgba(0, 210, 148, 0.22));
-    border-color: rgba(0, 210, 148, 0.65);
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,0.12),
-      0 14px 36px -8px rgba(0, 210, 148, 0.50),
-      0 18px 44px -12px rgba(0,0,0,0.6);
-  }
-  .lai-cta-solo:active { transform: scale(0.985); }
-
-  .lai-secondary {
-    padding: 4px 0;
-  }
-  .lai-band-arrow {
-    display: inline-flex;
-    width: 22px; height: 22px;
-    align-items: center; justify-content: center;
-    border-radius: 999px;
-    background: rgba(255,255,255,0.10);
-    color: #ffffff;
-    transition: transform 200ms ease, background 200ms ease;
-  }
-  .lai-cta-solo:hover .lai-band-arrow {
-    background: rgba(255,255,255,0.18);
-    transform: translateX(2px);
-  }
-
-  @media (max-width: 640px) {
-    .lai-headline {
-      font-size: clamp(29px, 8vw, 37px);
-      max-width: 14ch;
-      line-height: 1.05;
-    }
-    .lai-tagline { font-size: 14px; line-height: 1.45; }
-    .lai-cta-solo {
-      width: 100%;
-      justify-content: space-between;
-      padding: 12px 16px;
-    }
-    .lai-secondary {
-      flex-direction: column;
-      align-items: stretch;
-      width: 100%;
-      max-width: 320px;
-      gap: 0;
-      padding: 2px 0;
-      border-radius: 12px;
-      background: rgba(10, 10, 10, 0.55);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-    .lai-secondary .lai-link {
-      width: 100%;
-      justify-content: center;
-      padding: 9px 14px;
-    }
-    .lai-secondary .lai-link-sep {
-      width: 100%;
-      height: 1px;
-      background: rgba(255, 255, 255, 0.06);
-    }
-    .lai-trust {
-      font-size: 11.5px;
-      gap: 4px 8px;
-    }
-    .lai-footer { padding: 8px 16px 10px; }
-    .lai-footnote { font-size: 11px; }
-  }
-
-  .lai-link {
-    background: transparent;
-    color: var(--lai-ink-2);
-    font-size: 13.5px;
-    transition: color 150ms ease;
-    cursor: pointer;
-  }
-  .lai-link:hover { color: var(--lai-ink); }
-  .lai-link-text {
-    text-decoration: underline;
-    text-decoration-color: rgba(244, 244, 245, 0.18);
-    text-underline-offset: 4px;
-    transition: text-decoration-color 150ms ease;
-  }
-  .lai-link:hover .lai-link-text { text-decoration-color: var(--lai-accent-dim); }
-  .lai-link-sep {
-    width: 1px; height: 12px;
-    background: var(--lai-line);
-  }
-
-  .lai-footer {
-    border-top: 1px solid var(--lai-line);
-  }
-  .lai-footnote {
-    font-size: 12px;
-    color: var(--lai-ink-3);
-    font-weight: 400;
-  }
-
-  .lai-locale-trigger {
-    background: rgba(10, 10, 10, 0.78) !important;
-    border: 1px solid rgba(255, 255, 255, 0.10) !important;
-    color: var(--lai-ink) !important;
-    backdrop-filter: blur(14px) !important;
-  }
-  .lai-locale-trigger:hover {
-    background: rgba(20, 20, 20, 0.85) !important;
-    border-color: rgba(255, 255, 255, 0.18) !important;
-  }
-  .lai-locale-trigger-bare {
-    background: transparent !important;
-    border: none !important;
-    padding: 4px 0 !important;
-    font-size: 14px !important;
-    color: var(--lai-ink-2) !important;
-    backdrop-filter: none !important;
-    box-shadow: none !important;
-  }
-  .lai-locale-trigger-bare:hover {
-    background: transparent !important;
-    color: var(--lai-ink) !important;
-  }
-  .lai-locale-bare .tabular-nums { display: none !important; }
-  .lai-locale-menu {
-    background: #0a0a0a !important;
-    border-color: var(--lai-line) !important;
-  }
-`;
 
 function SkipWarning({
   onClose,

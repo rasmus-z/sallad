@@ -13,6 +13,7 @@ import { ModelRecommendations } from "./ModelRecommendations";
 import { WelcomePage } from "./Welcome";
 import { OnboardingSyncStep } from "./OnboardingSyncPage";
 import welcomeBg from "../../../assets/welcomebackground.png";
+import welcomeBgMobile from "../../../assets/welcomebackground-mobile.png";
 import { cn, typography } from "../../design-tokens";
 import { getPlatform } from "../../../core/utils/platform";
 import { useState, useCallback, useEffect } from "react";
@@ -147,12 +148,17 @@ export function OnboardingPage() {
       {/* Background image + overlay */}
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0 bg-cover bg-center bg-no-repeat"
+        className="pointer-events-none fixed inset-0 bg-cover bg-center bg-no-repeat lg:hidden"
+        style={{ backgroundImage: `url(${welcomeBgMobile})` }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 hidden bg-cover bg-center bg-no-repeat lg:block"
         style={{ backgroundImage: `url(${welcomeBg})` }}
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0 bg-[linear-gradient(180deg,rgba(5,5,5,0.50)_0%,rgba(5,5,5,0.65)_60%,rgba(5,5,5,0.75)_100%)]"
+        className="pointer-events-none fixed inset-0 bg-[linear-gradient(180deg,rgba(5,5,5,0.32)_0%,rgba(5,5,5,0.42)_55%,rgba(5,5,5,0.62)_100%)]"
       />
 
       {/* Header */}
