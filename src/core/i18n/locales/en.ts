@@ -12,7 +12,7 @@ export const enMessages = {
       responseStyle: "Response Style",
       models: "Models",
       security: "Security",
-      accessibility: "Accessibility",
+      accessibility: "Customization",
       speechRecognition: "Speech Recognition",
       reset: "Reset",
       backupRestore: "Backup & Restore",
@@ -163,7 +163,7 @@ export const enMessages = {
         subtitle: "Text-to-speech voices",
       },
       accessibility: {
-        title: "Accessibility",
+        title: "Customization",
         subtitle: "Language, sound cues, haptics, and appearance",
       },
       prompts: {

@@ -344,7 +344,7 @@ export function ChatPage() {
               onClick={() => {
                 const charId = selectedCharacter.id;
                 setSelectedCharacter(null);
-                navigate(`/settings/accessibility/chat?characterId=${charId}`);
+                navigate(`/settings/customization/chat?characterId=${charId}`);
               }}
               className="flex w-full items-center gap-3 rounded-xl border border-purple-400/30 bg-purple-400/10 px-4 py-3 text-left transition hover:border-purple-400/50 hover:bg-purple-400/20"
             >

@@ -16,7 +16,7 @@ import {
   FileCode,
   RefreshCw,
   Volume2,
-  Accessibility,
+  Palette,
   Mic,
   HelpCircle,
   ArrowLeftRight,
@@ -194,12 +194,12 @@ export function SettingsPage() {
         subtitle: t("settings.items.voices.subtitle"),
         onClick: () => navigate("/settings/providers?tab=audio"),
       },
-      accessibility: {
-        key: "accessibility",
-        icon: <Accessibility />,
+      customization: {
+        key: "customization",
+        icon: <Palette />,
         title: t("settings.items.accessibility.title"),
         subtitle: t("settings.items.accessibility.subtitle"),
-        onClick: () => navigate("/settings/accessibility"),
+        onClick: () => navigate("/settings/customization"),
       },
       speechRecognition: {
         key: "speechRecognition",
@@ -345,7 +345,7 @@ export function SettingsPage() {
       {
         key: "experience",
         label: t("settings.sections.experience"),
-        keys: ["voices", "accessibility", "speechRecognition"],
+        keys: ["voices", "customization", "speechRecognition"],
       },
       {
         key: "connectivity",

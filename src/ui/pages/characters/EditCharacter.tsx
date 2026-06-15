@@ -1399,7 +1399,7 @@ export function EditCharacterPage() {
                       <button
                         type="button"
                         onClick={() =>
-                          navigate(`/settings/accessibility/chat?characterId=${characterId}`)
+                          navigate(`/settings/customization/chat?characterId=${characterId}`)
                         }
                         className={cn(
                           "group flex w-full items-center gap-3 rounded-xl border px-3.5 py-3 text-left",

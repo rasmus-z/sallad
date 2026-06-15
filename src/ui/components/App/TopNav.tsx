@@ -69,7 +69,7 @@ export function TopNav({
         titleKey: "common.nav.models",
       },
       { match: (p) => p === "/settings/security", titleKey: "common.nav.security" },
-      { match: (p) => p === "/settings/accessibility", titleKey: "common.nav.accessibility" },
+      { match: (p) => p === "/settings/customization", titleKey: "common.nav.accessibility" },
       {
         match: (p) => p === "/settings/speech-recognition",
         titleKey: "common.nav.speechRecognition",
@@ -317,7 +317,7 @@ export function TopNav({
       (basePath.startsWith("/settings/personas/") && basePath.endsWith("/edit"))
     )
       return "personas";
-    if (basePath === "/settings/accessibility") return "accessibility";
+    if (basePath === "/settings/customization") return "accessibility";
     if (basePath === "/settings/sync") return "sync";
     if (basePath === "/settings/advanced/memory") return "memorySystem";
     if (basePath.includes("/lorebook")) return "lorebooks";
@@ -360,11 +360,11 @@ export function TopNav({
   );
   const isPromptNew = useMemo(() => basePath === "/settings/prompts/new", [basePath]);
   const isChatAppearanceEdit = useMemo(
-    () => basePath === "/settings/accessibility/chat",
+    () => basePath === "/settings/customization/chat",
     [basePath],
   );
   const isColorCustomizationEdit = useMemo(
-    () => basePath === "/settings/accessibility/colors",
+    () => basePath === "/settings/customization/colors",
     [basePath],
   );
   const isTemplateEdit = useMemo(

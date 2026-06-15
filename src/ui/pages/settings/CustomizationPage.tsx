@@ -142,7 +142,7 @@ function percentToVolume(value: number): number {
   return Math.max(0, Math.min(1, value / 100));
 }
 
-export function AccessibilityPage() {
+export function CustomizationPage() {
   const navigate = useNavigate();
   const { locale, setLocale, t } = useI18n();
   const [accessibility, setAccessibility] = useState<AccessibilitySettings>(
@@ -638,7 +638,7 @@ export function AccessibilityPage() {
           </h2>
           <button
             type="button"
-            onClick={() => navigate("/settings/accessibility/colors")}
+            onClick={() => navigate("/settings/customization/colors")}
             className={cn(
               "group flex w-full items-center gap-3 rounded-xl border px-4 py-3.5",
               "border-fg/10 bg-fg/5",
@@ -661,7 +661,7 @@ export function AccessibilityPage() {
           </button>
           <button
             type="button"
-            onClick={() => navigate("/settings/accessibility/chat")}
+            onClick={() => navigate("/settings/customization/chat")}
             className={cn(
               "group flex w-full items-center gap-3 rounded-xl border px-4 py-3.5 mt-3",
               "border-fg/10 bg-fg/5",

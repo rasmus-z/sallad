@@ -551,7 +551,7 @@ export function LibraryPage() {
                 onClick={() => {
                   const charId = selectedItem.id;
                   setSelectedItem(null);
-                  navigate(`/settings/accessibility/chat?characterId=${charId}`);
+                  navigate(`/settings/customization/chat?characterId=${charId}`);
                 }}
                 className="flex w-full items-center gap-3 rounded-xl border border-secondary/30 bg-secondary/10 px-4 py-3 text-left transition hover:border-secondary/50 hover:bg-secondary/20"
               >

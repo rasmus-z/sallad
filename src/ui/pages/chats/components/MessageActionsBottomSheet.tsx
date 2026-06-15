@@ -740,7 +740,7 @@ export function MessageActionsBottomSheet({
                       onOpenChatAppearance();
                       return;
                     }
-                    navigate(`/settings/accessibility/chat?characterId=${characterId}`);
+                    navigate(`/settings/customization/chat?characterId=${characterId}`);
                   }}
                 />
               )}
