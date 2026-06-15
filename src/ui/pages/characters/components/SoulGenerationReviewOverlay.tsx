@@ -223,16 +223,17 @@ export function SoulGenerationReviewOverlay({
     baselineValue: number,
   ) => {
     const changed = Math.abs(value - baselineValue) >= 0.02;
+    const changeColor = value >= baselineValue ? "text-accent" : "text-danger";
     return (
       <div key={key} className={spacing.tight}>
         <div className="flex items-center justify-between">
           <span className="text-sm text-fg/80">{label[0]}</span>
-          <span className={cn("text-[11px]", changed ? "text-accent" : "text-fg/45")}>
+          <span className={cn("text-[11px]", changed ? changeColor : "text-fg/45")}>
             {changed ? (
               <>
                 {pct(baselineValue)}{" "}
                 <span className="text-fg/40">{arrow(value - baselineValue)}</span>{" "}
-                <span className="font-semibold text-fg">{pct(value)}</span>
+                <span className={cn("font-semibold", changeColor)}>{pct(value)}</span>
               </>
             ) : (
               pct(value)
