@@ -946,8 +946,12 @@ export async function listReferencedBackgroundImagePaths(): Promise<string[]> {
 
 export async function saveCharacter(c: Partial<Character>): Promise<Character> {
   const settings = await readSettings();
-  const shouldClearChatAppearance =
-    Object.prototype.hasOwnProperty.call(c, "chatAppearance") && c.chatAppearance === undefined;
+  const chatAppearanceProvided = Object.prototype.hasOwnProperty.call(c, "chatAppearance");
+  const shouldClearChatAppearance = chatAppearanceProvided && c.chatAppearance === undefined;
+  let resolvedChatAppearance = c.chatAppearance;
+  if (!chatAppearanceProvided && c.id) {
+    resolvedChatAppearance = (await getCharacter(c.id))?.chatAppearance;
+  }
   const pureModeLevel =
     settings.appState.pureModeLevel ?? (settings.appState.pureModeEnabled ? "standard" : "off");
   const defaultRules =
@@ -1009,7 +1013,7 @@ export async function saveCharacter(c: Partial<Character>): Promise<Character> {
     customTextSecondary: c.customTextSecondary,
     voiceConfig: c.voiceConfig,
     voiceAutoplay: c.voiceAutoplay ?? false,
-    chatAppearance: shouldClearChatAppearance ? (null as any) : c.chatAppearance,
+    chatAppearance: shouldClearChatAppearance ? (null as any) : resolvedChatAppearance,
     chatTemplates: c.chatTemplates ?? [],
     defaultChatTemplateId: c.defaultChatTemplateId ?? null,
     createdAt: c.createdAt ?? timestamp,
