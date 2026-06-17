@@ -243,6 +243,7 @@ export function AvatarGenerationSheet({
         providerId: selectedModel.providerId,
         credentialId: selectedProvider.id,
         advancedModelSettings: selectedModel.advancedModelSettings ?? null,
+        outputModalities: selectedModel.outputScopes,
         size: selectedModel.advancedModelSettings?.sdSize ?? "1024x1024",
         n: 1,
       };
@@ -316,6 +317,7 @@ export function AvatarGenerationSheet({
         credentialId: selectedProvider.id,
         advancedModelSettings: selectedModel.advancedModelSettings ?? null,
         inputImages: [sourceImageDataUrl],
+        outputModalities: selectedModel.outputScopes,
         size: selectedModel.advancedModelSettings?.sdSize ?? "1024x1024",
         n: 1,
       };

@@ -2581,7 +2581,7 @@ function normalizeModelScopes(value: unknown): ModelScope[] {
   for (const item of fromValue) {
     if (item === "text" || item === "image" || item === "audio") set.add(item);
   }
-  set.add("text");
+  if (set.size === 0) set.add("text");
   return scopeOrder.filter((s) => set.has(s));
 }
 
@@ -2597,7 +2597,6 @@ export const ModelSchema = z.object({
   providerLabel: z.string().min(1),
   displayName: z.string().min(1),
   createdAt: z.number().int(),
-  // Input/output modality scopes for chat models. Text is always enabled.
   inputScopes: ModelScopesSchema,
   outputScopes: ModelScopesSchema,
   advancedModelSettings: AdvancedModelSettingsSchema.nullish().optional(),

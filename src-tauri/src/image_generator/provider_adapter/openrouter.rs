@@ -108,7 +108,7 @@ impl ImageProviderAdapter for OpenRouterAdapter {
         let mut modalities: Vec<&str> = vec!["image"];
         let supports_text = match &request.output_modalities {
             Some(scopes) => scopes.iter().any(|s| s.eq_ignore_ascii_case("text")),
-            None => true,
+            None => false,
         };
         if supports_text {
             modalities.push("text");

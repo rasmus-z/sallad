@@ -133,7 +133,7 @@ pub fn model_upsert(app: tauri::AppHandle, model_json: String) -> Result<String,
                 }
             }
         }
-        if !scopes.iter().any(|s| s.eq_ignore_ascii_case("text")) {
+        if scopes.is_empty() {
             scopes.push("text".to_string());
         }
         scopes.sort_by_key(|s| {

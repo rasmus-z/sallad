@@ -26,6 +26,7 @@ export interface ImageGenerationRequest {
   credentialId: string;
   advancedModelSettings?: AdvancedModelSettings | null;
   inputImages?: string[];
+  outputModalities?: string[];
   size?: string;
   quality?: string;
   style?: string;

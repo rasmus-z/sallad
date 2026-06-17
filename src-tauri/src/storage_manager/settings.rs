@@ -510,7 +510,7 @@ fn db_write_settings_json(app: &tauri::AppHandle, data: String) -> Result<(), St
                     }
                 }
             }
-            if !scopes.iter().any(|s| s.eq_ignore_ascii_case("text")) {
+            if scopes.is_empty() {
                 scopes.push("text".to_string());
             }
             scopes.sort_by_key(|s| {
