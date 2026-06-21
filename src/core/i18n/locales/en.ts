@@ -6474,6 +6474,27 @@ export const enMessages = {
       personas: "Personas",
       lorebooks: "Lorebooks",
       images: "Images",
+      audio: "Audio",
+    },
+    audio: {
+      filters: {
+        all: "All",
+        generated: "Generated",
+        uploaded: "Uploaded",
+      },
+      play: "Play",
+      pause: "Pause",
+      generatedTitle: "Generated speech",
+      generatedSubtitle: "Text to speech",
+      uploadedSubtitle: "Uploaded in chat",
+      badges: {
+        tts: "TTS",
+        chat: "Chat",
+      },
+      empty: {
+        title: "No audio yet",
+        description: "Generated speech and audio you upload in chats will appear here",
+      },
     },
     emptyStates: {
       all: {
