@@ -5357,6 +5357,22 @@ export const filMessages: DeepPartialMessageTree<LocaleMessages> = {
     },
   },
   dynamicMemory: {
+    mode: {
+      title: "Mga Update sa Memory",
+      description: "Piliin kung kailan tatakbo ang mga dynamic memory cycle habang lumalago ang usapan.",
+      auto: "Awtomatiko",
+      autoDescription: "Kusang tumatakbo ang mga update sa memory sa background.",
+      askFirst: "Magtanong Muna",
+      askFirstDescription: "Magtanong bago ang bawat update para masimulan mo ito ngayon o laktawan at isama sa susunod.",
+      manual: "Manwal",
+      manualDescription: "Tumatakbo lang ang mga update kapag sinimulan mo ito mula sa memory panel.",
+    },
+    approval: {
+      title: "I-update ang Memory?",
+      description: "{{count}} bagong mensahe ang handa nang buurin sa memory.",
+      start: "Simulan Ngayon",
+      skip: "Laktawan ang Cycle na Ito",
+    },
     page: {
       info: "Awtomatikong binubuod ng Dynamic Memory ang mga usapan upang mapanatili ang konteksto nang mahusay. Pumili ng preset o i-fine-tune ang mga setting para sa iyong pangangailangan.",
       disabledDirectTitle: "Naka-disable ang dynamic memory para sa direct chats",

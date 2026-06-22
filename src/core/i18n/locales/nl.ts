@@ -5357,6 +5357,22 @@ export const nlMessages: DeepPartialMessageTree<LocaleMessages> = {
     },
   },
   dynamicMemory: {
+    mode: {
+      title: "Geheugenupdates",
+      description: "Kies wanneer dynamische geheugencycli draaien naarmate het gesprek groeit.",
+      auto: "Automatisch",
+      autoDescription: "Geheugenupdates draaien vanzelf op de achtergrond.",
+      askFirst: "Eerst vragen",
+      askFirstDescription: "Vraag voor elke update zodat u deze nu kunt starten of overslaan en in de volgende kunt meenemen.",
+      manual: "Handmatig",
+      manualDescription: "Updates draaien alleen wanneer u ze activeert vanuit het geheugenpaneel.",
+    },
+    approval: {
+      title: "Geheugen bijwerken?",
+      description: "{{count}} nieuwe berichten zijn klaar om te worden samengevat in het geheugen.",
+      start: "Nu starten",
+      skip: "Deze cyclus overslaan",
+    },
     page: {
       info: "Dynamisch Geheugen vat gesprekken automatisch samen om context efficiënt te behouden. Kies een preset of stem de instellingen af op uw behoeften.",
       disabledDirectTitle: "Dynamisch geheugen is uitgeschakeld voor directe chats",

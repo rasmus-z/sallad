@@ -5357,6 +5357,22 @@ export const trMessages: DeepPartialMessageTree<LocaleMessages> = {
     },
   },
   dynamicMemory: {
+    mode: {
+      title: "Hafıza güncellemeleri",
+      description: "Sohbet büyüdükçe dinamik hafıza döngülerinin ne zaman çalışacağını seçin.",
+      auto: "Otomatik",
+      autoDescription: "Hafıza güncellemeleri arka planda kendi kendine çalışır.",
+      askFirst: "Önce sor",
+      askFirstDescription: "Her güncellemeden önce sorulsun; şimdi başlatın ya da atlayıp bir sonrakine ekleyin.",
+      manual: "Manuel",
+      manualDescription: "Güncellemeler yalnızca hafıza panelinden başlattığınızda çalışır.",
+    },
+    approval: {
+      title: "Hafıza güncellensin mi?",
+      description: "{{count}} yeni mesaj hafızada özetlenmeye hazır.",
+      start: "Şimdi başlat",
+      skip: "Bu döngüyü atla",
+    },
     page: {
       info: "Dinamik Hafıza, bağlamı verimli bir şekilde korumak için konuşmaları otomatik olarak özetler. Bir hazır ayar seç veya ihtiyaçlarına göre ayarları yapılandır.",
       disabledDirectTitle: "Doğrudan sohbetler için dinamik hafıza devre dışı",

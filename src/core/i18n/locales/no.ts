@@ -5357,6 +5357,22 @@ export const noMessages: DeepPartialMessageTree<LocaleMessages> = {
     },
   },
   dynamicMemory: {
+    mode: {
+      title: "Minneoppdateringer",
+      description: "Velg når dynamiske minnesykluser kjører etter hvert som samtalen vokser.",
+      auto: "Automatisk",
+      autoDescription: "Minneoppdateringer kjører av seg selv i bakgrunnen.",
+      askFirst: "Spør først",
+      askFirstDescription: "Spør før hver oppdatering, slik at du kan starte den nå eller hoppe over og ta den med i neste.",
+      manual: "Manuell",
+      manualDescription: "Oppdateringer kjører bare når du utløser dem fra minnepanelet.",
+    },
+    approval: {
+      title: "Oppdatere minne?",
+      description: "{{count}} nye meldinger er klare til å oppsummeres i minnet.",
+      start: "Start nå",
+      skip: "Hopp over denne syklusen",
+    },
     page: {
       info: "Dynamisk minne oppsummerer samtaler automatisk for å opprettholde kontekst effektivt. Velg en forhåndsinnstilling eller finjuster innstillingene for dine behov.",
       disabledDirectTitle: "Dynamisk minne er deaktivert for direktesamtaler",

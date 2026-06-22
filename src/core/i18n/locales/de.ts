@@ -5357,6 +5357,22 @@ export const deMessages: DeepPartialMessageTree<LocaleMessages> = {
     },
   },
   dynamicMemory: {
+    mode: {
+      title: "Speicheraktualisierungen",
+      description: "Lege fest, wann dynamische Speicherzyklen laufen, während das Gespräch wächst.",
+      auto: "Automatisch",
+      autoDescription: "Speicheraktualisierungen laufen eigenständig im Hintergrund.",
+      askFirst: "Erst fragen",
+      askFirstDescription: "Vor jeder Aktualisierung nachfragen, damit du sie jetzt starten oder überspringen und in die nächste übernehmen kannst.",
+      manual: "Manuell",
+      manualDescription: "Aktualisierungen laufen nur, wenn du sie im Speicherbereich auslöst.",
+    },
+    approval: {
+      title: "Speicher aktualisieren?",
+      description: "{{count}} neue Nachrichten sind bereit, im Speicher zusammengefasst zu werden.",
+      start: "Jetzt starten",
+      skip: "Diesen Zyklus überspringen",
+    },
     page: {
       info: "Dynamischer Speicher fasst Unterhaltungen automatisch zusammen, um den Kontext effizient beizubehalten. Wähle ein Preset oder passe die Einstellungen nach deinen Bedürfnissen an.",
       disabledDirectTitle: "Dynamischer Speicher ist für Direktchats deaktiviert",

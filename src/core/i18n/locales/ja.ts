@@ -4748,6 +4748,22 @@ export const jaMessages: DeepPartialMessageTree<LocaleMessages> = {
     },
   },
   dynamicMemory: {
+    mode: {
+      title: "メモリの更新",
+      description: "会話が長くなるにつれてダイナミックメモリの更新をいつ実行するかを選択します。",
+      auto: "自動",
+      autoDescription: "メモリの更新はバックグラウンドで自動的に実行されます。",
+      askFirst: "確認する",
+      askFirstDescription: "更新のたびに確認し、今すぐ実行するか、スキップして次回にまとめるかを選べます。",
+      manual: "手動",
+      manualDescription: "更新はメモリパネルから手動で実行したときのみ行われます。",
+    },
+    approval: {
+      title: "メモリを更新しますか？",
+      description: "{{count}}件の新しいメッセージをメモリに要約する準備ができました。",
+      start: "今すぐ実行",
+      skip: "今回はスキップ",
+    },
     page: {
       info: "ダイナミックメモリは会話を自動的に要約し、コンテキストを効率的に維持します。プリセットを選択するか、ニーズに合わせて設定を微調整してください。",
       disabledDirectTitle: "ダイレクトチャットのダイナミックメモリは無効です",

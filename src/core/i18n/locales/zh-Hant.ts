@@ -5357,6 +5357,22 @@ export const zhHantMessages: DeepPartialMessageTree<LocaleMessages> = {
     },
   },
   dynamicMemory: {
+    mode: {
+      title: "記憶更新",
+      description: "選擇對話變長時動態記憶更新的執行時機。",
+      auto: "自動",
+      autoDescription: "記憶更新會在背景自動執行。",
+      askFirst: "先詢問",
+      askFirstDescription: "每次更新前先詢問，您可以立即執行，或略過並併入下一次。",
+      manual: "手動",
+      manualDescription: "僅在您從記憶面板手動觸發時才執行更新。",
+    },
+    approval: {
+      title: "更新記憶？",
+      description: "已有 {{count}} 則新訊息可摘要至記憶中。",
+      start: "立即執行",
+      skip: "略過本次",
+    },
     page: {
       info: "動態記憶會自動摘要對話，以更有效率地維持上下文。您可以選擇預設方案，或依需求細部調整。",
       disabledDirectTitle: "私聊的動態記憶目前已停用",

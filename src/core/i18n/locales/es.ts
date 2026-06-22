@@ -5357,6 +5357,22 @@ export const esMessages: DeepPartialMessageTree<LocaleMessages> = {
     },
   },
   dynamicMemory: {
+    mode: {
+      title: "Actualizaciones de memoria",
+      description: "Elige cuándo se ejecutan los ciclos de memoria dinámica a medida que crece la conversación.",
+      auto: "Automático",
+      autoDescription: "Las actualizaciones de memoria se ejecutan solas en segundo plano.",
+      askFirst: "Preguntar primero",
+      askFirstDescription: "Pregunta antes de cada actualización para que puedas iniciarla ahora u omitirla e incluirla en la siguiente.",
+      manual: "Manual",
+      manualDescription: "Las actualizaciones solo se ejecutan cuando las activas desde el panel de memoria.",
+    },
+    approval: {
+      title: "¿Actualizar memoria?",
+      description: "{{count}} mensajes nuevos están listos para resumirse en la memoria.",
+      start: "Iniciar ahora",
+      skip: "Omitir este ciclo",
+    },
     page: {
       info: "La Memoria Dinámica resume automáticamente las conversaciones para mantener el contexto de manera eficiente. Elige un preajuste o ajusta la configuración según tus necesidades.",
       disabledDirectTitle: "La memoria dinámica está desactivada para chats directos",

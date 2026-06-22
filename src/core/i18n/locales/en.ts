@@ -5554,6 +5554,22 @@ export const enMessages = {
     },
   },
   dynamicMemory: {
+    mode: {
+      title: "Memory Updates",
+      description: "Choose when dynamic memory cycles run as the conversation grows.",
+      auto: "Automatic",
+      autoDescription: "Memory updates run on their own in the background.",
+      askFirst: "Ask First",
+      askFirstDescription: "Ask before each update so you can start it now or skip and roll it into the next one.",
+      manual: "Manual",
+      manualDescription: "Updates only run when you trigger them from the memory panel.",
+    },
+    approval: {
+      title: "Update Memory?",
+      description: "{{count}} new messages are ready to be summarized into memory.",
+      start: "Start Now",
+      skip: "Skip This Cycle",
+    },
     page: {
       info: "Dynamic Memory automatically summarizes conversations to maintain context efficiently. Choose a preset or fine-tune settings for your needs.",
       disabledDirectTitle: "Dynamic memory is disabled for direct chats",

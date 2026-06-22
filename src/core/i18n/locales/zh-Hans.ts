@@ -5357,6 +5357,22 @@ export const zhHansMessages: DeepPartialMessageTree<LocaleMessages> = {
     },
   },
   dynamicMemory: {
+    mode: {
+      title: "记忆更新",
+      description: "选择对话变长时动态记忆更新的运行时机。",
+      auto: "自动",
+      autoDescription: "记忆更新在后台自动运行。",
+      askFirst: "先询问",
+      askFirstDescription: "每次更新前先询问，您可以立即运行，或跳过并并入下一次。",
+      manual: "手动",
+      manualDescription: "仅在您从记忆面板手动触发时才运行更新。",
+    },
+    approval: {
+      title: "更新记忆？",
+      description: "已有 {{count}} 条新消息可摘要到记忆中。",
+      start: "立即运行",
+      skip: "跳过本次",
+    },
     page: {
       info: "动态记忆会自动摘要对话，以更高效地维持上下文。您可以选择预设方案，或根据需求精细调整。",
       disabledDirectTitle: "私聊的动态记忆当前已禁用",

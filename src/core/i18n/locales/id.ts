@@ -4748,6 +4748,22 @@ export const idMessages: DeepPartialMessageTree<LocaleMessages> = {
     },
   },
   dynamicMemory: {
+    mode: {
+      title: "Pembaruan Memori",
+      description: "Pilih kapan siklus memori dinamis berjalan seiring percakapan bertambah.",
+      auto: "Otomatis",
+      autoDescription: "Pembaruan memori berjalan sendiri di latar belakang.",
+      askFirst: "Tanya Dulu",
+      askFirstDescription: "Tanyakan sebelum setiap pembaruan agar Anda bisa memulainya sekarang atau melewatinya dan menggabungkannya ke siklus berikutnya.",
+      manual: "Manual",
+      manualDescription: "Pembaruan hanya berjalan saat Anda memicunya dari panel memori.",
+    },
+    approval: {
+      title: "Perbarui Memori?",
+      description: "{{count}} pesan baru siap dirangkum ke dalam memori.",
+      start: "Mulai Sekarang",
+      skip: "Lewati Siklus Ini",
+    },
     page: {
       info: "Memori Dinamis secara otomatis merangkum percakapan untuk menjaga konteks secara efisien. Pilih preset atau sesuaikan pengaturan sesuai kebutuhan Anda.",
       disabledDirectTitle: "Memori dinamis dinonaktifkan untuk obrolan langsung",

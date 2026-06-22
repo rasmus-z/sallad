@@ -5357,6 +5357,22 @@ export const koMessages: DeepPartialMessageTree<LocaleMessages> = {
     },
   },
   dynamicMemory: {
+    mode: {
+      title: "메모리 업데이트",
+      description: "대화가 길어질 때 다이나믹 메모리 업데이트를 언제 실행할지 선택하세요.",
+      auto: "자동",
+      autoDescription: "메모리 업데이트가 백그라운드에서 자동으로 실행됩니다.",
+      askFirst: "먼저 확인",
+      askFirstDescription: "업데이트할 때마다 확인하여 지금 실행하거나, 건너뛰고 다음에 함께 처리할 수 있습니다.",
+      manual: "수동",
+      manualDescription: "업데이트는 메모리 패널에서 직접 실행할 때만 진행됩니다.",
+    },
+    approval: {
+      title: "메모리를 업데이트할까요?",
+      description: "새 메시지 {{count}}개를 메모리로 요약할 준비가 되었습니다.",
+      start: "지금 실행",
+      skip: "이번에는 건너뛰기",
+    },
     page: {
       info: "다이나믹 메모리는 대화를 자동으로 요약하여 컨텍스트를 효율적으로 유지합니다. 프리셋을 선택하거나 필요에 맞게 설정을 미세 조정하세요.",
       disabledDirectTitle: "다이렉트 채팅의 다이나믹 메모리가 비활성화되어 있습니다",

@@ -4834,6 +4834,22 @@ export const plMessages: DeepPartialMessageTree<LocaleMessages> = {
     },
   },
   dynamicMemory: {
+    mode: {
+      title: "Aktualizacje pamięci",
+      description: "Wybierz, kiedy cykle pamięci dynamicznej mają być uruchamiane w miarę rozwoju rozmowy.",
+      auto: "Automatycznie",
+      autoDescription: "Aktualizacje pamięci są wykonywane samodzielnie w tle.",
+      askFirst: "Pytaj najpierw",
+      askFirstDescription: "Pytaj przed każdą aktualizacją, aby uruchomić ją teraz lub pominąć i dołączyć do następnej.",
+      manual: "Ręcznie",
+      manualDescription: "Aktualizacje są uruchamiane tylko po wywołaniu ich z panelu pamięci.",
+    },
+    approval: {
+      title: "Zaktualizować pamięć?",
+      description: "{{count}} nowych wiadomości jest gotowych do podsumowania w pamięci.",
+      start: "Rozpocznij teraz",
+      skip: "Pomiń ten cykl",
+    },
     page: {
       info: "Pamięć dynamiczna automatycznie podsumowuje rozmowy, aby efektywnie utrzymywać kontekst. Wybierz preset lub dostosuj ustawienia do swoich potrzeb.",
       disabledDirectTitle: "Pamięć dynamiczna jest wyłączona dla czatów bezpośrednich",

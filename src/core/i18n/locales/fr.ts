@@ -5357,6 +5357,22 @@ export const frMessages: DeepPartialMessageTree<LocaleMessages> = {
     },
   },
   dynamicMemory: {
+    mode: {
+      title: "Mises à jour de la mémoire",
+      description: "Choisissez quand les cycles de mémoire dynamique s'exécutent au fil de la conversation.",
+      auto: "Automatique",
+      autoDescription: "Les mises à jour de la mémoire s'exécutent d'elles-mêmes en arrière-plan.",
+      askFirst: "Demander d'abord",
+      askFirstDescription: "Demander avant chaque mise à jour pour la lancer maintenant ou l'ignorer et l'intégrer à la suivante.",
+      manual: "Manuel",
+      manualDescription: "Les mises à jour ne s'exécutent que lorsque vous les lancez depuis le panneau de mémoire.",
+    },
+    approval: {
+      title: "Mettre à jour la mémoire ?",
+      description: "{{count}} nouveaux messages sont prêts à être résumés dans la mémoire.",
+      start: "Lancer maintenant",
+      skip: "Ignorer ce cycle",
+    },
     page: {
       info: "La Mémoire Dynamique résume automatiquement les conversations pour maintenir le contexte efficacement. Choisissez un préréglage ou ajustez les paramètres selon vos besoins.",
       disabledDirectTitle: "La mémoire dynamique est désactivée pour les discussions directes",

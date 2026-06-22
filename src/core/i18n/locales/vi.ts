@@ -4748,6 +4748,22 @@ export const viMessages: DeepPartialMessageTree<LocaleMessages> = {
     },
   },
   dynamicMemory: {
+    mode: {
+      title: "Cập nhật bộ nhớ",
+      description: "Chọn thời điểm các chu kỳ bộ nhớ động chạy khi cuộc trò chuyện dài thêm.",
+      auto: "Tự động",
+      autoDescription: "Cập nhật bộ nhớ tự chạy trong nền.",
+      askFirst: "Hỏi trước",
+      askFirstDescription: "Hỏi trước mỗi lần cập nhật để bạn có thể bắt đầu ngay hoặc bỏ qua và gộp vào chu kỳ kế tiếp.",
+      manual: "Thủ công",
+      manualDescription: "Cập nhật chỉ chạy khi bạn kích hoạt từ bảng bộ nhớ.",
+    },
+    approval: {
+      title: "Cập nhật bộ nhớ?",
+      description: "{{count}} tin nhắn mới đã sẵn sàng để tóm tắt vào bộ nhớ.",
+      start: "Bắt đầu ngay",
+      skip: "Bỏ qua chu kỳ này",
+    },
     page: {
       info: "Bộ nhớ Động tự động tóm tắt các cuộc trò chuyện để duy trì ngữ cảnh hiệu quả. Chọn một preset hoặc tinh chỉnh cài đặt theo nhu cầu của bạn.",
       disabledDirectTitle: "Bộ nhớ động đã bị tắt cho trò chuyện trực tiếp",
