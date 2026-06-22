@@ -25,6 +25,7 @@ pub use prompting::{
 
 pub use commands::{
     __cmd__abort_dynamic_memory, __cmd__chat_add_message_attachment, __cmd__chat_completion,
+    __cmd__dynamic_memory_pending_approval, __cmd__skip_dynamic_memory_cycle,
     __cmd__chat_continue, __cmd__chat_generate_companion_soul,
     __cmd__chat_generate_design_reference_description, __cmd__chat_generate_lorebook_entry_draft,
     __cmd__chat_generate_lorebook_keyword_draft, __cmd__chat_generate_scene_image,
@@ -64,5 +65,6 @@ pub use commands::{
     reset_local_roleplay_template, reset_lorebook_entry_writer_template,
     reset_lorebook_keyword_generator_template, reset_scene_generation_template,
     reset_scene_prompt_writer_template, retry_dynamic_memory, search_messages,
-    trigger_dynamic_memory, update_prompt_template, validate_template_variables,
+    skip_dynamic_memory_cycle, dynamic_memory_pending_approval, trigger_dynamic_memory,
+    update_prompt_template, validate_template_variables,
 };

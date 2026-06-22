@@ -533,6 +533,12 @@ pub struct DynamicMemorySettings {
     pub recursive_memory_loops: bool,
     #[serde(default = "default_recursive_memory_loop_hard_cap")]
     pub recursive_memory_loop_hard_cap: u32,
+    #[serde(default = "default_run_mode")]
+    pub run_mode: String,
+}
+
+fn default_run_mode() -> String {
+    "auto".to_string()
 }
 
 fn default_min_similarity() -> f32 {

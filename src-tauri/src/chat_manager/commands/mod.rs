@@ -1066,6 +1066,16 @@ pub fn abort_dynamic_memory(app: AppHandle, session_id: String) -> Result<(), St
 }
 
 #[tauri::command]
+pub fn skip_dynamic_memory_cycle(app: AppHandle, session_id: String) -> Result<(), String> {
+    super::memory::flow::skip_dynamic_memory_cycle(app, session_id)
+}
+
+#[tauri::command]
+pub fn dynamic_memory_pending_approval(app: AppHandle, session_id: String) -> Option<u32> {
+    super::memory::flow::dynamic_memory_pending_approval(app, session_id)
+}
+
+#[tauri::command]
 pub async fn chat_add_message_attachment(
     app: AppHandle,
     args: ChatAddMessageAttachmentArgs,

@@ -1504,6 +1504,18 @@ pub fn abort_dynamic_memory(app: AppHandle, session_id: String) -> Result<(), St
     run_manager.cancel_run(&abort_registry, &run_key)
 }
 
+pub fn skip_dynamic_memory_cycle(app: AppHandle, session_id: String) -> Result<(), String> {
+    app.state::<crate::dynamic_memory_approval::DynamicMemoryApprovalManager>()
+        .mark_skipped(&session_id);
+    Ok(())
+}
+
+pub fn dynamic_memory_pending_approval(app: AppHandle, session_id: String) -> Option<u32> {
+    app.state::<crate::dynamic_memory_approval::DynamicMemoryApprovalManager>()
+        .pending(&session_id)
+        .map(|count| count as u32)
+}
+
 pub fn enqueue_post_turn_dynamic_memory(
     app: AppHandle,
     session_id: String,
@@ -2034,6 +2046,47 @@ async fn process_dynamic_memory_cycle_with_model(
             return Ok(());
         }
     }
+
+    if model_id_override.is_none() && !force && !cursor_rewound {
+        match dynamic.run_mode.as_str() {
+            "manual" => {
+                log_info(
+                    app,
+                    "dynamic_memory",
+                    "run_mode=manual; skipping automatic cycle",
+                );
+                return Ok(());
+            }
+            "askFirst" => {
+                let approval = app
+                    .state::<crate::dynamic_memory_approval::DynamicMemoryApprovalManager>();
+                if let Some(pending_count) = approval.should_prompt(
+                    &session.id,
+                    total_convo_at_start,
+                    last_window_end,
+                    window_size,
+                ) {
+                    log_info(
+                        app,
+                        "dynamic_memory",
+                        format!(
+                            "run_mode=askFirst; prompting for approval (pending_count={})",
+                            pending_count
+                        ),
+                    );
+                    let _ = app.emit(
+                        "dynamic-memory:approval-needed",
+                        json!({ "sessionId": session.id, "pendingCount": pending_count }),
+                    );
+                }
+                return Ok(());
+            }
+            _ => {}
+        }
+    }
+
+    app.state::<crate::dynamic_memory_approval::DynamicMemoryApprovalManager>()
+        .clear(&session.id);
 
     let mut window_start = if cursor_rewound {
         0
