@@ -1248,6 +1248,14 @@ function LogsPageInner() {
   };
 
   const deleteLogFile = async (filename: string) => {
+    const friendly = filename.replace(/^app-/, "").replace(/\.log$/, "");
+    const confirmed = await confirmBottomMenu({
+      title: "Delete this log?",
+      message: `Permanently delete the log file from ${friendly}?`,
+      confirmLabel: "Delete",
+      destructive: true,
+    });
+    if (!confirmed) return;
     try {
       await invoke("delete_log_file", { filename });
       await loadLogFiles();
