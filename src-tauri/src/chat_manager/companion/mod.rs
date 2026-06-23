@@ -285,13 +285,15 @@ impl SoulGrowthEntry {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SoulMutability {
     Immutable,
+    VerySlow,
     Slow,
     Fast,
 }
 
 pub fn soul_category_mutability(category: &str) -> SoulMutability {
     match category {
-        "essence" | "traits" | "backstory" => SoulMutability::Immutable,
+        "essence" | "traits" => SoulMutability::VerySlow,
+        "backstory" => SoulMutability::Immutable,
         "likes" => SoulMutability::Fast,
         "appearance" | "goals" | "voice" | "relationalStyle" | "vulnerabilities" | "fears"
         | "habits" | "boundaries" => SoulMutability::Slow,
@@ -300,6 +302,13 @@ pub fn soul_category_mutability(category: &str) -> SoulMutability {
 }
 
 pub fn soul_category_is_changeable(category: &str) -> bool {
+    matches!(
+        soul_category_mutability(category),
+        SoulMutability::Fast | SoulMutability::Slow
+    )
+}
+
+pub fn soul_category_is_consolidatable(category: &str) -> bool {
     !matches!(soul_category_mutability(category), SoulMutability::Immutable)
 }
 
@@ -314,6 +323,8 @@ pub const CHANGEABLE_SOUL_CATEGORIES: &[&str] = &[
     "habits",
     "boundaries",
 ];
+
+pub const CORE_SOUL_CATEGORIES: &[&str] = &["essence", "traits"];
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
@@ -631,8 +642,16 @@ pub fn render_prompt_state(
     ];
 
     let growth = &state.soul_growth;
-    push_soul_line(&mut lines, "Soul essence", &soul.essence);
-    push_soul_line(&mut lines, "Defining traits", &soul.traits);
+    push_soul_line(
+        &mut lines,
+        "Soul essence",
+        &effective_soul_value(&soul.essence, "essence", growth),
+    );
+    push_soul_line(
+        &mut lines,
+        "Defining traits",
+        &effective_soul_value(&soul.traits, "traits", growth),
+    );
     push_soul_line(&mut lines, "Backstory", &soul.backstory);
     push_soul_line(
         &mut lines,
@@ -829,6 +848,19 @@ pub fn clear_soul_growth(session: &mut Session, now: u64) -> usize {
     removed
 }
 
+pub fn core_soul_authored(character: &Character) -> Vec<(String, String)> {
+    let config = companion_config(character);
+    CORE_SOUL_CATEGORIES
+        .iter()
+        .map(|category| {
+            (
+                (*category).to_string(),
+                soul_base_value(&config.soul, category).to_string(),
+            )
+        })
+        .collect()
+}
+
 pub fn active_soul_growth_entries(character: &Character, session: &Session) -> Vec<SoulGrowthEntry> {
     let config = companion_config(character);
     let state = current_state(session, &config);
@@ -845,6 +877,25 @@ pub fn append_soul_growth(
     entries: Vec<SoulGrowthEntry>,
     now: u64,
 ) -> usize {
+    append_soul_growth_gated(session, character, entries, now, false)
+}
+
+pub fn append_core_soul_growth(
+    session: &mut Session,
+    character: &Character,
+    entries: Vec<SoulGrowthEntry>,
+    now: u64,
+) -> usize {
+    append_soul_growth_gated(session, character, entries, now, true)
+}
+
+fn append_soul_growth_gated(
+    session: &mut Session,
+    character: &Character,
+    entries: Vec<SoulGrowthEntry>,
+    now: u64,
+    allow_core: bool,
+) -> usize {
     if entries.is_empty() {
         return 0;
     }
@@ -859,7 +910,12 @@ pub fn append_soul_growth(
 
     let mut applied = 0;
     for mut entry in entries {
-        if !soul_category_is_changeable(&entry.category) {
+        let allowed = if allow_core {
+            soul_category_is_consolidatable(&entry.category)
+        } else {
+            soul_category_is_changeable(&entry.category)
+        };
+        if !allowed {
             continue;
         }
         if entry.value.trim().is_empty() {
@@ -892,6 +948,34 @@ pub fn append_soul_growth(
         session.companion_state = serde_json::to_value(state).ok();
     }
     applied
+}
+
+pub fn retire_soul_growth_entries(session: &mut Session, ids: &[String], now: u64) -> usize {
+    if ids.is_empty() {
+        return 0;
+    }
+    let raw = match &session.companion_state {
+        Some(raw) => raw.clone(),
+        None => return 0,
+    };
+    let mut state: CompanionSessionState = match serde_json::from_value(raw) {
+        Ok(state) => state,
+        Err(_) => return 0,
+    };
+    let mut retired = 0;
+    for entry in state.soul_growth.iter_mut() {
+        if entry.is_active() && ids.iter().any(|id| id == &entry.id) {
+            entry.superseded_by = Some("consolidation".to_string());
+            entry.superseded_at = Some(now);
+            retired += 1;
+        }
+    }
+    if retired > 0 {
+        enforce_growth_bounds(&mut state.soul_growth);
+        state.updated_at = now;
+        session.companion_state = serde_json::to_value(state).ok();
+    }
+    retired
 }
 
 fn enforce_growth_bounds(growth: &mut Vec<SoulGrowthEntry>) {
