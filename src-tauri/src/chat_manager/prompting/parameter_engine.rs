@@ -633,6 +633,11 @@ fn companion_growthcycle_variables() -> Vec<PromptVariableDefinition> {
             "The companion's changeable soul categories with their current values.",
         ),
         variable(
+            "{{current_growth}}",
+            "Current Growth Entries",
+            "Existing active growth entries with ids, so the model can supersede or revise them.",
+        ),
+        variable(
             "{{new_memories}}",
             "New Memories",
             "Memories freshly created during the latest exchange, each with a leading index.",

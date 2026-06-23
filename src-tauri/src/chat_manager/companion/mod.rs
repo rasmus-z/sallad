@@ -257,6 +257,8 @@ pub struct CompanionSessionState {
 #[serde(rename_all = "camelCase")]
 pub struct SoulGrowthEntry {
     #[serde(default)]
+    pub id: String,
+    #[serde(default)]
     pub category: String,
     #[serde(default)]
     pub value: String,
@@ -266,6 +268,18 @@ pub struct SoulGrowthEntry {
     pub source_memory_ids: Vec<String>,
     #[serde(default)]
     pub created_at: u64,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub supersedes: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub superseded_by: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub superseded_at: Option<u64>,
+}
+
+impl SoulGrowthEntry {
+    pub fn is_active(&self) -> bool {
+        self.superseded_by.is_none()
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -716,7 +730,7 @@ fn effective_soul_value(base: &str, category: &str, growth: &[SoulGrowthEntry]) 
         parts.push(trimmed.to_string());
     }
     for entry in growth {
-        if entry.category != category {
+        if entry.category != category || !entry.is_active() {
             continue;
         }
         let value = entry.value.trim();
@@ -815,6 +829,16 @@ pub fn clear_soul_growth(session: &mut Session, now: u64) -> usize {
     removed
 }
 
+pub fn active_soul_growth_entries(character: &Character, session: &Session) -> Vec<SoulGrowthEntry> {
+    let config = companion_config(character);
+    let state = current_state(session, &config);
+    state
+        .soul_growth
+        .into_iter()
+        .filter(|entry| entry.is_active())
+        .collect()
+}
+
 pub fn append_soul_growth(
     session: &mut Session,
     character: &Character,
@@ -826,6 +850,13 @@ pub fn append_soul_growth(
     }
     let config = companion_config(character);
     let mut state = current_state(session, &config);
+
+    for entry in state.soul_growth.iter_mut() {
+        if entry.id.trim().is_empty() {
+            entry.id = uuid::Uuid::new_v4().to_string();
+        }
+    }
+
     let mut applied = 0;
     for mut entry in entries {
         if !soul_category_is_changeable(&entry.category) {
@@ -834,17 +865,50 @@ pub fn append_soul_growth(
         if entry.value.trim().is_empty() {
             continue;
         }
+        if entry.id.trim().is_empty() {
+            entry.id = uuid::Uuid::new_v4().to_string();
+        }
         if entry.created_at == 0 {
             entry.created_at = now;
+        }
+        if !entry.supersedes.is_empty() {
+            for existing in state.soul_growth.iter_mut() {
+                if existing.is_active()
+                    && existing.category == entry.category
+                    && entry.supersedes.iter().any(|id| id == &existing.id)
+                {
+                    existing.superseded_by = Some(entry.id.clone());
+                    existing.superseded_at = Some(now);
+                }
+            }
         }
         state.soul_growth.push(entry);
         applied += 1;
     }
+
     if applied > 0 {
+        enforce_growth_bounds(&mut state.soul_growth);
         state.updated_at = now;
         session.companion_state = serde_json::to_value(state).ok();
     }
     applied
+}
+
+fn enforce_growth_bounds(growth: &mut Vec<SoulGrowthEntry>) {
+    const MAX_SUPERSEDED_HISTORY: usize = 40;
+    let superseded_count = growth.iter().filter(|entry| !entry.is_active()).count();
+    if superseded_count <= MAX_SUPERSEDED_HISTORY {
+        return;
+    }
+    let mut to_drop = superseded_count - MAX_SUPERSEDED_HISTORY;
+    growth.retain(|entry| {
+        if to_drop > 0 && !entry.is_active() {
+            to_drop -= 1;
+            false
+        } else {
+            true
+        }
+    });
 }
 
 fn default_state(config: &CompanionConfig) -> CompanionSessionState {

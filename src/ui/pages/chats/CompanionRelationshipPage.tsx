@@ -287,6 +287,8 @@ export function CompanionRelationshipPage() {
   const emotionalState = session?.companionState?.emotionalState;
   const activeSignals = session?.companionState?.activeSignals ?? [];
   const soulGrowth = session?.companionState?.soulGrowth ?? [];
+  const activeGrowth = soulGrowth.filter((entry) => !entry.supersededBy);
+  const supersededGrowthCount = soulGrowth.length - activeGrowth.length;
 
   const handleClearGrowth = async () => {
     if (!session || clearingGrowth || soulGrowth.length === 0) return;
@@ -572,9 +574,9 @@ export function CompanionRelationshipPage() {
             </SectionLabel>
             <p className="mb-2 text-[11px] text-fg/40">{t("chats.companionRelationship.soulGrowthDesc")}</p>
 
-            {soulGrowth.length ? (
+            {activeGrowth.length ? (
               <div className="space-y-2">
-                {soulGrowth
+                {activeGrowth
                   .slice()
                   .sort((a, b) => b.createdAt - a.createdAt)
                   .map((entry, index) => {
@@ -635,6 +637,11 @@ export function CompanionRelationshipPage() {
             ) : (
               <p className="text-[11px] italic text-fg/35">{t("chats.companionRelationship.soulGrowthEmpty")}</p>
             )}
+            {supersededGrowthCount > 0 ? (
+              <p className="mt-2 text-[10px] text-fg/30">
+                {t("chats.companionRelationship.soulGrowthSuperseded", { count: supersededGrowthCount })}
+              </p>
+            ) : null}
           </section>
 
           {/* Timeline */}

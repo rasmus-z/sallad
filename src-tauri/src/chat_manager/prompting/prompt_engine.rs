@@ -163,6 +163,7 @@ For each category, decide whether the new memories justify an adjustment. Most t
 - Identity-core categories (essence, traits, backstory) are fixed and are never listed here. Never attempt to change them.
 - Phrase every value as a short additive clause describing the new or revised trait, written in third person about the character.
 - Use kind "add" for a new detail and "adjust" for revising an existing one.
+- When a new memory contradicts or updates an existing growth entry, use kind "adjust" and put that entry's id in supersedes so the old version is retired instead of stacked.
 - Cite the leading index of each supporting memory in sourceIndices.
 
 OUTPUT DISCIPLINE: call record_growth exactly once with an adjustments array. The array may be empty when nothing changed. Do not write prose, JSON, or markdown outside the tool call."#,
@@ -174,6 +175,9 @@ OUTPUT DISCIPLINE: call record_growth exactly once with an adjustments array. Th
 
 Changeable personality categories (use the bracketed key as category):
 {{changeable_categories}}
+
+Existing growth entries (to revise or replace one, set kind to adjust and list its id in supersedes):
+{{current_growth}}
 
 New memories from the latest exchange (cite their leading number in sourceIndices):
 {{new_memories}}

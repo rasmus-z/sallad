@@ -3337,11 +3337,15 @@ const DEFAULT_COMPANION_RELATIONSHIP_STATE: CompanionRelationshipState = {
 };
 
 export const CompanionSoulGrowthEntrySchema = z.object({
+  id: z.string().optional(),
   category: z.string().default(""),
   value: z.string().default(""),
   kind: z.string().default("add"),
   sourceMemoryIds: z.array(z.string()).default([]),
   createdAt: z.number().int().default(0),
+  supersedes: z.array(z.string()).optional(),
+  supersededBy: z.string().nullish(),
+  supersededAt: z.number().int().nullish(),
 });
 export type CompanionSoulGrowthEntry = z.infer<typeof CompanionSoulGrowthEntrySchema>;
 

@@ -1301,6 +1301,7 @@ export const enMessages = {
       soulGrowthEmpty: "No growth yet. As memories form, evolving traits will appear here.",
       soulGrowthClear: "Clear growth",
       soulGrowthRemove: "Remove this growth",
+      soulGrowthSuperseded: "{{count}} earlier versions retired",
       soulGrowthSources: "from {{count}} memories",
       growthKindAdd: "added",
       growthKindAdjust: "adjusted",

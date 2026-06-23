@@ -46,6 +46,7 @@ pub async fn run_growthcycle(
     }
 
     let snapshot = companion::changeable_soul_snapshot(character, session);
+    let existing_growth = companion::active_soul_growth_entries(character, session);
 
     let model_id = resolve_dynamic_memory_summarisation_model_id(app, settings, None)?;
     let (model, credential) = find_model_with_credential(settings, &model_id)
@@ -64,7 +65,7 @@ pub async fn run_growthcycle(
         None,
     );
 
-    let messages = render_messages(app, credential, character, &snapshot, &fresh);
+    let messages = render_messages(app, credential, character, &snapshot, &existing_growth, &fresh);
     if messages.is_empty() {
         return Err("Growthcycle template rendered no prompt content".to_string());
     }
@@ -129,11 +130,13 @@ fn render_messages(
     credential: &ProviderCredential,
     character: &Character,
     snapshot: &[(String, String)],
+    existing_growth: &[SoulGrowthEntry],
     fresh: &[&MemoryEmbedding],
 ) -> Vec<Value> {
     let entries = load_prompt_entries(app);
     let system_role = request_builder::system_role_for(credential);
     let categories = format_categories(snapshot);
+    let current_growth = format_current_growth(existing_growth);
     let memories = format_memories(fresh);
 
     let mut messages = Vec::new();
@@ -146,7 +149,8 @@ fn render_messages(
             PromptEntryRole::User => "user",
             PromptEntryRole::Assistant => "assistant",
         };
-        let rendered = render_growth_content(&entry.content, character, &categories, &memories);
+        let rendered =
+            render_growth_content(&entry.content, character, &categories, &current_growth, &memories);
         let trimmed = rendered.trim();
         if trimmed.is_empty() {
             continue;
@@ -168,13 +172,34 @@ fn render_growth_content(
     content: &str,
     character: &Character,
     categories: &str,
+    current_growth: &str,
     memories: &str,
 ) -> String {
     content
         .replace("{{companion.name}}", character.name.trim())
         .replace("{{char.name}}", character.name.trim())
         .replace("{{changeable_categories}}", categories)
+        .replace("{{current_growth}}", current_growth)
         .replace("{{new_memories}}", memories)
+}
+
+fn format_current_growth(entries: &[SoulGrowthEntry]) -> String {
+    let mut out = String::new();
+    for entry in entries {
+        if entry.id.trim().is_empty() {
+            continue;
+        }
+        out.push_str(&format!(
+            "- id={} [{}]: {}\n",
+            entry.id,
+            entry.category,
+            entry.value.trim()
+        ));
+    }
+    if out.is_empty() {
+        return "(none yet)".to_string();
+    }
+    out
 }
 
 fn format_categories(snapshot: &[(String, String)]) -> String {
@@ -212,7 +237,7 @@ fn build_tool_config() -> ToolConfig {
     let tools = vec![ToolDefinition {
         name: "record_growth".to_string(),
         description: Some(
-            "Record how the new memories change the companion's changeable personality categories. Pass an empty adjustments array when nothing changed.".to_string(),
+            "Record how the new memories change the companion's changeable personality categories. To revise or replace an existing growth entry, set kind to adjust and list its id in supersedes. Pass an empty adjustments array when nothing changed.".to_string(),
         ),
         parameters: json!({
             "type": "object",
@@ -228,6 +253,10 @@ fn build_tool_config() -> ToolConfig {
                             "sourceIndices": {
                                 "type": "array",
                                 "items": { "type": "integer" }
+                            },
+                            "supersedes": {
+                                "type": "array",
+                                "items": { "type": "string" }
                             }
                         },
                         "required": ["category", "value"]
@@ -294,13 +323,24 @@ fn parse_growth_entries(
         }
         .to_string();
         let source_memory_ids = resolve_sources(item.get("sourceIndices"), memory_ids);
+        let supersedes = item
+            .get("supersedes")
+            .and_then(Value::as_array)
+            .map(|ids| {
+                ids.iter()
+                    .filter_map(Value::as_str)
+                    .map(str::to_string)
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
 
         entries.push(SoulGrowthEntry {
             category,
             value,
             kind,
             source_memory_ids,
-            created_at: 0,
+            supersedes,
+            ..Default::default()
         });
     }
     entries
