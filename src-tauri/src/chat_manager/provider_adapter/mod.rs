@@ -307,6 +307,7 @@ mod featherless;
 pub mod google_gemini;
 mod groq;
 mod intenserp;
+mod literouter;
 mod llamacpp;
 mod lmstudio;
 mod mistral;
@@ -351,6 +352,7 @@ pub fn adapter_for(credential: &ProviderCredential) -> Box<dyn ProviderAdapter +
         "qwen" => Box::new(qwen::QwenAdapter),
         "stability" => Box::new(stability::StabilityAdapter),
         "openrouter" => Box::new(openai::OpenRouterAdapter),
+        "literouter" => Box::new(literouter::LiteRouterAdapter),
         "pollinations" => Box::new(pollinations::PollinationsAdapter),
         "lettuce-host" => Box::new(openai::OpenAIAdapter),
         "lettuce-engine" => Box::new(lettuce_engine::LettuceEngineAdapter),
