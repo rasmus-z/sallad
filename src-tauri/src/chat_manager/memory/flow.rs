@@ -105,7 +105,7 @@ fn dynamic_memory_manager_template_id(
         })
 }
 
-fn resolve_dynamic_memory_summarisation_model_id(
+pub(crate) fn resolve_dynamic_memory_summarisation_model_id(
     app: &AppHandle,
     settings: &Settings,
     override_model_id: Option<&str>,
@@ -1663,6 +1663,14 @@ pub fn enqueue_post_turn_dynamic_memory(
                 );
                 mark_jobs_failed(&app, &jobs, &err);
             } else {
+                run_growthcycle_for_turn(
+                    &app,
+                    &context,
+                    &mut session,
+                    &character,
+                    &before_memories,
+                )
+                .await;
                 finalize_companion_turn_effects(&app, &jobs, &before_memories, &session);
             }
 
@@ -1671,6 +1679,64 @@ pub fn enqueue_post_turn_dynamic_memory(
             }
         }
     });
+}
+
+async fn run_growthcycle_for_turn(
+    app: &AppHandle,
+    context: &ChatContext,
+    session: &mut Session,
+    character: &Character,
+    before_memories: &[MemoryEmbedding],
+) {
+    if !companion::is_companion_mode(session, character) {
+        return;
+    }
+
+    let before_ids: HashSet<&str> = before_memories
+        .iter()
+        .map(|memory| memory.id.as_str())
+        .collect();
+    let new_memories: Vec<MemoryEmbedding> = session
+        .memory_embeddings
+        .iter()
+        .filter(|memory| !before_ids.contains(memory.id.as_str()))
+        .cloned()
+        .collect();
+    if new_memories.is_empty() {
+        return;
+    }
+
+    match crate::chat_manager::companion_growth::run_growthcycle(
+        app,
+        context,
+        &context.settings,
+        session,
+        character,
+        &new_memories,
+    )
+    .await
+    {
+        Ok(applied) if applied > 0 => {
+            if let Err(err) = save_session(app, session) {
+                log_warn(
+                    app,
+                    "companion_growth",
+                    format!(
+                        "failed to persist soul growth for session {}: {}",
+                        session.id, err
+                    ),
+                );
+            }
+        }
+        Ok(_) => {}
+        Err(err) => {
+            log_warn(
+                app,
+                "companion_growth",
+                format!("growthcycle failed for session {}: {}", session.id, err),
+            );
+        }
+    }
 }
 
 fn mark_jobs_failed(app: &AppHandle, jobs: &[PostTurnMemoryJob], err: &str) {
