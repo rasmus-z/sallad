@@ -6521,8 +6521,8 @@ async fn generate_character_response(
 
     let data_preview = match api_response.data() {
         serde_json::Value::String(s) => {
-            let preview = if s.len() > 500 { &s[..500] } else { s.as_str() };
-            format!("String({} bytes): {}...", s.len(), preview)
+            let preview = crate::serde_utils::truncate_for_log(s, 500);
+            format!("String({} bytes): {}", s.len(), preview)
         }
         serde_json::Value::Object(obj) => {
             format!("Object with keys: {:?}", obj.keys().collect::<Vec<_>>())
@@ -6542,11 +6542,8 @@ async fn generate_character_response(
         "group_chat_response",
         format!(
             "Extracted text: {:?} (len={})",
-            text.as_ref().map(|t| if t.len() > 100 {
-                format!("{}...", &t[..100])
-            } else {
-                t.clone()
-            }),
+            text.as_ref()
+                .map(|t| crate::serde_utils::truncate_for_log(t, 100)),
             text.as_ref().map(|t| t.len()).unwrap_or(0)
         ),
     );
