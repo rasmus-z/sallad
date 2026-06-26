@@ -36,6 +36,9 @@ interface TreeRow {
   node: TreeNode;
   depth: number;
   rails: boolean[];
+  railPath: boolean[];
+  elbowHorizPath: boolean;
+  elbowDownPath: boolean;
   isLast: boolean;
 }
 
@@ -50,25 +53,52 @@ function buildTree(nodes: SessionPreview[]): TreeNode[] {
     else roots.push(node);
   });
 
+  const order = (a: TreeNode, b: TreeNode) => a.updatedAt - b.updatedAt;
   const sortKids = (node: TreeNode) => {
-    node.children.sort((a, b) => a.updatedAt - b.updatedAt);
+    node.children.sort(order);
     node.children.forEach(sortKids);
   };
-  roots.sort((a, b) => a.updatedAt - b.updatedAt);
+  roots.sort(order);
   roots.forEach(sortKids);
   return roots;
 }
 
-function flattenRows(roots: TreeNode[]): TreeRow[] {
+function flattenRows(roots: TreeNode[], pathIds: Set<string>): TreeRow[] {
   const out: TreeRow[] = [];
-  const walk = (node: TreeNode, depth: number, parentRails: boolean[], isLast: boolean) => {
+  const walk = (
+    node: TreeNode,
+    depth: number,
+    parentRails: boolean[],
+    parentRailPath: boolean[],
+    isLast: boolean,
+    elbow: { vert: boolean; horiz: boolean; down: boolean },
+  ) => {
     const rails = depth === 0 ? [] : [...parentRails, !isLast];
-    out.push({ node, depth, rails, isLast });
-    node.children.forEach((child, i) =>
-      walk(child, depth + 1, rails, i === node.children.length - 1),
-    );
+    const railPath = depth === 0 ? [] : [...parentRailPath, elbow.vert];
+    out.push({
+      node,
+      depth,
+      rails,
+      railPath,
+      elbowHorizPath: elbow.horiz,
+      elbowDownPath: elbow.down,
+      isLast,
+    });
+
+    const childParentRailPath = depth === 0 ? [] : [...parentRailPath, elbow.down];
+    const onPathChildIdx = node.children.findIndex((child) => pathIds.has(child.id));
+
+    node.children.forEach((child, i) => {
+      walk(child, depth + 1, rails, childParentRailPath, i === node.children.length - 1, {
+        vert: onPathChildIdx !== -1 && i <= onPathChildIdx,
+        horiz: pathIds.has(child.id),
+        down: onPathChildIdx !== -1 && i < onPathChildIdx,
+      });
+    });
   };
-  roots.forEach((root, i) => walk(root, 0, [], i === roots.length - 1));
+  roots.forEach((root, i) =>
+    walk(root, 0, [], [], i === roots.length - 1, { vert: false, horiz: false, down: false }),
+  );
   return out;
 }
 
@@ -143,8 +173,6 @@ export function ChatTreePage() {
     setRenameDraft(renameTarget?.title ?? "");
   }, [renameTarget]);
 
-  const rows = useMemo(() => flattenRows(buildTree(nodes)), [nodes]);
-
   const pathIds = useMemo(() => {
     const byId = new Map(nodes.map((n) => [n.id, n]));
     const ids = new Set<string>();
@@ -155,6 +183,8 @@ export function ChatTreePage() {
     }
     return ids;
   }, [nodes, sessionId]);
+
+  const rows = useMemo(() => flattenRows(buildTree(nodes), pathIds), [nodes, pathIds]);
 
   const summary = useMemo(() => {
     const branches = nodes.length;
@@ -657,26 +687,25 @@ function BranchRow({
   onMenu: () => void;
 }) {
   const { t } = useI18n();
-  const { node, depth, rails } = row;
-  const lineColor = onPath ? "bg-accent/40" : "bg-fg/20";
+  const { node, depth, rails, railPath, elbowHorizPath, elbowDownPath } = row;
+  const vLine = (on: boolean) =>
+    cn("absolute left-1/2 -translate-x-1/2", on ? "w-0.5 bg-accent/80" : "w-px bg-fg/12");
+  const hLine = (on: boolean) =>
+    cn("absolute -translate-y-1/2", on ? "h-0.5 bg-accent/80" : "h-px bg-fg/12");
   const isSelected = selectedIndex >= 0;
 
   return (
-    <div className={cn("flex items-stretch", dimmed && "opacity-45")}>
+    <div className="flex items-stretch">
       {rails.map((active, k) => {
         const isElbow = k === depth - 1;
         return (
           <div key={k} className="relative shrink-0 self-stretch" style={{ width: RAIL_W }}>
             {isElbow ? (
               <>
-                <span className={cn("absolute left-1/2 top-0 h-1/2 w-px -translate-x-1/2", lineColor)} />
-                <span
-                  className={cn("absolute left-1/2 right-0 top-1/2 h-px -translate-y-1/2", lineColor)}
-                />
+                <span className={cn("top-0 h-1/2", vLine(railPath[k]))} />
+                <span className={cn("left-1/2 right-0 top-1/2", hLine(elbowHorizPath))} />
                 {active ? (
-                  <span
-                    className={cn("absolute left-1/2 bottom-0 top-1/2 w-px -translate-x-1/2", lineColor)}
-                  />
+                  <span className={cn("bottom-0 top-1/2", vLine(elbowDownPath))} />
                 ) : null}
                 <span
                   className={cn(
@@ -690,13 +719,13 @@ function BranchRow({
                 />
               </>
             ) : active ? (
-              <span className={cn("absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2", lineColor)} />
+              <span className={cn("top-0 bottom-0", vLine(railPath[k]))} />
             ) : null}
           </div>
         );
       })}
 
-      <div className="flex min-w-0 flex-1 items-center gap-1 py-1.5">
+      <div className={cn("flex min-w-0 flex-1 items-center gap-1 py-1.5", dimmed && "opacity-45")}>
         <button
           onClick={onSelect}
           disabled={isBusy}
