@@ -6,7 +6,6 @@ use std::collections::HashMap;
 use tauri::{AppHandle, Emitter, Manager};
 
 use crate::api::{api_request, ApiRequest, ApiResponse};
-use crate::dynamic_memory_run_manager::{DynamicMemoryRunGuard, DynamicMemoryRunManager};
 use crate::chat_manager::execution::{
     find_model_with_credential, prepare_default_sampling_request,
 };
@@ -23,6 +22,7 @@ use crate::chat_manager::types::{
     ChatGenerateCompanionSoulArgs, DynamicMemoryStructuredFallbackFormat, Model,
     ProviderCredential, Session, Settings, SystemPromptEntry,
 };
+use crate::dynamic_memory_run_manager::{DynamicMemoryRunGuard, DynamicMemoryRunManager};
 use crate::usage::tracking::UsageOperationType;
 use crate::utils::{log_info, log_warn, now_millis};
 
@@ -1265,10 +1265,7 @@ pub async fn chat_generate_companion_soul(
 }
 
 pub fn abort_companion_soul(app: AppHandle, request_id: String) -> Result<(), String> {
-    let run_manager = app
-        .state::<DynamicMemoryRunManager>()
-        .inner()
-        .clone();
+    let run_manager = app.state::<DynamicMemoryRunManager>().inner().clone();
     let abort_registry = app.state::<crate::abort_manager::AbortRegistry>();
     run_manager.cancel_run(&abort_registry, &request_id)
 }
@@ -1306,7 +1303,8 @@ async fn run_companion_soul_with_fallback(
         return Err(primary_err);
     }
 
-    if let Some((fb_model, fb_credential)) = resolve_companion_soul_writer_fallback_target(settings) {
+    if let Some((fb_model, fb_credential)) = resolve_companion_soul_writer_fallback_target(settings)
+    {
         if fb_model.id == model.id {
             return Err(primary_err);
         }

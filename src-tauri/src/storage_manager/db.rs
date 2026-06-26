@@ -1440,10 +1440,7 @@ pub fn init_db(_app: &tauri::AppHandle, conn: &Connection) -> Result<(), String>
         );
     }
     if !has_session_parent_session_id {
-        let _ = conn.execute(
-            "ALTER TABLE sessions ADD COLUMN parent_session_id TEXT",
-            [],
-        );
+        let _ = conn.execute("ALTER TABLE sessions ADD COLUMN parent_session_id TEXT", []);
     }
     if !has_session_branched_from_message_id {
         let _ = conn.execute(
@@ -1452,10 +1449,7 @@ pub fn init_db(_app: &tauri::AppHandle, conn: &Connection) -> Result<(), String>
         );
     }
     if !has_session_root_session_id {
-        let _ = conn.execute(
-            "ALTER TABLE sessions ADD COLUMN root_session_id TEXT",
-            [],
-        );
+        let _ = conn.execute("ALTER TABLE sessions ADD COLUMN root_session_id TEXT", []);
     }
     let _ = conn.execute(
         "UPDATE sessions SET root_session_id = id WHERE root_session_id IS NULL",
@@ -1718,10 +1712,7 @@ pub fn init_db(_app: &tauri::AppHandle, conn: &Connection) -> Result<(), String>
         );
     }
     if has_fallback_model_id {
-        let _ = conn.execute(
-            "ALTER TABLE characters DROP COLUMN fallback_model_id",
-            [],
-        );
+        let _ = conn.execute("ALTER TABLE characters DROP COLUMN fallback_model_id", []);
     }
     if !has_avatar_crop_x {
         let _ = conn.execute("ALTER TABLE characters ADD COLUMN avatar_crop_x REAL", []);

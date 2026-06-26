@@ -2452,8 +2452,8 @@ async fn process_group_dynamic_memory_cycle(
                 return Ok(());
             }
             "askFirst" => {
-                let approval = app
-                    .state::<crate::dynamic_memory_approval::DynamicMemoryApprovalManager>();
+                let approval =
+                    app.state::<crate::dynamic_memory_approval::DynamicMemoryApprovalManager>();
                 if let Some(pending_count) =
                     approval.should_prompt(&session.id, total_convo, last_window_end, window_size)
                 {

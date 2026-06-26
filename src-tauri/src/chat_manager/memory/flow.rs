@@ -1154,7 +1154,10 @@ fn format_memories_with_ids(session: &Session) -> Vec<String> {
 const MAX_SUPERSEDED_MEMORIES: usize = 40;
 
 fn enforce_superseded_cap(memories: &mut Vec<MemoryEmbedding>, cap: usize) {
-    let superseded_count = memories.iter().filter(|m| m.superseded_by.is_some()).count();
+    let superseded_count = memories
+        .iter()
+        .filter(|m| m.superseded_by.is_some())
+        .count();
     if superseded_count <= cap {
         return;
     }
@@ -1239,13 +1242,12 @@ pub(crate) async fn select_relevant_memories(
     }
 
     let reference_ms = companion_effective_now(session);
-    let temporal_range = if temporal_query_features_enabled
-        && companion_time_awareness_enabled(session)
-    {
-        detect_temporal_query_range(query, reference_ms)
-    } else {
-        None
-    };
+    let temporal_range =
+        if temporal_query_features_enabled && companion_time_awareness_enabled(session) {
+            detect_temporal_query_range(query, reference_ms)
+        } else {
+            None
+        };
     let filtered_candidates: Option<Vec<(usize, MemoryEmbedding)>> =
         temporal_range.as_ref().map(|range| {
             session
@@ -2193,8 +2195,8 @@ async fn process_dynamic_memory_cycle_with_model(
                 return Ok(());
             }
             "askFirst" => {
-                let approval = app
-                    .state::<crate::dynamic_memory_approval::DynamicMemoryApprovalManager>();
+                let approval =
+                    app.state::<crate::dynamic_memory_approval::DynamicMemoryApprovalManager>();
                 if let Some(pending_count) = approval.should_prompt(
                     &session.id,
                     total_convo_at_start,

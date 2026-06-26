@@ -1811,14 +1811,22 @@ fn read_session(conn: &rusqlite::Connection, id: &str) -> Result<Option<JsonValu
         mobj.insert("role".into(), JsonValue::String(role));
         mobj.insert("content".into(), JsonValue::String(content));
         mobj.insert("createdAt".into(), JsonValue::from(mcreated));
-        if let Some(model_id_val) = model_id { mobj.insert("modelId".into(), JsonValue::String(model_id_val)); }
+        if let Some(model_id_val) = model_id {
+            mobj.insert("modelId".into(), JsonValue::String(model_id_val));
+        }
         if visible_in_chat != 0 {
             mobj.insert("visibleInChat".into(), JsonValue::Bool(true));
         }
         if scene_edited != 0 {
             mobj.insert("sceneEdited".into(), JsonValue::Bool(true));
         }
-        if let Some(usage) = json_usage_summary(p_tokens, c_tokens, t_tokens, first_token_ms, tokens_per_second) {
+        if let Some(usage) = json_usage_summary(
+            p_tokens,
+            c_tokens,
+            t_tokens,
+            first_token_ms,
+            tokens_per_second,
+        ) {
             mobj.insert("usage".into(), usage);
         }
         if !variants.is_empty() {
@@ -2124,14 +2132,22 @@ fn fetch_messages_page(
         mobj.insert("role".into(), JsonValue::String(role));
         mobj.insert("content".into(), JsonValue::String(content));
         mobj.insert("createdAt".into(), JsonValue::from(mcreated));
-        if let Some(model_id_val) = model_id { mobj.insert("modelId".into(), JsonValue::String(model_id_val)); }
+        if let Some(model_id_val) = model_id {
+            mobj.insert("modelId".into(), JsonValue::String(model_id_val));
+        }
         if visible_in_chat != 0 {
             mobj.insert("visibleInChat".into(), JsonValue::Bool(true));
         }
         if scene_edited != 0 {
             mobj.insert("sceneEdited".into(), JsonValue::Bool(true));
         }
-        if let Some(usage) = json_usage_summary(p_tokens, c_tokens, t_tokens, first_token_ms, tokens_per_second) {
+        if let Some(usage) = json_usage_summary(
+            p_tokens,
+            c_tokens,
+            t_tokens,
+            first_token_ms,
+            tokens_per_second,
+        ) {
             mobj.insert("usage".into(), usage);
         }
         if let Some(variants) = variants_by_message.get(&mid) {
@@ -2632,14 +2648,22 @@ pub fn messages_list_pinned(app: tauri::AppHandle, session_id: String) -> Result
         mobj.insert("role".into(), JsonValue::String(role));
         mobj.insert("content".into(), JsonValue::String(content));
         mobj.insert("createdAt".into(), JsonValue::from(mcreated));
-        if let Some(model_id_val) = model_id { mobj.insert("modelId".into(), JsonValue::String(model_id_val)); }
+        if let Some(model_id_val) = model_id {
+            mobj.insert("modelId".into(), JsonValue::String(model_id_val));
+        }
         if visible_in_chat != 0 {
             mobj.insert("visibleInChat".into(), JsonValue::Bool(true));
         }
         if scene_edited != 0 {
             mobj.insert("sceneEdited".into(), JsonValue::Bool(true));
         }
-        if let Some(usage) = json_usage_summary(p_tokens, c_tokens, t_tokens, first_token_ms, tokens_per_second) {
+        if let Some(usage) = json_usage_summary(
+            p_tokens,
+            c_tokens,
+            t_tokens,
+            first_token_ms,
+            tokens_per_second,
+        ) {
             mobj.insert("usage".into(), usage);
         }
         if let Some(variants) = variants_by_message.get(&mid) {

@@ -205,9 +205,7 @@ pub fn companion_effective_now(session: &Session) -> u64 {
     match override_value.mode.as_str() {
         "frozen" => override_value.anchor_ms.unwrap_or(real_now),
         "ticking" => match (override_value.anchor_ms, override_value.set_at_ms) {
-            (Some(anchor), Some(set_at)) => {
-                anchor.saturating_add(real_now.saturating_sub(set_at))
-            }
+            (Some(anchor), Some(set_at)) => anchor.saturating_add(real_now.saturating_sub(set_at)),
             _ => real_now,
         },
         _ => real_now,

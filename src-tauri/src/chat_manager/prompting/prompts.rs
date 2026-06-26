@@ -977,7 +977,10 @@ fn reset_protected_template_to_defaults(
     crate::utils::log_info(
         app,
         "prompts",
-        format!("Reset protected prompt template to latest: {} ({})", updated.name, id),
+        format!(
+            "Reset protected prompt template to latest: {} ({})",
+            updated.name, id
+        ),
     );
     get_template(app, id).map(|opt| opt.expect("reset row should exist"))
 }
@@ -2369,7 +2372,11 @@ pub fn reset_lorebook_generator_coherence_template(
 }
 
 pub fn reset_all_protected_templates(app: &AppHandle) -> Result<Vec<SystemPromptTemplate>, String> {
-    crate::utils::log_info(app, "prompts", "Updating all protected prompt templates to latest");
+    crate::utils::log_info(
+        app,
+        "prompts",
+        "Updating all protected prompt templates to latest",
+    );
     load_templates(app)?;
     reset_app_default_template(app)?;
     reset_local_roleplay_template(app)?;

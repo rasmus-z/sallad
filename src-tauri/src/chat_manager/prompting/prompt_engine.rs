@@ -3117,7 +3117,8 @@ fn identity_placeholder_patterns() -> &'static [(regex::Regex, IdentityValue)] {
     static PATTERNS: std::sync::OnceLock<Vec<(regex::Regex, IdentityValue)>> =
         std::sync::OnceLock::new();
     PATTERNS.get_or_init(|| {
-        let compile = |body: &str| regex::Regex::new(&format!(r"\{{\{{\s*{}\s*\}}\}}", body)).unwrap();
+        let compile =
+            |body: &str| regex::Regex::new(&format!(r"\{{\{{\s*{}\s*\}}\}}", body)).unwrap();
         vec![
             (compile(r"char\.name"), IdentityValue::CharName),
             (compile(r"char\.desc"), IdentityValue::CharDesc),
@@ -3155,7 +3156,9 @@ fn apply_identity_placeholders(
                 IdentityValue::PersonaDesc => persona_desc,
             };
             out = std::borrow::Cow::Owned(
-                pattern.replace_all(&out, regex::NoExpand(replacement)).into_owned(),
+                pattern
+                    .replace_all(&out, regex::NoExpand(replacement))
+                    .into_owned(),
             );
         }
     }
@@ -4115,7 +4118,9 @@ pub fn render_with_context_internal(
         session
             .memory_embeddings
             .iter()
-            .filter(|memory| (!memory.is_cold || memory.is_pinned) && memory.superseded_by.is_none())
+            .filter(|memory| {
+                (!memory.is_cold || memory.is_pinned) && memory.superseded_by.is_none()
+            })
             .map(|memory| format!("- {}", memory.text))
             .collect::<Vec<_>>()
             .join("\n")
@@ -4164,7 +4169,8 @@ pub fn render_with_context_internal(
 
     result = result.replace("{{ai_rules}}", "");
 
-    result = apply_identity_placeholders(&result, char_name, &char_desc, persona_name, persona_desc);
+    result =
+        apply_identity_placeholders(&result, char_name, &char_desc, persona_name, persona_desc);
 
     result
 }

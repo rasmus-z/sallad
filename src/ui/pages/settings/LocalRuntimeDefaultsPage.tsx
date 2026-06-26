@@ -19,16 +19,6 @@ import { invoke } from "@tauri-apps/api/core";
 
 import { BottomMenu, MenuButton, MenuButtonGroup, MenuDivider } from "../../components/BottomMenu";
 
-import {
-  sdFinalizeBinaryInstall,
-  sdGetStatus,
-  sdListEngineVariants,
-  sdQueueBinaryInstall,
-  sdRemoveBinary,
-  sdSetCustomBinary,
-  type SdEngineVariant,
-  type SdStatus,
-} from "../../../core/local-diffusion";
 import { readSettings, saveAdvancedSettings } from "../../../core/storage/repo";
 import { useDownloadQueue } from "../../../core/downloads/DownloadQueueContext";
 import { useI18n } from "../../../core/i18n/context";
@@ -43,7 +33,7 @@ type RuntimeDefaults = {
   sdDefaultSize: string;
 };
 
-type ModelDirKind = "llm" | "sd";
+type ModelDirKind = "llm";
 
 type LlmModelsDirInfo = {
   path: string;
@@ -57,6 +47,40 @@ type SetLlmModelsDirResult = {
   movedEntries: number;
   rewiredModels: number;
 };
+
+type SdEngineVariant = {
+  id: string;
+  assetName: string;
+  size: number;
+  releaseTag: string;
+  recommended: boolean;
+};
+
+type SdStatus = {
+  binary: { path: string; variant: string; releaseTag: string } | null;
+  recommendedVariant: string;
+  modelsDir: string;
+};
+
+async function sdGetStatus(): Promise<SdStatus> {
+  return { binary: null, recommendedVariant: "", modelsDir: "" };
+}
+
+async function sdListEngineVariants(): Promise<SdEngineVariant[]> {
+  return [];
+}
+
+async function sdQueueBinaryInstall(_variant?: string | null): Promise<void> {}
+
+async function sdFinalizeBinaryInstall(): Promise<NonNullable<SdStatus["binary"]>> {
+  throw new Error("Local image backend support has been removed");
+}
+
+async function sdSetCustomBinary(_path?: string): Promise<NonNullable<SdStatus["binary"]>> {
+  throw new Error("Local image backend support has been removed");
+}
+
+async function sdRemoveBinary(): Promise<void> {}
 
 function formatBytes(bytes: number): string {
   if (!bytes) return "0 B";
@@ -115,7 +139,6 @@ export function LocalRuntimeDefaultsPage() {
   const [installing, setInstalling] = useState(false);
   const [defaults, setDefaults] = useState<RuntimeDefaults | null>(null);
   const [modelsDir, setModelsDir] = useState<LlmModelsDirInfo | null>(null);
-  const [sdModelsDir, setSdModelsDir] = useState<LlmModelsDirInfo | null>(null);
   const [pending, setPending] = useState<{ kind: ModelDirKind; dir: string } | null>(null);
   const [movingDir, setMovingDir] = useState(false);
   const finalizedRef = useRef(false);
@@ -126,19 +149,17 @@ export function LocalRuntimeDefaultsPage() {
     } catch (err) {
       console.error("Failed to load LLM models dir:", err);
     }
-    try {
-      setSdModelsDir(await invoke<LlmModelsDirInfo>("sd_get_models_dir"));
-    } catch (err) {
-      console.error("Failed to load SD models dir:", err);
-    }
   }, []);
 
   const applyModelsDir = useCallback(
     async (kind: ModelDirKind, newDir: string, moveExisting: boolean) => {
+      void kind;
       setMovingDir(true);
       try {
-        const command = kind === "llm" ? "hf_set_llm_models_dir" : "sd_set_models_dir";
-        const result = await invoke<SetLlmModelsDirResult>(command, { newDir, moveExisting });
+        const result = await invoke<SetLlmModelsDirResult>("hf_set_llm_models_dir", {
+          newDir,
+          moveExisting,
+        });
         await refreshModelsDir();
         if (moveExisting && result.movedEntries > 0) {
           toast.success(
@@ -163,7 +184,7 @@ export function LocalRuntimeDefaultsPage() {
 
   const pickModelsFolder = useCallback(
     async (kind: ModelDirKind) => {
-      const info = kind === "llm" ? modelsDir : sdModelsDir;
+      const info = modelsDir;
       const selection = await open({ directory: true, multiple: false });
       if (typeof selection !== "string") return;
       if (info && selection === info.path) return;
@@ -173,12 +194,12 @@ export function LocalRuntimeDefaultsPage() {
         void applyModelsDir(kind, selection, false);
       }
     },
-    [modelsDir, sdModelsDir, applyModelsDir],
+    [modelsDir, applyModelsDir],
   );
 
   const resetModelsFolder = useCallback(
     (kind: ModelDirKind) => {
-      const info = kind === "llm" ? modelsDir : sdModelsDir;
+      const info = modelsDir;
       if (!info) return;
       if (info.modelCount > 0) {
         setPending({ kind, dir: info.defaultPath });
@@ -186,20 +207,16 @@ export function LocalRuntimeDefaultsPage() {
         void applyModelsDir(kind, info.defaultPath, false);
       }
     },
-    [modelsDir, sdModelsDir, applyModelsDir],
+    [modelsDir, applyModelsDir],
   );
 
-  const pendingInfo = pending
-    ? pending.kind === "llm"
-      ? modelsDir
-      : sdModelsDir
-    : null;
+  const pendingInfo = pending ? modelsDir : null;
 
   const refreshStatus = useCallback(async () => {
     try {
       setStatus(await sdGetStatus());
     } catch (err) {
-      console.error("Failed to load sd.cpp status:", err);
+      console.error("Failed to load local image backend status:", err);
     }
   }, []);
 
@@ -511,7 +528,6 @@ export function LocalRuntimeDefaultsPage() {
 
             <div className="space-y-3">
               {renderFolderRow("llm", modelsDir, t("runtimeDefaults.modelsFolderTitle"))}
-              {renderFolderRow("sd", sdModelsDir, t("runtimeDefaults.sdModelsFolderTitle"))}
             </div>
           </div>
 
