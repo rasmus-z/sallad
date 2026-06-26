@@ -840,32 +840,54 @@ async fn migrate_session_memory_embeddings_if_needed(
         0.0,
     );
 
-    let migration_result: Result<(), String> = async {
+    let migration_result: Result<(bool, usize), String> = async {
+        let mut migrated_any = false;
+        let mut failures = 0usize;
         for (idx, memory) in session.memory_embeddings.iter_mut().enumerate() {
             if memory_embedding_requires_migration(
                 memory,
                 &target_source_version,
                 target_dimensions,
             ) {
-                memory.embedding = tokio::time::timeout(
+                match tokio::time::timeout(
                     Duration::from_secs(MEMORY_MIGRATION_EMBED_TIMEOUT_SECS),
                     embedding::compute_embedding(app.clone(), memory.text.clone()),
                 )
                 .await
-                .map_err(|_| {
-                    crate::utils::err_msg(
-                        module_path!(),
-                        line!(),
-                        format!(
-                            "Timed out after {}s while re-embedding saved memory {}/{}",
-                            MEMORY_MIGRATION_EMBED_TIMEOUT_SECS,
-                            idx + 1,
-                            total
-                        ),
-                    )
-                })??;
-                memory.embedding_source_version = Some(target_source_version.clone());
-                memory.embedding_dimensions = Some(target_dimensions);
+                {
+                    Ok(Ok(vector)) => {
+                        memory.embedding = vector;
+                        memory.embedding_source_version = Some(target_source_version.clone());
+                        memory.embedding_dimensions = Some(target_dimensions);
+                        migrated_any = true;
+                    }
+                    Ok(Err(err)) => {
+                        failures += 1;
+                        log_warn(
+                            app,
+                            "memory_retrieval",
+                            format!(
+                                "failed to re-embed saved memory {}/{}: {}",
+                                idx + 1,
+                                total,
+                                err
+                            ),
+                        );
+                    }
+                    Err(_) => {
+                        failures += 1;
+                        log_warn(
+                            app,
+                            "memory_retrieval",
+                            format!(
+                                "timed out after {}s while re-embedding saved memory {}/{}",
+                                MEMORY_MIGRATION_EMBED_TIMEOUT_SECS,
+                                idx + 1,
+                                total
+                            ),
+                        );
+                    }
+                }
             }
 
             let progress = (idx + 1) as f32 / total as f32;
@@ -878,33 +900,40 @@ async fn migrate_session_memory_embeddings_if_needed(
             );
         }
 
-        save_session(app, session)?;
-        Ok(())
+        if migrated_any {
+            save_session(app, session)?;
+        }
+        Ok((migrated_any, failures))
     }
     .await;
 
     dismiss_memory_vector_migration_toast(app, &toast_id);
 
-    if let Err(err) = migration_result {
+    let (migrated_any, failures) = match migration_result {
+        Ok(outcome) => outcome,
+        Err(err) => {
+            let _ = app.emit(
+                "app://toast",
+                json!({
+                    "variant": "error",
+                    "title": "Memory migration failed",
+                    "description": err.clone(),
+                }),
+            );
+            return Err(err);
+        }
+    };
+
+    if migrated_any && failures == 0 {
         let _ = app.emit(
             "app://toast",
             json!({
-                "variant": "error",
-                "title": "Memory migration failed",
-                "description": err.clone(),
+                "variant": "success",
+                "title": "Memory migration complete",
+                "description": "Saved memory vectors are now using the current memory model.",
             }),
         );
-        return Err(err);
     }
-
-    let _ = app.emit(
-        "app://toast",
-        json!({
-            "variant": "success",
-            "title": "Memory migration complete",
-            "description": "Saved memory vectors are now using the current memory model.",
-        }),
-    );
     Ok(())
 }
 
