@@ -55,6 +55,7 @@ import {
   generateUserReply,
   getSession,
   getSessionMeta,
+  listBranchTree,
   listCharacters,
   listPersonas,
   readSettings,
@@ -271,6 +272,11 @@ export function ChatConversationPage() {
 
   // Help Me Reply states
   const [showPlusMenu, setShowPlusMenu] = useState(false);
+  const [showBranchNavMenu, setShowBranchNavMenu] = useState(false);
+  const [childForks, setChildForks] = useState<
+    Map<string, Array<{ id: string; title: string; characterId: string }>>
+  >(new Map());
+  const [branchPickerMessageId, setBranchPickerMessageId] = useState<string | null>(null);
   const [showDiceMenu, setShowDiceMenu] = useState(false);
   const [diceNotation, setDiceNotation] = useState("1d20");
   const [diceEditing, setDiceEditing] = useState(false);
@@ -600,6 +606,58 @@ export function ChatConversationPage() {
     generateAiScenePrompt,
     applySceneImagePrompt,
   } = chatController;
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!sessionId || messages.length === 0) {
+      setChildForks(new Map());
+      return;
+    }
+    const parentMessages = messages;
+    void (async () => {
+      try {
+        const tree = await listBranchTree(sessionId);
+        const children = tree.filter((preview) => preview.parentSessionId === sessionId);
+        if (children.length === 0) {
+          if (!cancelled) setChildForks(new Map());
+          return;
+        }
+        const map = new Map<string, Array<{ id: string; title: string; characterId: string }>>();
+        for (const child of children) {
+          const full = await getSession(child.id);
+          if (!full?.branchedFromMessageId) continue;
+          const childForkIdx = full.messages.findIndex(
+            (message) => message.id === full.branchedFromMessageId,
+          );
+          if (childForkIdx < 0) continue;
+          const childForkMessage = full.messages[childForkIdx];
+          let forkMessage: (typeof parentMessages)[number] | undefined =
+            parentMessages[childForkIdx];
+          if (
+            !forkMessage ||
+            forkMessage.content !== childForkMessage.content ||
+            forkMessage.role !== childForkMessage.role
+          ) {
+            forkMessage = parentMessages.find(
+              (message) =>
+                message.role === childForkMessage.role &&
+                message.content === childForkMessage.content,
+            );
+          }
+          if (!forkMessage) continue;
+          const list = map.get(forkMessage.id) ?? [];
+          list.push({ id: child.id, title: child.title, characterId: child.characterId });
+          map.set(forkMessage.id, list);
+        }
+        if (!cancelled) setChildForks(map);
+      } catch {
+        if (!cancelled) setChildForks(new Map());
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionId, messages.length]);
 
   const [widgetPersonas, setWidgetPersonas] = useState<Persona[]>([]);
   const [widgetModels, setWidgetModels] = useState<Model[]>([]);
@@ -2785,12 +2843,7 @@ export function ChatConversationPage() {
                         disabled={!parentBranchMeta}
                         onClick={() => {
                           if (!parentBranchMeta) return;
-                          navigate(
-                            Routes.chatSession(
-                              parentBranchMeta.characterId,
-                              parentSessionId,
-                            ),
-                          );
+                          setShowBranchNavMenu(true);
                         }}
                         className={cn(
                           "inline-flex shrink-0 items-center gap-1.5 rounded-full border border-fg/10 bg-fg/4 px-3 py-1",
@@ -2848,6 +2901,26 @@ export function ChatConversationPage() {
                     }
                   />
                   </motion.div>
+                  {childForks.has(message.id) ? (
+                    <div className="my-3 flex items-center gap-2 px-2">
+                      <span className="h-px flex-1 bg-fg/10" />
+                      <button
+                        type="button"
+                        onClick={() => setBranchPickerMessageId(message.id)}
+                        className={cn(
+                          "inline-flex shrink-0 items-center gap-1.5 rounded-full border border-fg/10 bg-fg/4 px-3 py-1",
+                          typography.caption.size,
+                          "text-fg/55 transition-colors hover:bg-fg/8 hover:text-fg/80",
+                        )}
+                      >
+                        <GitBranch size={12} />
+                        {t("chats.branchTree.branchesFromHere", {
+                          count: childForks.get(message.id)?.length ?? 0,
+                        })}
+                      </button>
+                      <span className="h-px flex-1 bg-fg/10" />
+                    </div>
+                  ) : null}
                 </Fragment>
               );
             })}
@@ -3236,6 +3309,63 @@ export function ChatConversationPage() {
                   }
                 : handleEnableSwapPlaces
             }
+          />
+        </div>
+      </BottomMenu>
+
+      <BottomMenu
+        isOpen={showBranchNavMenu}
+        onClose={() => setShowBranchNavMenu(false)}
+        title={t("chats.branchTree.goToParentTitle")}
+      >
+        <div className="space-y-2">
+          {parentBranchMeta ? (
+            <p className="px-1 pb-1 text-xs text-fg/55">
+              {t("chats.branchTree.goToParentDesc", { title: parentBranchMeta.title })}
+            </p>
+          ) : null}
+          <MenuButton
+            icon={GitBranch}
+            title={t("chats.branchTree.goToParentConfirm", {
+              title: parentBranchMeta?.title ?? "",
+            })}
+            onClick={() => {
+              if (!parentBranchMeta || !parentSessionId) return;
+              setShowBranchNavMenu(false);
+              navigate(Routes.chatSession(parentBranchMeta.characterId, parentSessionId));
+            }}
+          />
+          <MenuButton
+            icon={X}
+            title={t("chats.branchTree.goToParentCancel")}
+            onClick={() => setShowBranchNavMenu(false)}
+          />
+        </div>
+      </BottomMenu>
+
+      <BottomMenu
+        isOpen={branchPickerMessageId !== null}
+        onClose={() => setBranchPickerMessageId(null)}
+        title={t("chats.branchTree.branchesFromHereTitle")}
+      >
+        <div className="space-y-2">
+          {(branchPickerMessageId ? childForks.get(branchPickerMessageId) : undefined)?.map(
+            (child) => (
+              <MenuButton
+                key={child.id}
+                icon={GitBranch}
+                title={t("chats.branchTree.goToParentConfirm", { title: child.title })}
+                onClick={() => {
+                  setBranchPickerMessageId(null);
+                  navigate(Routes.chatSession(child.characterId, child.id));
+                }}
+              />
+            ),
+          )}
+          <MenuButton
+            icon={X}
+            title={t("chats.branchTree.goToParentCancel")}
+            onClick={() => setBranchPickerMessageId(null)}
           />
         </div>
       </BottomMenu>
