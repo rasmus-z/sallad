@@ -2622,15 +2622,49 @@ pub async fn group_session_add_memory(
     memories.push(memory.clone());
 
     // Compute embedding (best-effort)
-    let embedding: Vec<f32> = crate::embedding::compute_embedding(app.clone(), memory.clone())
-        .await
-        .unwrap_or_default();
+    let embedding: Vec<f32> =
+        match crate::embedding::compute_embedding(app.clone(), memory.clone()).await {
+            Ok(vec) => vec,
+            Err(err) => {
+                crate::utils::log_warn(
+                    &app,
+                    "group_session_add_memory",
+                    format!(
+                        "embedding computation failed; storing memory without an embedding (it will not be semantically retrievable): {}",
+                        err
+                    ),
+                );
+                Vec::new()
+            }
+        };
 
     // Count tokens (best-effort)
-    let token_count = crate::embedding::tokenizer::count_tokens(&app, &memory).unwrap_or(0);
+    let token_count = match crate::embedding::tokenizer::count_tokens(&app, &memory) {
+        Ok(count) => count,
+        Err(err) => {
+            crate::utils::log_warn(
+                &app,
+                "group_session_add_memory",
+                format!("token count failed; defaulting to 0: {}", err),
+            );
+            0
+        }
+    };
     let (embedding_source_version, embedding_dimensions) =
-        crate::embedding::resolve_active_embedding_signature(&app)
-            .unwrap_or_else(|_| ("v3".to_string(), 512));
+        match crate::embedding::resolve_active_embedding_signature(&app) {
+            Ok(sig) => sig,
+            Err(err) => {
+                crate::utils::log_warn(
+                    &app,
+                    "group_session_add_memory",
+                    format!(
+                        "could not resolve active embedding signature; falling back to v3/512 (may mismatch stored vectors): {}",
+                        err
+                    ),
+                );
+                ("v3".to_string(), 512)
+            }
+        };
 
     let now = now_ms();
     memory_embeddings.push(MemoryEmbedding {
@@ -2772,13 +2806,45 @@ pub async fn group_session_update_memory(
         let embedding =
             match crate::embedding::compute_embedding(app.clone(), new_memory.clone()).await {
                 Ok(vec) => vec,
-                Err(_) => memory_embeddings[memory_index].embedding.clone(),
+                Err(err) => {
+                    crate::utils::log_warn(
+                        &app,
+                        "group_session_update_memory",
+                        format!(
+                            "embedding recomputation failed; reusing the previous embedding for this memory: {}",
+                            err
+                        ),
+                    );
+                    memory_embeddings[memory_index].embedding.clone()
+                }
             };
 
-        let token_count = crate::embedding::tokenizer::count_tokens(&app, &new_memory).unwrap_or(0);
+        let token_count = match crate::embedding::tokenizer::count_tokens(&app, &new_memory) {
+            Ok(count) => count,
+            Err(err) => {
+                crate::utils::log_warn(
+                    &app,
+                    "group_session_update_memory",
+                    format!("token count failed; defaulting to 0: {}", err),
+                );
+                0
+            }
+        };
         let (embedding_source_version, embedding_dimensions) =
-            crate::embedding::resolve_active_embedding_signature(&app)
-                .unwrap_or_else(|_| ("v3".to_string(), 512));
+            match crate::embedding::resolve_active_embedding_signature(&app) {
+                Ok(sig) => sig,
+                Err(err) => {
+                    crate::utils::log_warn(
+                        &app,
+                        "group_session_update_memory",
+                        format!(
+                            "could not resolve active embedding signature; falling back to v3/512 (may mismatch stored vectors): {}",
+                            err
+                        ),
+                    );
+                    ("v3".to_string(), 512)
+                }
+            };
 
         memory_embeddings[memory_index].text = new_memory;
         memory_embeddings[memory_index].embedding = embedding;

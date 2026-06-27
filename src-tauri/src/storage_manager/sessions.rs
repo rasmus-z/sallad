@@ -3755,12 +3755,34 @@ pub async fn session_add_memory(
         }
     };
 
-    let token_count = crate::embedding::tokenizer::count_tokens(&app, &memory).unwrap_or(0);
+    let token_count = match crate::embedding::tokenizer::count_tokens(&app, &memory) {
+        Ok(count) => count,
+        Err(err) => {
+            log_warn(
+                &app,
+                "session_add_memory",
+                format!("token count failed; defaulting to 0: {}", err),
+            );
+            0
+        }
+    };
     let category_mode = resolve_memory_category_mode(&conn, &session_id);
     let normalized_category = normalize_memory_category(memory_category, &category_mode)?;
     let (embedding_source_version, embedding_dimensions) =
-        embedding::resolve_active_embedding_signature(&app)
-            .unwrap_or_else(|_| ("v3".to_string(), 512));
+        match embedding::resolve_active_embedding_signature(&app) {
+            Ok(sig) => sig,
+            Err(err) => {
+                log_warn(
+                    &app,
+                    "session_add_memory",
+                    format!(
+                        "could not resolve active embedding signature; falling back to v3/512 (may mismatch stored vectors): {}",
+                        err
+                    ),
+                );
+                ("v3".to_string(), 512)
+            }
+        };
 
     let now_u = now_ms();
     memory_embeddings.push(MemoryEmbedding {
