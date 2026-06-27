@@ -57,6 +57,10 @@ const STAGE_META: Record<
     label: "Typical P",
     description: "Prefer statistically typical tokens in the current distribution.",
   },
+  xtc: {
+    label: "XTC",
+    description: "Exclude Top Choices — drops high-probability tokens for variety.",
+  },
   temp: {
     labelKey: "samplerOrder.stages.temp.label",
     descriptionKey: "samplerOrder.stages.temp.desc",
