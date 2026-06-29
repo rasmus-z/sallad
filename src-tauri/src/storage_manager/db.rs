@@ -319,6 +319,17 @@ pub fn init_db(_app: &tauri::AppHandle, conn: &Connection) -> Result<(), String>
           system_prompt TEXT
         );
 
+        CREATE TABLE IF NOT EXISTS llm_generation_metrics (
+          id TEXT PRIMARY KEY,
+          created_at INTEGER NOT NULL,
+          model_name TEXT,
+          summary_json TEXT NOT NULL,
+          samples_json TEXT NOT NULL DEFAULT '[]'
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_llm_generation_metrics_created_at
+          ON llm_generation_metrics(created_at);
+
         CREATE TABLE IF NOT EXISTS asr_vocabulary_terms (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           term TEXT NOT NULL,
@@ -1034,6 +1045,16 @@ pub fn init_db(_app: &tauri::AppHandle, conn: &Connection) -> Result<(), String>
       "#,
     )
     .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+
+    let _ = conn.execute(
+        "ALTER TABLE llm_generation_metrics ADD COLUMN message_id TEXT",
+        [],
+    );
+    let _ = conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_llm_generation_metrics_message_id
+           ON llm_generation_metrics(message_id)",
+        [],
+    );
 
     // Backward-compatible group chat schema bootstrap for existing databases:
     // older DBs have group_sessions but not group_character_id yet.
