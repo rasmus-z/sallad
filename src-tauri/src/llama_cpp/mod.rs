@@ -1199,6 +1199,7 @@ mod desktop {
                 );
             }
 
+            check_abort_signal(abort_rx.as_mut())?;
             log_info(&app, "llama_cpp", "loading llama.cpp engine/model");
             let engine = load_engine(
                 Some(&app),
