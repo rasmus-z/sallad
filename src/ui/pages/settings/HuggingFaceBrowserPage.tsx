@@ -51,6 +51,7 @@ import {
 } from "../../../core/storage/repo";
 import { createDefaultAdvancedModelSettings } from "../../../core/storage/schemas";
 import type { ProviderCredential } from "../../../core/storage/schemas";
+import { openExternalUrl } from "../../../core/utils/openExternal";
 
 interface HfSearchResult {
   modelId: string;
@@ -1384,6 +1385,15 @@ export function HuggingFaceBrowserPage() {
     [ollamaProviders, selectedOllamaProviderId],
   );
   const isOllamaMode = !!selectedOllamaProvider;
+  const sproutConfig = useMemo(() => {
+    const config = (selectedOllamaProvider?.config ?? {}) as Record<string, any>;
+    if (config.sproutEnabled !== true) return null;
+    const url = typeof config.sproutUrl === "string" ? config.sproutUrl.trim() : "";
+    if (!url) return null;
+    const apiKey = typeof config.sproutApiKey === "string" ? config.sproutApiKey : "";
+    return { url, apiKey };
+  }, [selectedOllamaProvider]);
+  const sproutActive = isOllamaMode && !!sproutConfig;
 
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -1625,8 +1635,8 @@ export function HuggingFaceBrowserPage() {
       setReadmeLoading(true);
       setRunabilityScores({});
       setRecData(null);
-      setRecLoading(!isOllamaMode);
-      setFilesPanelTab(isOllamaMode ? "files" : "recommended");
+      setRecLoading(!isOllamaMode || sproutActive);
+      setFilesPanelTab(isOllamaMode && !sproutActive ? "files" : "recommended");
       setCompareOpen(false);
       setCompareSelections([]);
       setRecImageSupport(false);
@@ -1637,9 +1647,8 @@ export function HuggingFaceBrowserPage() {
       })
         .then((info) => {
           setModelInfo(info);
-          // Fetch runability scores in background (skipped in Ollama mode — host hardware unknown)
           const runnableFiles = info.files.filter((f) => f.size > 0 && !f.isMmproj && !f.isMtp);
-          if (runnableFiles.length > 0 && !isOllamaMode) {
+          if (runnableFiles.length > 0 && (!isOllamaMode || sproutActive)) {
             invoke<RunabilityScore[]>("hf_compute_runability", {
               modelId: info.modelId,
               files: runnableFiles.map((f) => ({
@@ -1647,6 +1656,8 @@ export function HuggingFaceBrowserPage() {
                 size: f.size,
                 quantization: f.quantization,
               })),
+              sproutUrl: sproutConfig?.url,
+              sproutApiKey: sproutConfig?.apiKey || undefined,
             })
               .then((scores) => {
                 const map: Record<string, RunabilityScore> = {};
@@ -1676,12 +1687,12 @@ export function HuggingFaceBrowserPage() {
 
       await Promise.allSettled([filesPromise, readmePromise]);
     },
-    [setView, isOllamaMode],
+    [setView, isOllamaMode, sproutActive, sproutConfig],
   );
 
   useEffect(() => {
     if (view.kind !== "model" || !modelInfo) return;
-    if (isOllamaMode) {
+    if (isOllamaMode && !sproutActive) {
       setRecLoading(false);
       setRecData(null);
       return;
@@ -1702,6 +1713,8 @@ export function HuggingFaceBrowserPage() {
         size: f.size,
         quantization: f.quantization,
       })),
+      sproutUrl: sproutConfig?.url,
+      sproutApiKey: sproutConfig?.apiKey || undefined,
     })
       .then((data) => {
         if (cancelled) return;
@@ -1725,7 +1738,7 @@ export function HuggingFaceBrowserPage() {
     return () => {
       cancelled = true;
     };
-  }, [view.kind, modelInfo, isOllamaMode]);
+  }, [view.kind, modelInfo, isOllamaMode, sproutActive, sproutConfig]);
 
   const filesWithSize = modelInfo?.files.filter((f) => f.size > 0) ?? [];
   const runnableFilesWithSize = useMemo(
@@ -1810,7 +1823,14 @@ export function HuggingFaceBrowserPage() {
   ]);
 
   useEffect(() => {
-    if (!mmprojFilesWithSize.length) {
+    if (isOllamaMode) {
+      setRecImageSupport(false);
+      setRecMmprojFile("");
+    }
+  }, [isOllamaMode]);
+
+  useEffect(() => {
+    if (!mmprojFilesWithSize.length || isOllamaMode) {
       setRecImageSupport(false);
       setRecMmprojFile("");
       return;
@@ -1822,7 +1842,7 @@ export function HuggingFaceBrowserPage() {
       }
       return mmprojFilesWithSize[0]?.filename ?? "";
     });
-  }, [mmprojFilesWithSize]);
+  }, [mmprojFilesWithSize, isOllamaMode]);
 
   useEffect(() => {
     if (!mtpFilesWithSize.length) {
@@ -2927,7 +2947,7 @@ export function HuggingFaceBrowserPage() {
                         className="flex flex-col overflow-hidden will-change-transform rounded-b-xl"
                       >
                         <div className="border-b border-fg/10 px-3 py-2 space-y-2">
-                          {isOllamaMode ? (
+                          {isOllamaMode && !sproutActive ? (
                             <>
                               <div className="rounded-md border border-amber-400/20 bg-amber-500/5 px-3 py-2 text-[12px] leading-relaxed text-amber-300/95">
                                 <div className="flex items-start gap-2">
@@ -2939,6 +2959,18 @@ export function HuggingFaceBrowserPage() {
                                     <div className="text-amber-300/80">
                                       {t("hfBrowser.ollamaModeNoticeBody")}
                                     </div>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        void openExternalUrl(
+                                          "https://github.com/LettuceAI/Sprout",
+                                        )
+                                      }
+                                      className="mt-1 inline-flex items-center gap-1 font-medium text-amber-200 underline underline-offset-2 hover:text-amber-100"
+                                    >
+                                      <ExternalLink size={11} />
+                                      {t("hfBrowser.getSprout")}
+                                    </button>
                                   </div>
                                 </div>
                               </div>
@@ -3254,7 +3286,12 @@ export function HuggingFaceBrowserPage() {
                                         </select>
                                       </div>
 
-                                      {mmprojFilesWithSize.length > 0 && (
+                                      {mmprojFilesWithSize.length > 0 && isOllamaMode && (
+                                        <div className="rounded-lg border border-amber-400/20 bg-amber-500/5 px-2.5 py-2 text-[11px] leading-relaxed text-amber-300/80">
+                                          {t("hfBrowser.ollamaVisionUnsupported")}
+                                        </div>
+                                      )}
+                                      {mmprojFilesWithSize.length > 0 && !isOllamaMode && (
                                         <>
                                           <div className="flex items-center justify-between gap-3 rounded-lg border border-fg/10 bg-fg/5 px-2.5 py-2">
                                             <div className="min-w-0">
