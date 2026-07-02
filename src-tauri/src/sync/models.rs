@@ -49,6 +49,10 @@ pub struct Persona {
     #[serde(default)]
     pub design_reference_image_ids: Option<String>,
     #[serde(default)]
+    pub lora_name: Option<String>,
+    #[serde(default)]
+    pub lora_strength: Option<f64>,
+    #[serde(default)]
     pub active_lorebook_ids: Option<String>,
     pub is_default: i64,
     pub created_at: i64,
@@ -221,9 +225,21 @@ pub struct Character {
     pub avatar_crop_y: Option<f64>,
     pub avatar_crop_scale: Option<f64>,
     #[serde(default)]
+    pub banner_crop_x: Option<f64>,
+    #[serde(default)]
+    pub banner_crop_y: Option<f64>,
+    #[serde(default)]
+    pub banner_crop_scale: Option<f64>,
+    #[serde(default)]
+    pub card_type: Option<String>,
+    #[serde(default)]
     pub design_description: Option<String>,
     #[serde(default)]
     pub design_reference_image_ids: Option<String>,
+    #[serde(default)]
+    pub lora_name: Option<String>,
+    #[serde(default)]
+    pub lora_strength: Option<f64>,
     pub background_image_path: Option<String>,
     pub definition: Option<String>,
     pub description: Option<String>,
@@ -332,6 +348,12 @@ pub struct Session {
     pub character_id: String,
     pub title: String,
     #[serde(default)]
+    pub parent_session_id: Option<String>,
+    #[serde(default)]
+    pub branched_from_message_id: Option<String>,
+    #[serde(default)]
+    pub root_session_id: Option<String>,
+    #[serde(default)]
     pub background_image_path: Option<String>,
     pub system_prompt: Option<String>,
     #[serde(default)]
@@ -353,6 +375,8 @@ pub struct Session {
     pub frequency_penalty: Option<f64>,
     pub presence_penalty: Option<f64>,
     pub top_k: Option<i64>,
+    #[serde(default)]
+    pub advanced_model_settings: Option<String>,
     #[serde(default)]
     pub companion_state: Option<String>,
     pub memories: String,
@@ -408,6 +432,14 @@ pub struct Message {
     pub prompt_tokens: Option<i64>,
     pub completion_tokens: Option<i64>,
     pub total_tokens: Option<i64>,
+    #[serde(default)]
+    pub first_token_ms: Option<i64>,
+    #[serde(default)]
+    pub tokens_per_second: Option<f64>,
+    #[serde(default)]
+    pub mtp_stats: Option<String>,
+    #[serde(default)]
+    pub model_id: Option<String>,
     pub selected_variant_id: Option<String>,
     pub is_pinned: i64,
     pub memory_refs: String,
@@ -426,6 +458,12 @@ pub struct MessageVariant {
     pub prompt_tokens: Option<i64>,
     pub completion_tokens: Option<i64>,
     pub total_tokens: Option<i64>,
+    #[serde(default)]
+    pub first_token_ms: Option<i64>,
+    #[serde(default)]
+    pub tokens_per_second: Option<f64>,
+    #[serde(default)]
+    pub mtp_stats: Option<String>,
     pub reasoning: Option<String>,
 }
 
@@ -524,11 +562,19 @@ pub struct GroupMessage {
     pub prompt_tokens: Option<i64>,
     pub completion_tokens: Option<i64>,
     pub total_tokens: Option<i64>,
+    #[serde(default)]
+    pub first_token_ms: Option<i64>,
+    #[serde(default)]
+    pub tokens_per_second: Option<f64>,
+    #[serde(default)]
+    pub mtp_stats: Option<String>,
     pub selected_variant_id: Option<String>,
     pub is_pinned: i64,
     pub attachments: String,
     #[serde(default)]
     pub used_lorebook_entries: String,
+    #[serde(default)]
+    pub memory_refs: String,
     pub reasoning: Option<String>,
     pub selection_reasoning: Option<String>,
     pub model_id: Option<String>,
@@ -544,6 +590,12 @@ pub struct GroupMessageVariant {
     pub prompt_tokens: Option<i64>,
     pub completion_tokens: Option<i64>,
     pub total_tokens: Option<i64>,
+    #[serde(default)]
+    pub first_token_ms: Option<i64>,
+    #[serde(default)]
+    pub tokens_per_second: Option<f64>,
+    #[serde(default)]
+    pub mtp_stats: Option<String>,
     pub reasoning: Option<String>,
     pub selection_reasoning: Option<String>,
     pub model_id: Option<String>,

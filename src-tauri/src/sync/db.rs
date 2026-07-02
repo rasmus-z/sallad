@@ -16,8 +16,8 @@ use crate::sync::models::{
 use crate::sync::protocol::{ChangeOp, ChangeRecord, CursorSet, DomainCursor, SyncDomain};
 use crate::utils::{log_error_global, log_info_global};
 
-pub const CHANGE_SCHEMA_VERSION: u16 = 6;
-pub const LOCAL_SYNC_STATE_VERSION: u16 = 7;
+pub const CHANGE_SCHEMA_VERSION: u16 = 7;
+pub const LOCAL_SYNC_STATE_VERSION: u16 = 8;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct EntityKey {
@@ -147,6 +147,8 @@ struct SyncGroupConfigRecord {
     background_image_path: Option<String>,
     lorebook_ids: String,
     disable_character_lorebooks: i64,
+    #[serde(default)]
+    chat_appearance: Option<String>,
     speaker_selection_method: String,
     memory_type: String,
 }
@@ -179,6 +181,8 @@ struct SyncGroupSessionRecord {
     background_image_path: Option<String>,
     lorebook_ids: String,
     disable_character_lorebooks: i64,
+    #[serde(default)]
+    author_note: Option<String>,
     memories: String,
     memory_embeddings: String,
     memory_summary: String,
@@ -1960,7 +1964,7 @@ fn collect_optional_text_values(conn: &DbConnection, sql: &str) -> Result<Vec<St
 
 fn fetch_group_configs(conn: &DbConnection) -> Result<Vec<SyncGroupConfigRecord>, String> {
     let mut stmt = conn
-        .prepare("SELECT id, name, character_ids, muted_character_ids, persona_id, created_at, updated_at, archived, chat_type, starting_scene, background_image_path, COALESCE(lorebook_ids, '[]'), COALESCE(disable_character_lorebooks, 0), COALESCE(speaker_selection_method, 'llm'), COALESCE(memory_type, 'manual') FROM group_characters")
+        .prepare("SELECT id, name, character_ids, muted_character_ids, persona_id, created_at, updated_at, archived, chat_type, starting_scene, background_image_path, COALESCE(lorebook_ids, '[]'), COALESCE(disable_character_lorebooks, 0), chat_appearance, COALESCE(speaker_selection_method, 'llm'), COALESCE(memory_type, 'manual') FROM group_characters")
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
     let rows = stmt
         .query_map([], |r| {
@@ -1978,8 +1982,9 @@ fn fetch_group_configs(conn: &DbConnection) -> Result<Vec<SyncGroupConfigRecord>
                 background_image_path: r.get(10)?,
                 lorebook_ids: r.get(11)?,
                 disable_character_lorebooks: r.get(12)?,
-                speaker_selection_method: r.get(13)?,
-                memory_type: r.get(14)?,
+                chat_appearance: r.get(13)?,
+                speaker_selection_method: r.get(14)?,
+                memory_type: r.get(15)?,
             })
         })
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
@@ -2013,7 +2018,7 @@ fn fetch_group_sessions_full(
     }
 
     let placeholders = ids.iter().map(|_| "?").collect::<Vec<_>>().join(",");
-    let sql = format!("SELECT id, group_character_id, name, character_ids, muted_character_ids, persona_id, created_at, updated_at, archived, chat_type, starting_scene, background_image_path, COALESCE(lorebook_ids, '[]'), COALESCE(disable_character_lorebooks, 0), memories, memory_embeddings, memory_summary, memory_summary_token_count, memory_tool_events, memory_status, memory_error, memory_progress_step, COALESCE(speaker_selection_method, 'llm'), COALESCE(memory_type, 'manual') FROM group_sessions WHERE id IN ({})", placeholders);
+    let sql = format!("SELECT id, group_character_id, name, character_ids, muted_character_ids, persona_id, created_at, updated_at, archived, chat_type, starting_scene, background_image_path, COALESCE(lorebook_ids, '[]'), COALESCE(disable_character_lorebooks, 0), author_note, memories, memory_embeddings, memory_summary, memory_summary_token_count, memory_tool_events, memory_status, memory_error, memory_progress_step, COALESCE(speaker_selection_method, 'llm'), COALESCE(memory_type, 'manual') FROM group_sessions WHERE id IN ({})", placeholders);
     let mut stmt = conn
         .prepare(&sql)
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
@@ -2034,16 +2039,17 @@ fn fetch_group_sessions_full(
                 background_image_path: r.get(11)?,
                 lorebook_ids: r.get(12)?,
                 disable_character_lorebooks: r.get(13)?,
-                memories: r.get(14)?,
-                memory_embeddings: r.get(15)?,
-                memory_summary: r.get(16)?,
-                memory_summary_token_count: r.get(17)?,
-                memory_tool_events: r.get(18)?,
-                memory_status: r.get(19)?,
-                memory_error: r.get(20)?,
-                memory_progress_step: r.get(21)?,
-                speaker_selection_method: r.get(22)?,
-                memory_type: r.get(23)?,
+                author_note: r.get(14)?,
+                memories: r.get(15)?,
+                memory_embeddings: r.get(16)?,
+                memory_summary: r.get(17)?,
+                memory_summary_token_count: r.get(18)?,
+                memory_tool_events: r.get(19)?,
+                memory_status: r.get(20)?,
+                memory_error: r.get(21)?,
+                memory_progress_step: r.get(22)?,
+                speaker_selection_method: r.get(23)?,
+                memory_type: r.get(24)?,
             })
         })
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?
@@ -2139,8 +2145,8 @@ fn apply_core_snapshot(conn: &mut DbConnection, payload: &[u8]) -> Result<(), St
         .collect::<Vec<_>>();
     for persona in snapshot.personas {
         tx.execute(
-            r#"INSERT OR REPLACE INTO personas (id, title, description, nickname, avatar_path, avatar_crop_x, avatar_crop_y, avatar_crop_scale, design_description, design_reference_image_ids, active_lorebook_ids, is_default, created_at, updated_at)
-               VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)"#,
+            r#"INSERT OR REPLACE INTO personas (id, title, description, nickname, avatar_path, avatar_crop_x, avatar_crop_y, avatar_crop_scale, design_description, design_reference_image_ids, lora_name, lora_strength, active_lorebook_ids, is_default, created_at, updated_at)
+               VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)"#,
             params![
                 persona.id,
                 persona.title,
@@ -2152,6 +2158,8 @@ fn apply_core_snapshot(conn: &mut DbConnection, payload: &[u8]) -> Result<(), St
                 persona.avatar_crop_scale,
                 persona.design_description,
                 persona.design_reference_image_ids,
+                persona.lora_name,
+                persona.lora_strength,
                 persona.active_lorebook_ids,
                 persona.is_default,
                 persona.created_at,
@@ -2374,8 +2382,8 @@ fn apply_characters_snapshot(conn: &mut DbConnection, payload: &[u8]) -> Result<
         .collect::<Vec<_>>();
     for character in snapshot.characters {
         tx.execute(
-            r#"INSERT OR REPLACE INTO characters (id, name, avatar_path, avatar_crop_x, avatar_crop_y, avatar_crop_scale, design_description, design_reference_image_ids, background_image_path, definition, description, nickname, scenario, creator_notes, creator, creator_notes_multilingual, source, tags, default_scene_id, default_model_id, mode, companion, memory_type, active_lorebook_ids, prompt_template_id, group_chat_prompt_template_id, group_chat_roleplay_prompt_template_id, system_prompt, voice_config, voice_autoplay, disable_avatar_gradient, avatar_gradient_source, custom_gradient_enabled, custom_gradient_colors, custom_text_color, custom_text_secondary, chat_appearance, default_chat_template_id, created_at, updated_at)
-               VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25, ?26, ?27, ?28, ?29, ?30, ?31, ?32, ?33, ?34, ?35, ?36, ?37, ?38, ?39, ?40)"#,
+            r#"INSERT OR REPLACE INTO characters (id, name, avatar_path, avatar_crop_x, avatar_crop_y, avatar_crop_scale, banner_crop_x, banner_crop_y, banner_crop_scale, card_type, design_description, design_reference_image_ids, lora_name, lora_strength, background_image_path, definition, description, nickname, scenario, creator_notes, creator, creator_notes_multilingual, source, tags, default_scene_id, default_model_id, mode, companion, memory_type, active_lorebook_ids, prompt_template_id, group_chat_prompt_template_id, group_chat_roleplay_prompt_template_id, system_prompt, voice_config, voice_autoplay, disable_avatar_gradient, avatar_gradient_source, custom_gradient_enabled, custom_gradient_colors, custom_text_color, custom_text_secondary, chat_appearance, default_chat_template_id, created_at, updated_at)
+               VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25, ?26, ?27, ?28, ?29, ?30, ?31, ?32, ?33, ?34, ?35, ?36, ?37, ?38, ?39, ?40, ?41, ?42, ?43, ?44, ?45, ?46)"#,
             params![
                 character.id,
                 character.name,
@@ -2383,8 +2391,14 @@ fn apply_characters_snapshot(conn: &mut DbConnection, payload: &[u8]) -> Result<
                 character.avatar_crop_x,
                 character.avatar_crop_y,
                 character.avatar_crop_scale,
+                character.banner_crop_x,
+                character.banner_crop_y,
+                character.banner_crop_scale,
+                character.card_type.unwrap_or_else(|| "circle".to_string()),
                 character.design_description,
                 character.design_reference_image_ids,
+                character.lora_name,
+                character.lora_strength,
                 character.background_image_path,
                 character.definition,
                 character.description,
@@ -2546,8 +2560,8 @@ fn apply_groups_snapshot(conn: &mut DbConnection, payload: &[u8]) -> Result<(), 
         .collect::<Vec<_>>();
     for group in snapshot.group_characters {
         tx.execute(
-            r#"INSERT OR REPLACE INTO group_characters (id, name, character_ids, muted_character_ids, persona_id, created_at, updated_at, archived, chat_type, starting_scene, background_image_path, lorebook_ids, disable_character_lorebooks, speaker_selection_method, memory_type)
-               VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)"#,
+            r#"INSERT OR REPLACE INTO group_characters (id, name, character_ids, muted_character_ids, persona_id, created_at, updated_at, archived, chat_type, starting_scene, background_image_path, lorebook_ids, disable_character_lorebooks, chat_appearance, speaker_selection_method, memory_type)
+               VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)"#,
             params![
                 group.id,
                 group.name,
@@ -2562,6 +2576,7 @@ fn apply_groups_snapshot(conn: &mut DbConnection, payload: &[u8]) -> Result<(), 
                 group.background_image_path,
                 group.lorebook_ids,
                 group.disable_character_lorebooks,
+                group.chat_appearance,
                 group.speaker_selection_method,
                 group.memory_type
             ],
@@ -2572,8 +2587,8 @@ fn apply_groups_snapshot(conn: &mut DbConnection, payload: &[u8]) -> Result<(), 
 
     for session in snapshot.group_sessions {
         tx.execute(
-            r#"INSERT OR REPLACE INTO group_sessions (id, group_character_id, name, character_ids, muted_character_ids, persona_id, created_at, updated_at, archived, chat_type, starting_scene, background_image_path, lorebook_ids, disable_character_lorebooks, memories, memory_embeddings, memory_summary, memory_summary_token_count, memory_tool_events, memory_status, memory_error, memory_progress_step, speaker_selection_method, memory_type)
-               VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24)"#,
+            r#"INSERT OR REPLACE INTO group_sessions (id, group_character_id, name, character_ids, muted_character_ids, persona_id, created_at, updated_at, archived, chat_type, starting_scene, background_image_path, lorebook_ids, disable_character_lorebooks, author_note, memories, memory_embeddings, memory_summary, memory_summary_token_count, memory_tool_events, memory_status, memory_error, memory_progress_step, speaker_selection_method, memory_type)
+               VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25)"#,
             params![
                 session.id,
                 session.group_character_id,
@@ -2589,6 +2604,7 @@ fn apply_groups_snapshot(conn: &mut DbConnection, payload: &[u8]) -> Result<(), 
                 session.background_image_path,
                 session.lorebook_ids,
                 session.disable_character_lorebooks,
+                session.author_note,
                 session.memories,
                 "[]",
                 session.memory_summary,
@@ -2614,8 +2630,8 @@ fn apply_groups_snapshot(conn: &mut DbConnection, payload: &[u8]) -> Result<(), 
 
     for message in snapshot.group_messages {
         tx.execute(
-            r#"INSERT OR REPLACE INTO group_messages (id, session_id, role, content, speaker_character_id, turn_number, created_at, prompt_tokens, completion_tokens, total_tokens, selected_variant_id, is_pinned, attachments, used_lorebook_entries, reasoning, selection_reasoning, model_id)
-               VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17)"#,
+            r#"INSERT OR REPLACE INTO group_messages (id, session_id, role, content, speaker_character_id, turn_number, created_at, prompt_tokens, completion_tokens, total_tokens, first_token_ms, tokens_per_second, mtp_stats, selected_variant_id, is_pinned, attachments, used_lorebook_entries, memory_refs, reasoning, selection_reasoning, model_id)
+               VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21)"#,
             params![
                 message.id,
                 message.session_id,
@@ -2627,10 +2643,14 @@ fn apply_groups_snapshot(conn: &mut DbConnection, payload: &[u8]) -> Result<(), 
                 message.prompt_tokens,
                 message.completion_tokens,
                 message.total_tokens,
+                message.first_token_ms,
+                message.tokens_per_second,
+                message.mtp_stats,
                 message.selected_variant_id,
                 message.is_pinned,
                 message.attachments,
                 message.used_lorebook_entries,
+                message.memory_refs,
                 message.reasoning,
                 message.selection_reasoning,
                 message.model_id
@@ -2641,8 +2661,8 @@ fn apply_groups_snapshot(conn: &mut DbConnection, payload: &[u8]) -> Result<(), 
 
     for variant in snapshot.group_message_variants {
         tx.execute(
-            "INSERT OR REPLACE INTO group_message_variants (id, message_id, content, speaker_character_id, created_at, prompt_tokens, completion_tokens, total_tokens, reasoning, selection_reasoning, model_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
-            params![variant.id, variant.message_id, variant.content, variant.speaker_character_id, variant.created_at, variant.prompt_tokens, variant.completion_tokens, variant.total_tokens, variant.reasoning, variant.selection_reasoning, variant.model_id],
+            "INSERT OR REPLACE INTO group_message_variants (id, message_id, content, speaker_character_id, created_at, prompt_tokens, completion_tokens, total_tokens, first_token_ms, tokens_per_second, mtp_stats, reasoning, selection_reasoning, model_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
+            params![variant.id, variant.message_id, variant.content, variant.speaker_character_id, variant.created_at, variant.prompt_tokens, variant.completion_tokens, variant.total_tokens, variant.first_token_ms, variant.tokens_per_second, variant.mtp_stats, variant.reasoning, variant.selection_reasoning, variant.model_id],
         )
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
     }
@@ -2787,12 +2807,15 @@ fn apply_sessions_snapshot_struct(
 
     for session in snapshot.sessions {
         tx.execute(
-            r#"INSERT OR REPLACE INTO sessions (id, character_id, title, background_image_path, system_prompt, mode, selected_scene_id, prompt_template_id, lorebook_ids_override, author_note, persona_id, persona_disabled, voice_autoplay, temperature, top_p, max_output_tokens, frequency_penalty, presence_penalty, top_k, companion_state, memories, memory_embeddings, memory_summary, memory_summary_token_count, memory_tool_events, archived, created_at, updated_at, memory_status, memory_error, memory_progress_step)
-               VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25, ?26, ?27, ?28, ?29, ?30, ?31)"#,
+            r#"INSERT OR REPLACE INTO sessions (id, character_id, title, parent_session_id, branched_from_message_id, root_session_id, background_image_path, system_prompt, mode, selected_scene_id, prompt_template_id, lorebook_ids_override, author_note, persona_id, persona_disabled, voice_autoplay, temperature, top_p, max_output_tokens, frequency_penalty, presence_penalty, top_k, advanced_model_settings, companion_state, memories, memory_embeddings, memory_summary, memory_summary_token_count, memory_tool_events, archived, created_at, updated_at, memory_status, memory_error, memory_progress_step)
+               VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25, ?26, ?27, ?28, ?29, ?30, ?31, ?32, ?33, ?34, ?35)"#,
             params![
                 session.id,
                 session.character_id,
                 session.title,
+                session.parent_session_id,
+                session.branched_from_message_id,
+                session.root_session_id,
                 session.background_image_path,
                 session.system_prompt,
                 if session.mode.trim().is_empty() { "roleplay".to_string() } else { session.mode },
@@ -2809,6 +2832,7 @@ fn apply_sessions_snapshot_struct(
                 session.frequency_penalty,
                 session.presence_penalty,
                 session.top_k,
+                session.advanced_model_settings,
                 session.companion_state,
                 session.memories,
                 "[]",
@@ -2974,8 +2998,8 @@ fn apply_messages_snapshot(conn: &mut DbConnection, payload: &[u8]) -> Result<()
 
     for message in snapshot.messages {
         tx.execute(
-            r#"INSERT OR REPLACE INTO messages (id, session_id, role, content, created_at, visible_in_chat, scene_edited, prompt_tokens, completion_tokens, total_tokens, selected_variant_id, is_pinned, memory_refs, used_lorebook_entries, attachments, reasoning)
-               VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)"#,
+            r#"INSERT OR REPLACE INTO messages (id, session_id, role, content, created_at, visible_in_chat, scene_edited, prompt_tokens, completion_tokens, total_tokens, first_token_ms, tokens_per_second, mtp_stats, model_id, selected_variant_id, is_pinned, memory_refs, used_lorebook_entries, attachments, reasoning)
+               VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20)"#,
             params![
                 message.id,
                 message.session_id,
@@ -2987,6 +3011,10 @@ fn apply_messages_snapshot(conn: &mut DbConnection, payload: &[u8]) -> Result<()
                 message.prompt_tokens,
                 message.completion_tokens,
                 message.total_tokens,
+                message.first_token_ms,
+                message.tokens_per_second,
+                message.mtp_stats,
+                message.model_id,
                 message.selected_variant_id,
                 message.is_pinned,
                 message.memory_refs,
@@ -3000,8 +3028,8 @@ fn apply_messages_snapshot(conn: &mut DbConnection, payload: &[u8]) -> Result<()
 
     for variant in snapshot.message_variants {
         tx.execute(
-            "INSERT OR REPLACE INTO message_variants (id, message_id, content, created_at, prompt_tokens, completion_tokens, total_tokens, reasoning) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
-            params![variant.id, variant.message_id, variant.content, variant.created_at, variant.prompt_tokens, variant.completion_tokens, variant.total_tokens, variant.reasoning],
+            "INSERT OR REPLACE INTO message_variants (id, message_id, content, created_at, prompt_tokens, completion_tokens, total_tokens, first_token_ms, tokens_per_second, mtp_stats, reasoning) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+            params![variant.id, variant.message_id, variant.content, variant.created_at, variant.prompt_tokens, variant.completion_tokens, variant.total_tokens, variant.first_token_ms, variant.tokens_per_second, variant.mtp_stats, variant.reasoning],
         )
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
     }
@@ -3100,7 +3128,7 @@ fn fetch_global_core(conn: &DbConnection) -> Result<GlobalCoreData, String> {
     let settings: Vec<Settings> = settings_iter.map(|r| r.unwrap()).collect();
 
     let mut stmt = conn
-        .prepare("SELECT id, title, description, nickname, avatar_path, avatar_crop_x, avatar_crop_y, avatar_crop_scale, design_description, design_reference_image_ids, COALESCE(active_lorebook_ids, '[]'), is_default, created_at, updated_at FROM personas")
+        .prepare("SELECT id, title, description, nickname, avatar_path, avatar_crop_x, avatar_crop_y, avatar_crop_scale, design_description, design_reference_image_ids, lora_name, lora_strength, COALESCE(active_lorebook_ids, '[]'), is_default, created_at, updated_at FROM personas")
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
     let personas: Vec<Persona> = stmt
         .query_map([], |r| {
@@ -3115,10 +3143,12 @@ fn fetch_global_core(conn: &DbConnection) -> Result<GlobalCoreData, String> {
                 avatar_crop_scale: r.get(7)?,
                 design_description: r.get(8)?,
                 design_reference_image_ids: r.get(9)?,
-                active_lorebook_ids: r.get(10)?,
-                is_default: r.get(11)?,
-                created_at: r.get(12)?,
-                updated_at: r.get(13)?,
+                lora_name: r.get(10)?,
+                lora_strength: r.get(11)?,
+                active_lorebook_ids: r.get(12)?,
+                is_default: r.get(13)?,
+                created_at: r.get(14)?,
+                updated_at: r.get(15)?,
             })
         })
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?
@@ -3344,7 +3374,7 @@ fn fetch_characters_data(
     }
     let placeholders = ids.iter().map(|_| "?").collect::<Vec<_>>().join(",");
 
-    let sql = format!("SELECT id, name, avatar_path, avatar_crop_x, avatar_crop_y, avatar_crop_scale, design_description, design_reference_image_ids, background_image_path, definition, description, nickname, scenario, creator_notes, creator, creator_notes_multilingual, source, tags, default_scene_id, default_model_id, COALESCE(mode, 'roleplay'), companion, memory_type, COALESCE(active_lorebook_ids, '[]'), prompt_template_id, group_chat_prompt_template_id, group_chat_roleplay_prompt_template_id, system_prompt, voice_config, voice_autoplay, disable_avatar_gradient, COALESCE(avatar_gradient_source, 'base'), custom_gradient_enabled, custom_gradient_colors, custom_text_color, custom_text_secondary, chat_appearance, default_chat_template_id, created_at, updated_at FROM characters WHERE id IN ({})", placeholders);
+    let sql = format!("SELECT id, name, avatar_path, avatar_crop_x, avatar_crop_y, avatar_crop_scale, banner_crop_x, banner_crop_y, banner_crop_scale, COALESCE(card_type, 'circle'), design_description, design_reference_image_ids, lora_name, lora_strength, background_image_path, definition, description, nickname, scenario, creator_notes, creator, creator_notes_multilingual, source, tags, default_scene_id, default_model_id, COALESCE(mode, 'roleplay'), companion, memory_type, COALESCE(active_lorebook_ids, '[]'), prompt_template_id, group_chat_prompt_template_id, group_chat_roleplay_prompt_template_id, system_prompt, voice_config, voice_autoplay, disable_avatar_gradient, COALESCE(avatar_gradient_source, 'base'), custom_gradient_enabled, custom_gradient_colors, custom_text_color, custom_text_secondary, chat_appearance, default_chat_template_id, created_at, updated_at FROM characters WHERE id IN ({})", placeholders);
     let mut stmt = conn
         .prepare(&sql)
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
@@ -3357,40 +3387,46 @@ fn fetch_characters_data(
                 avatar_crop_x: r.get(3)?,
                 avatar_crop_y: r.get(4)?,
                 avatar_crop_scale: r.get(5)?,
-                design_description: r.get(6)?,
-                design_reference_image_ids: r.get(7)?,
-                background_image_path: r.get(8)?,
-                definition: r.get(9)?,
-                description: r.get(10)?,
-                nickname: r.get(11)?,
-                scenario: r.get(12)?,
-                creator_notes: r.get(13)?,
-                creator: r.get(14)?,
-                creator_notes_multilingual: r.get(15)?,
-                source: r.get(16)?,
-                tags: r.get(17)?,
-                default_scene_id: r.get(18)?,
-                default_model_id: r.get(19)?,
-                mode: r.get(20)?,
-                companion: r.get(21)?,
-                memory_type: r.get(22)?,
-                active_lorebook_ids: r.get(23)?,
-                prompt_template_id: r.get(24)?,
-                group_chat_prompt_template_id: r.get(25)?,
-                group_chat_roleplay_prompt_template_id: r.get(26)?,
-                system_prompt: r.get(27)?,
-                voice_config: r.get(28)?,
-                voice_autoplay: r.get(29)?,
-                disable_avatar_gradient: r.get(30)?,
-                avatar_gradient_source: r.get(31)?,
-                custom_gradient_enabled: r.get(32)?,
-                custom_gradient_colors: r.get(33)?,
-                custom_text_color: r.get(34)?,
-                custom_text_secondary: r.get(35)?,
-                chat_appearance: r.get(36)?,
-                default_chat_template_id: r.get(37)?,
-                created_at: r.get(38)?,
-                updated_at: r.get(39)?,
+                banner_crop_x: r.get(6)?,
+                banner_crop_y: r.get(7)?,
+                banner_crop_scale: r.get(8)?,
+                card_type: r.get(9)?,
+                design_description: r.get(10)?,
+                design_reference_image_ids: r.get(11)?,
+                lora_name: r.get(12)?,
+                lora_strength: r.get(13)?,
+                background_image_path: r.get(14)?,
+                definition: r.get(15)?,
+                description: r.get(16)?,
+                nickname: r.get(17)?,
+                scenario: r.get(18)?,
+                creator_notes: r.get(19)?,
+                creator: r.get(20)?,
+                creator_notes_multilingual: r.get(21)?,
+                source: r.get(22)?,
+                tags: r.get(23)?,
+                default_scene_id: r.get(24)?,
+                default_model_id: r.get(25)?,
+                mode: r.get(26)?,
+                companion: r.get(27)?,
+                memory_type: r.get(28)?,
+                active_lorebook_ids: r.get(29)?,
+                prompt_template_id: r.get(30)?,
+                group_chat_prompt_template_id: r.get(31)?,
+                group_chat_roleplay_prompt_template_id: r.get(32)?,
+                system_prompt: r.get(33)?,
+                voice_config: r.get(34)?,
+                voice_autoplay: r.get(35)?,
+                disable_avatar_gradient: r.get(36)?,
+                avatar_gradient_source: r.get(37)?,
+                custom_gradient_enabled: r.get(38)?,
+                custom_gradient_colors: r.get(39)?,
+                custom_text_color: r.get(40)?,
+                custom_text_secondary: r.get(41)?,
+                chat_appearance: r.get(42)?,
+                default_chat_template_id: r.get(43)?,
+                created_at: r.get(44)?,
+                updated_at: r.get(45)?,
             })
         })
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?
@@ -3520,7 +3556,7 @@ fn fetch_sessions_data(
     }
     let placeholders = ids.iter().map(|_| "?").collect::<Vec<_>>().join(",");
 
-    let sql = format!("SELECT id, character_id, title, background_image_path, system_prompt, COALESCE(mode, 'roleplay'), selected_scene_id, prompt_template_id, lorebook_ids_override, author_note, persona_id, persona_disabled, voice_autoplay, temperature, top_p, max_output_tokens, frequency_penalty, presence_penalty, top_k, companion_state, memories, memory_embeddings, memory_summary, memory_summary_token_count, memory_tool_events, archived, created_at, updated_at, memory_status, memory_error, memory_progress_step FROM sessions WHERE id IN ({})", placeholders);
+    let sql = format!("SELECT id, character_id, title, parent_session_id, branched_from_message_id, root_session_id, background_image_path, system_prompt, COALESCE(mode, 'roleplay'), selected_scene_id, prompt_template_id, lorebook_ids_override, author_note, persona_id, persona_disabled, voice_autoplay, temperature, top_p, max_output_tokens, frequency_penalty, presence_penalty, top_k, advanced_model_settings, companion_state, memories, memory_embeddings, memory_summary, memory_summary_token_count, memory_tool_events, archived, created_at, updated_at, memory_status, memory_error, memory_progress_step FROM sessions WHERE id IN ({})", placeholders);
     let mut stmt = conn
         .prepare(&sql)
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
@@ -3530,34 +3566,38 @@ fn fetch_sessions_data(
                 id: r.get(0)?,
                 character_id: r.get(1)?,
                 title: r.get(2)?,
-                background_image_path: r.get(3)?,
-                system_prompt: r.get(4)?,
-                mode: r.get(5)?,
-                selected_scene_id: r.get(6)?,
-                prompt_template_id: r.get(7)?,
-                lorebook_ids_override: r.get(8)?,
-                author_note: r.get(9)?,
-                persona_id: r.get(10)?,
-                persona_disabled: r.get(11)?,
-                voice_autoplay: r.get(12)?,
-                temperature: r.get(13)?,
-                top_p: r.get(14)?,
-                max_output_tokens: r.get(15)?,
-                frequency_penalty: r.get(16)?,
-                presence_penalty: r.get(17)?,
-                top_k: r.get(18)?,
-                companion_state: r.get(19)?,
-                memories: r.get(20)?,
-                memory_embeddings: r.get(21)?,
-                memory_summary: r.get(22)?,
-                memory_summary_token_count: r.get(23)?,
-                memory_tool_events: r.get(24)?,
-                archived: r.get(25)?,
-                created_at: r.get(26)?,
-                updated_at: r.get(27)?,
-                memory_status: r.get(28)?,
-                memory_error: r.get(29)?,
-                memory_progress_step: r.get(30)?,
+                parent_session_id: r.get(3)?,
+                branched_from_message_id: r.get(4)?,
+                root_session_id: r.get(5)?,
+                background_image_path: r.get(6)?,
+                system_prompt: r.get(7)?,
+                mode: r.get(8)?,
+                selected_scene_id: r.get(9)?,
+                prompt_template_id: r.get(10)?,
+                lorebook_ids_override: r.get(11)?,
+                author_note: r.get(12)?,
+                persona_id: r.get(13)?,
+                persona_disabled: r.get(14)?,
+                voice_autoplay: r.get(15)?,
+                temperature: r.get(16)?,
+                top_p: r.get(17)?,
+                max_output_tokens: r.get(18)?,
+                frequency_penalty: r.get(19)?,
+                presence_penalty: r.get(20)?,
+                top_k: r.get(21)?,
+                advanced_model_settings: r.get(22)?,
+                companion_state: r.get(23)?,
+                memories: r.get(24)?,
+                memory_embeddings: r.get(25)?,
+                memory_summary: r.get(26)?,
+                memory_summary_token_count: r.get(27)?,
+                memory_tool_events: r.get(28)?,
+                archived: r.get(29)?,
+                created_at: r.get(30)?,
+                updated_at: r.get(31)?,
+                memory_status: r.get(32)?,
+                memory_error: r.get(33)?,
+                memory_progress_step: r.get(34)?,
             })
         })
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?
@@ -3573,7 +3613,7 @@ fn fetch_sessions_data(
         );
     }
 
-    let sql_msg = format!("SELECT id, session_id, role, content, created_at, visible_in_chat, scene_edited, prompt_tokens, completion_tokens, total_tokens, selected_variant_id, is_pinned, memory_refs, used_lorebook_entries, attachments, reasoning FROM messages WHERE session_id IN ({})", placeholders);
+    let sql_msg = format!("SELECT id, session_id, role, content, created_at, visible_in_chat, scene_edited, prompt_tokens, completion_tokens, total_tokens, first_token_ms, tokens_per_second, mtp_stats, model_id, selected_variant_id, is_pinned, memory_refs, used_lorebook_entries, attachments, reasoning FROM messages WHERE session_id IN ({})", placeholders);
     let mut stmt = conn
         .prepare(&sql_msg)
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
@@ -3590,19 +3630,23 @@ fn fetch_sessions_data(
                 prompt_tokens: r.get(7)?,
                 completion_tokens: r.get(8)?,
                 total_tokens: r.get(9)?,
-                selected_variant_id: r.get(10)?,
-                is_pinned: r.get(11)?,
-                memory_refs: r.get(12)?,
-                used_lorebook_entries: r.get(13)?,
-                attachments: r.get(14)?,
-                reasoning: r.get(15)?,
+                first_token_ms: r.get(10)?,
+                tokens_per_second: r.get(11)?,
+                mtp_stats: r.get(12)?,
+                model_id: r.get(13)?,
+                selected_variant_id: r.get(14)?,
+                is_pinned: r.get(15)?,
+                memory_refs: r.get(16)?,
+                used_lorebook_entries: r.get(17)?,
+                attachments: r.get(18)?,
+                reasoning: r.get(19)?,
             })
         })
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?
         .map(|r| r.unwrap())
         .collect();
 
-    let sql_var = format!("SELECT id, message_id, content, created_at, prompt_tokens, completion_tokens, total_tokens, reasoning FROM message_variants WHERE message_id IN (SELECT id FROM messages WHERE session_id IN ({}))", placeholders);
+    let sql_var = format!("SELECT id, message_id, content, created_at, prompt_tokens, completion_tokens, total_tokens, first_token_ms, tokens_per_second, mtp_stats, reasoning FROM message_variants WHERE message_id IN (SELECT id FROM messages WHERE session_id IN ({}))", placeholders);
     let mut stmt = conn
         .prepare(&sql_var)
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
@@ -3616,7 +3660,10 @@ fn fetch_sessions_data(
                 prompt_tokens: r.get(4)?,
                 completion_tokens: r.get(5)?,
                 total_tokens: r.get(6)?,
-                reasoning: r.get(7)?,
+                first_token_ms: r.get(7)?,
+                tokens_per_second: r.get(8)?,
+                mtp_stats: r.get(9)?,
+                reasoning: r.get(10)?,
             })
         })
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?
@@ -3813,7 +3860,7 @@ fn fetch_group_sessions_data(
         .map(|r| r.unwrap())
         .collect();
 
-    let sql_msg = format!("SELECT id, session_id, role, content, speaker_character_id, turn_number, created_at, prompt_tokens, completion_tokens, total_tokens, selected_variant_id, is_pinned, attachments, used_lorebook_entries, reasoning, selection_reasoning, model_id FROM group_messages WHERE session_id IN ({})", placeholders);
+    let sql_msg = format!("SELECT id, session_id, role, content, speaker_character_id, turn_number, created_at, prompt_tokens, completion_tokens, total_tokens, first_token_ms, tokens_per_second, mtp_stats, selected_variant_id, is_pinned, attachments, used_lorebook_entries, memory_refs, reasoning, selection_reasoning, model_id FROM group_messages WHERE session_id IN ({})", placeholders);
     let mut stmt = conn
         .prepare(&sql_msg)
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
@@ -3830,20 +3877,24 @@ fn fetch_group_sessions_data(
                 prompt_tokens: r.get(7)?,
                 completion_tokens: r.get(8)?,
                 total_tokens: r.get(9)?,
-                selected_variant_id: r.get(10)?,
-                is_pinned: r.get(11)?,
-                attachments: r.get(12)?,
-                used_lorebook_entries: r.get(13)?,
-                reasoning: r.get(14)?,
-                selection_reasoning: r.get(15)?,
-                model_id: r.get(16)?,
+                first_token_ms: r.get(10)?,
+                tokens_per_second: r.get(11)?,
+                mtp_stats: r.get(12)?,
+                selected_variant_id: r.get(13)?,
+                is_pinned: r.get(14)?,
+                attachments: r.get(15)?,
+                used_lorebook_entries: r.get(16)?,
+                memory_refs: r.get(17)?,
+                reasoning: r.get(18)?,
+                selection_reasoning: r.get(19)?,
+                model_id: r.get(20)?,
             })
         })
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?
         .map(|r| r.unwrap())
         .collect();
 
-    let sql_var = format!("SELECT id, message_id, content, speaker_character_id, created_at, prompt_tokens, completion_tokens, total_tokens, reasoning, selection_reasoning, model_id FROM group_message_variants WHERE message_id IN (SELECT id FROM group_messages WHERE session_id IN ({}))", placeholders);
+    let sql_var = format!("SELECT id, message_id, content, speaker_character_id, created_at, prompt_tokens, completion_tokens, total_tokens, first_token_ms, tokens_per_second, mtp_stats, reasoning, selection_reasoning, model_id FROM group_message_variants WHERE message_id IN (SELECT id FROM group_messages WHERE session_id IN ({}))", placeholders);
     let mut stmt = conn
         .prepare(&sql_var)
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
@@ -3858,9 +3909,12 @@ fn fetch_group_sessions_data(
                 prompt_tokens: r.get(5)?,
                 completion_tokens: r.get(6)?,
                 total_tokens: r.get(7)?,
-                reasoning: r.get(8)?,
-                selection_reasoning: r.get(9)?,
-                model_id: r.get(10)?,
+                first_token_ms: r.get(8)?,
+                tokens_per_second: r.get(9)?,
+                mtp_stats: r.get(10)?,
+                reasoning: r.get(11)?,
+                selection_reasoning: r.get(12)?,
+                model_id: r.get(13)?,
             })
         })
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?
