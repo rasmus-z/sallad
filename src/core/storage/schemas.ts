@@ -521,6 +521,14 @@ export const AdvancedModelSettingsSchema = z.object({
   // Caching settings
   promptCachingEnabled: z.boolean().nullable().optional(),
   promptCachingTtl: z.string().nullish().optional(),
+  openRouterProvider: z
+    .object({
+      id: z.string().trim().min(1),
+      name: z.string().trim().min(1),
+      logoUrl: z.string().url().nullable().optional(),
+    })
+    .nullable()
+    .optional(),
 });
 
 export type AdvancedModelSettings = z.infer<typeof AdvancedModelSettingsSchema>;

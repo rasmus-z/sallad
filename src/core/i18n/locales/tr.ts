@@ -4259,6 +4259,16 @@ export const trMessages: DeepPartialMessageTree<LocaleMessages> = {
       free: "Ücretsiz",
       input: "Giriş {{price}}",
       output: "Çıkış {{price}}",
+      cacheRead: "Önbellek okuma {{price}}",
+      cacheWrite: "Önbellek yazma {{price}}",
+    },
+    providerPin: {
+      action: "Sağlayıcı sabitle", change: "Sağlayıcıyı değiştir", title: "Sağlayıcı sabitle",
+      pinned: "Sabitlenmiş sağlayıcı", clear: "Otomatik yönlendirmeyi kullan",
+      loading: "Sağlayıcılar yükleniyor...", error: "Sağlayıcılar yüklenemedi.",
+      empty: "Bu model için şu anda kullanılabilir sağlayıcı yok.", cacheSupported: "Önbellekleme",
+      sortButtonHint: "Sağlayıcı sıralamasını değiştir",
+      sort: { price: "En ucuz", uptime: "Çalışma süresi", caching: "Önbellekleme", alphabetical: "A–Z" },
     },
     sdOffload: {
       auto: "Otomatik",

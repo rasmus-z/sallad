@@ -8915,6 +8915,16 @@ export const jaMessages: DeepPartialMessageTree<LocaleMessages> = {
       free: "無料",
       input: "入力 {{price}}",
       output: "出力 {{price}}",
+      cacheRead: "キャッシュ読み取り {{price}}",
+      cacheWrite: "キャッシュ書き込み {{price}}",
+    },
+    providerPin: {
+      action: "プロバイダーを固定", change: "プロバイダーを変更", title: "プロバイダーを固定",
+      pinned: "固定中のプロバイダー", clear: "自動ルーティングを使用",
+      loading: "プロバイダーを読み込み中...", error: "プロバイダーを読み込めませんでした。",
+      empty: "このモデルで現在利用可能なプロバイダーはありません。", cacheSupported: "キャッシュ",
+      sortButtonHint: "プロバイダーの並び順を変更",
+      sort: { price: "価格が安い順", uptime: "稼働率", caching: "キャッシュ", alphabetical: "五十音順" },
     },
     sdOffload: {
       auto: "自動",

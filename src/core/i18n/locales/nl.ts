@@ -4541,6 +4541,16 @@ export const nlMessages: DeepPartialMessageTree<LocaleMessages> = {
       free: "Gratis",
       input: "Invoer {{price}}",
       output: "Uitvoer {{price}}",
+      cacheRead: "Cache lezen {{price}}",
+      cacheWrite: "Cache schrijven {{price}}",
+    },
+    providerPin: {
+      action: "Provider vastzetten", change: "Provider wijzigen", title: "Provider vastzetten",
+      pinned: "Vastgezette provider", clear: "Automatische routering gebruiken",
+      loading: "Providers laden...", error: "Providers konden niet worden geladen.",
+      empty: "Er zijn momenteel geen providers beschikbaar voor dit model.", cacheSupported: "Caching",
+      sortButtonHint: "Sortering van providers wijzigen",
+      sort: { price: "Goedkoopste", uptime: "Beschikbaarheid", caching: "Caching", alphabetical: "A–Z" },
     },
     sdOffload: {
       auto: "Auto",

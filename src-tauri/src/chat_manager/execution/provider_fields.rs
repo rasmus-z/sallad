@@ -732,6 +732,23 @@ pub(crate) fn build_provider_extra_fields(
         extra.insert("promptCachingTtl".to_string(), json!(ttl));
     }
 
+    if provider_id == "openrouter" {
+        if let Some(pinned) = model
+            .advanced_model_settings
+            .as_ref()
+            .and_then(|cfg| cfg.open_router_provider.as_ref())
+            .filter(|provider| !provider.id.trim().is_empty())
+        {
+            extra.insert(
+                "provider".to_string(),
+                json!({
+                    "order": [pinned.id.trim()],
+                    "allow_fallbacks": false,
+                }),
+            );
+        }
+    }
+
     if extra.is_empty() {
         None
     } else {

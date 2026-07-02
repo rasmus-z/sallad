@@ -241,6 +241,13 @@ export function sanitizeAdvancedModelSettings(input: AdvancedModelSettings): Adv
     forceSendThinkingState: input.forceSendThinkingState ?? null,
     promptCachingEnabled: input.promptCachingEnabled ?? null,
     promptCachingTtl: input.promptCachingTtl ?? "5min",
+    openRouterProvider: input.openRouterProvider
+      ? {
+          id: input.openRouterProvider.id.trim(),
+          name: input.openRouterProvider.name.trim(),
+          logoUrl: input.openRouterProvider.logoUrl ?? null,
+        }
+      : null,
   };
 }
 

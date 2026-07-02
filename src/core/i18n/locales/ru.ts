@@ -4259,6 +4259,16 @@ export const ruMessages: DeepPartialMessageTree<LocaleMessages> = {
       free: "Бесплатно",
       input: "Ввод {{price}}",
       output: "Вывод {{price}}",
+      cacheRead: "Чтение кэша {{price}}",
+      cacheWrite: "Запись кэша {{price}}",
+    },
+    providerPin: {
+      action: "Закрепить провайдера", change: "Сменить провайдера", title: "Закрепить провайдера",
+      pinned: "Закреплённый провайдер", clear: "Использовать автоматическую маршрутизацию",
+      loading: "Загрузка провайдеров...", error: "Не удалось загрузить провайдеров.",
+      empty: "Для этой модели сейчас нет доступных провайдеров.", cacheSupported: "Кэширование",
+      sortButtonHint: "Изменить сортировку провайдеров",
+      sort: { price: "Сначала дешёвые", uptime: "Доступность", caching: "Кэширование", alphabetical: "А–Я" },
     },
     sdOffload: {
       auto: "Авто",

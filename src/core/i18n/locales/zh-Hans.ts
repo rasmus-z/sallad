@@ -4259,6 +4259,16 @@ export const zhHansMessages: DeepPartialMessageTree<LocaleMessages> = {
       free: "免费",
       input: "输入 {{price}}",
       output: "输出 {{price}}",
+      cacheRead: "缓存读取 {{price}}",
+      cacheWrite: "缓存写入 {{price}}",
+    },
+    providerPin: {
+      action: "固定服务商", change: "更换服务商", title: "固定服务商",
+      pinned: "已固定的服务商", clear: "使用自动路由",
+      loading: "正在加载服务商...", error: "无法加载服务商。",
+      empty: "此模型当前没有可用的服务商。", cacheSupported: "缓存",
+      sortButtonHint: "更改服务商排序",
+      sort: { price: "价格最低", uptime: "可用率", caching: "缓存", alphabetical: "字母顺序" },
     },
     sdOffload: {
       auto: "自动",

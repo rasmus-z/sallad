@@ -7680,6 +7680,16 @@ export const plMessages: DeepPartialMessageTree<LocaleMessages> = {
       free: "Darmowy",
       input: "Wejście {{price}}",
       output: "Wyjście {{price}}",
+      cacheRead: "Odczyt pamięci podręcznej {{price}}",
+      cacheWrite: "Zapis pamięci podręcznej {{price}}",
+    },
+    providerPin: {
+      action: "Przypnij dostawcę", change: "Zmień dostawcę", title: "Przypnij dostawcę",
+      pinned: "Przypięty dostawca", clear: "Użyj automatycznego routingu",
+      loading: "Ładowanie dostawców...", error: "Nie udało się załadować dostawców.",
+      empty: "Brak dostępnych dostawców dla tego modelu.", cacheSupported: "Pamięć podręczna",
+      sortButtonHint: "Zmień sortowanie dostawców",
+      sort: { price: "Najtańsze", uptime: "Dostępność", caching: "Pamięć podręczna", alphabetical: "A–Z" },
     },
     sdOffload: {
       auto: "Auto",

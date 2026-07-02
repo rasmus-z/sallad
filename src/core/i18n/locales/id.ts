@@ -8915,6 +8915,16 @@ export const idMessages: DeepPartialMessageTree<LocaleMessages> = {
       free: "Gratis",
       input: "Input {{price}}",
       output: "Output {{price}}",
+      cacheRead: "Baca cache {{price}}",
+      cacheWrite: "Tulis cache {{price}}",
+    },
+    providerPin: {
+      action: "Sematkan penyedia", change: "Ganti penyedia", title: "Sematkan penyedia",
+      pinned: "Penyedia tersemat", clear: "Gunakan perutean otomatis",
+      loading: "Memuat penyedia...", error: "Penyedia tidak dapat dimuat.",
+      empty: "Saat ini tidak ada penyedia untuk model ini.", cacheSupported: "Cache",
+      sortButtonHint: "Ubah urutan penyedia",
+      sort: { price: "Termurah", uptime: "Waktu aktif", caching: "Cache", alphabetical: "A–Z" },
     },
     sdOffload: {
       auto: "Otomatis",

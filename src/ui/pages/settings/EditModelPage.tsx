@@ -70,6 +70,7 @@ import {
   Layers,
   MemoryStick,
   Pin,
+  ArrowUpDown,
   Cpu,
   type LucideIcon,
 } from "lucide-react";
@@ -103,6 +104,21 @@ type DownloadedGgufModel = {
 };
 
 type LocalLibraryPickerMode = "model" | "mmproj" | "mtp";
+
+type OpenRouterEndpoint = {
+  id: string;
+  name: string;
+  logoUrl?: string | null;
+  promptPrice: string;
+  completionPrice: string;
+  contextLength?: number | null;
+  uptimeLast30m?: number | null;
+  supportsPromptCaching: boolean;
+  cacheReadPrice?: string | null;
+  cacheWritePrice?: string | null;
+};
+
+type ProviderSortMode = "price" | "uptime" | "caching" | "alphabetical";
 
 type SdModelRole =
   | "checkpoint"
@@ -426,6 +442,11 @@ export function EditModelPage() {
     "balanced" | "throughput" | "vram" | "cpu_ram" | null
   >(null);
   const [showPlatformSelector, setShowPlatformSelector] = useState(false);
+  const [showProviderPicker, setShowProviderPicker] = useState(false);
+  const [openRouterEndpoints, setOpenRouterEndpoints] = useState<OpenRouterEndpoint[]>([]);
+  const [providerEndpointsLoading, setProviderEndpointsLoading] = useState(false);
+  const [providerEndpointsError, setProviderEndpointsError] = useState<string | null>(null);
+  const [providerSortMode, setProviderSortMode] = useState<ProviderSortMode>("price");
   const [sdEntries, setSdEntries] = useState<SdModelEntry[] | null>(null);
   const [showSdModelPicker, setShowSdModelPicker] = useState(false);
   const [sdFilesDraft, setSdFilesDraft] = useState<Record<string, string>>({});
@@ -570,6 +591,67 @@ export function EditModelPage() {
   const isOnboardingReturnFlow = !!returnTo?.startsWith("/onboarding");
   const isLocalModel = editorModel?.providerId === "llamacpp";
   const isOllamaModel = editorModel?.providerId === "ollama";
+  const pinnedOpenRouterProvider = modelAdvancedDraft.openRouterProvider ?? null;
+  const sortedOpenRouterEndpoints = useMemo(() => {
+    const endpoints = [...openRouterEndpoints];
+    if (providerSortMode === "alphabetical") {
+      return endpoints.sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id));
+    }
+    if (providerSortMode === "uptime") {
+      return endpoints.sort(
+        (a, b) =>
+          (b.uptimeLast30m ?? -1) - (a.uptimeLast30m ?? -1) || a.name.localeCompare(b.name),
+      );
+    }
+    const totalPrice = (endpoint: OpenRouterEndpoint) =>
+      Number(endpoint.promptPrice || 0) + Number(endpoint.completionPrice || 0);
+    if (providerSortMode === "caching") {
+      return endpoints.sort(
+        (a, b) =>
+          Number(b.supportsPromptCaching) - Number(a.supportsPromptCaching) ||
+          totalPrice(a) - totalPrice(b) ||
+          a.name.localeCompare(b.name),
+      );
+    }
+    return endpoints.sort(
+      (a, b) => totalPrice(a) - totalPrice(b) || a.name.localeCompare(b.name),
+    );
+  }, [openRouterEndpoints, providerSortMode]);
+
+  const cycleProviderSortMode = () => {
+    setProviderSortMode((current) =>
+      current === "price"
+        ? "uptime"
+        : current === "uptime"
+          ? "caching"
+          : current === "caching"
+            ? "alphabetical"
+            : "price",
+    );
+  };
+
+  const clearPinnedOpenRouterProvider = () => {
+    if (!modelAdvancedDraft.openRouterProvider) return;
+    setModelAdvancedDraft({ ...modelAdvancedDraft, openRouterProvider: null });
+  };
+
+  const openProviderPicker = async () => {
+    if (!editorModel?.name.trim()) return;
+    setShowProviderPicker(true);
+    setProviderEndpointsLoading(true);
+    setProviderEndpointsError(null);
+    try {
+      const endpoints = await invoke<OpenRouterEndpoint[]>("get_openrouter_endpoints", {
+        modelId: editorModel.name.trim(),
+      });
+      setOpenRouterEndpoints(endpoints);
+    } catch (error) {
+      setOpenRouterEndpoints([]);
+      setProviderEndpointsError(String(error));
+    } finally {
+      setProviderEndpointsLoading(false);
+    }
+  };
   const llamaRuntimeReport = modelAdvancedDraft.llamaLastRuntimeReport ?? null;
   const llamaRuntimeFacts = useMemo(() => {
     if (!llamaRuntimeReport) {
@@ -1082,9 +1164,10 @@ export function EditModelPage() {
   }, [searchQuery]);
 
   const isOpenRouterProvider = editorModel?.providerId === "openrouter";
-  const formatOpenRouterPricePerMillion = (price?: number) => {
-    if (typeof price !== "number" || !Number.isFinite(price)) return null;
-    const perMillion = price * 1_000_000;
+  const formatOpenRouterPricePerMillion = (price?: number | string | null) => {
+    const numericPrice = typeof price === "string" ? Number(price) : price;
+    if (typeof numericPrice !== "number" || !Number.isFinite(numericPrice)) return null;
+    const perMillion = numericPrice * 1_000_000;
     if (perMillion <= 0) return t("editModel.pricing.free");
     if (perMillion >= 100) return `$${perMillion.toFixed(0)}/M`;
     if (perMillion >= 10) return `$${perMillion.toFixed(1)}/M`;
@@ -2041,6 +2124,9 @@ export function EditModelPage() {
 
   const handleSelectModel = (modelId: string, displayName?: string) => {
     const fetchedModel = fetchedModels.find((model) => model.id === modelId);
+    if (modelId !== editorModel?.name) {
+      clearPinnedOpenRouterProvider();
+    }
     handleModelNameChange(modelId);
     if (displayName) {
       handleDisplayNameChange(displayName);
@@ -2419,6 +2505,17 @@ export function EditModelPage() {
                         label={modelIdLabel}
                         action={
                           <div className="flex flex-wrap items-center justify-end gap-2">
+                            {isOpenRouterProvider && editorModel.name.trim() && (
+                              <button
+                                type="button"
+                                onClick={() => void openProviderPicker()}
+                                className="text-[13px] font-medium text-accent/80 transition hover:text-accent"
+                              >
+                                {pinnedOpenRouterProvider
+                                  ? t("editModel.providerPin.change")
+                                  : t("editModel.providerPin.action")}
+                              </button>
+                            )}
                             {fetchedModels.length > 0 && modelFetchEnabledForSelectedProvider && (
                               <button
                                 type="button"
@@ -2558,7 +2655,12 @@ export function EditModelPage() {
                             <input
                               type="text"
                               value={editorModel.name}
-                              onChange={(e) => handleModelNameChange(e.target.value)}
+                              onChange={(e) => {
+                                if (e.target.value !== editorModel.name) {
+                                  clearPinnedOpenRouterProvider();
+                                }
+                                handleModelNameChange(e.target.value);
+                              }}
                               placeholder={modelIdPlaceholder}
                               className="w-full rounded-lg border border-fg/10 bg-surface-el/20 px-4 py-3 font-mono text-[13px] text-fg placeholder-fg/40 transition focus:border-fg/30 focus:outline-none"
                             />
@@ -2571,6 +2673,197 @@ export function EditModelPage() {
                               )}
                           </>
                         )}
+
+                        {isOpenRouterProvider && pinnedOpenRouterProvider && (
+                          <button
+                            type="button"
+                            onClick={() => void openProviderPicker()}
+                            className="mt-2 flex w-full items-center gap-3 rounded-lg border border-fg/10 bg-fg/[0.035] px-3 py-2.5 text-left transition hover:border-fg/20 hover:bg-fg/[0.06]"
+                          >
+                            <span className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-md border border-fg/10 bg-surface-el text-[11px] font-semibold text-fg/55">
+                              {pinnedOpenRouterProvider.name.slice(0, 2).toUpperCase()}
+                              {pinnedOpenRouterProvider.logoUrl && (
+                                <img
+                                  src={pinnedOpenRouterProvider.logoUrl}
+                                  alt=""
+                                  className="absolute inset-0 h-full w-full bg-surface-el object-contain p-1"
+                                  onError={(event) => {
+                                    event.currentTarget.style.display = "none";
+                                  }}
+                                />
+                              )}
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span className="block text-[12px] text-fg/40">
+                                {t("editModel.providerPin.pinned")}
+                              </span>
+                              <span className="block truncate text-[13px] font-medium text-fg/85">
+                                {pinnedOpenRouterProvider.name}
+                              </span>
+                            </span>
+                            <Pin className="h-4 w-4 shrink-0 text-accent/70" />
+                          </button>
+                        )}
+
+                        <BottomMenu
+                          isOpen={showProviderPicker}
+                          onClose={() => setShowProviderPicker(false)}
+                          title={t("editModel.providerPin.title")}
+                          leftAction={
+                            pinnedOpenRouterProvider ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  clearPinnedOpenRouterProvider();
+                                  setShowProviderPicker(false);
+                                }}
+                                className="text-[13px] font-medium text-fg/55 transition hover:text-fg"
+                              >
+                                {t("editModel.providerPin.clear")}
+                              </button>
+                            ) : null
+                          }
+                          rightAction={
+                            <button
+                              type="button"
+                              onClick={cycleProviderSortMode}
+                              className="inline-flex items-center gap-1.5 rounded-md border border-fg/10 bg-fg/5 px-2.5 py-1.5 text-[12px] font-medium text-fg/65 transition hover:border-fg/20 hover:bg-fg/10 hover:text-fg"
+                              title={t("editModel.providerPin.sortButtonHint")}
+                            >
+                              <ArrowUpDown className="h-3.5 w-3.5" />
+                              {t(`editModel.providerPin.sort.${providerSortMode}`)}
+                            </button>
+                          }
+                        >
+                          <div className="max-h-[50vh] space-y-2 overflow-y-auto">
+                            {providerEndpointsLoading ? (
+                              <div className="flex items-center justify-center gap-2 py-12 text-fg/50">
+                                <Loader className="h-4 w-4 animate-spin" />
+                                <span className="text-[13px]">{t("editModel.providerPin.loading")}</span>
+                              </div>
+                            ) : providerEndpointsError ? (
+                              <div className="px-4 py-10 text-center">
+                                <p className="text-[13px] text-danger/80">
+                                  {t("editModel.providerPin.error")}
+                                </p>
+                                <button
+                                  type="button"
+                                  onClick={() => void openProviderPicker()}
+                                  className="mt-3 text-[13px] font-medium text-accent"
+                                >
+                                  {t("common.buttons.retry")}
+                                </button>
+                              </div>
+                            ) : openRouterEndpoints.length === 0 ? (
+                              <p className="px-4 py-12 text-center text-[13px] text-fg/45">
+                                {t("editModel.providerPin.empty")}
+                              </p>
+                            ) : (
+                              sortedOpenRouterEndpoints.map((endpoint) => {
+                                const inputPrice = formatOpenRouterPricePerMillion(
+                                  endpoint.promptPrice,
+                                );
+                                const outputPrice = formatOpenRouterPricePerMillion(
+                                  endpoint.completionPrice,
+                                );
+                                const cacheReadPrice = formatOpenRouterPricePerMillion(
+                                  endpoint.cacheReadPrice,
+                                );
+                                const cacheWritePrice = formatOpenRouterPricePerMillion(
+                                  endpoint.cacheWritePrice,
+                                );
+                                const isSelected = pinnedOpenRouterProvider?.id === endpoint.id;
+                                return (
+                                  <button
+                                    key={endpoint.id}
+                                    type="button"
+                                    className={cn(
+                                      "flex w-full items-start gap-3 rounded-xl border px-3.5 py-3 text-left transition",
+                                      isSelected
+                                        ? "border-accent/40 bg-accent/10"
+                                        : "border-fg/10 bg-fg/5 hover:bg-fg/10",
+                                    )}
+                                    onClick={() => {
+                                      setModelAdvancedDraft({
+                                        ...modelAdvancedDraft,
+                                        openRouterProvider: {
+                                          id: endpoint.id,
+                                          name: endpoint.name,
+                                          logoUrl: endpoint.logoUrl ?? null,
+                                        },
+                                      });
+                                      setShowProviderPicker(false);
+                                    }}
+                                  >
+                                    <span className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-fg/10 bg-surface-el text-[10px] font-semibold text-fg/50">
+                                        {endpoint.name.slice(0, 2).toUpperCase()}
+                                        {endpoint.logoUrl && (
+                                          <img
+                                            src={endpoint.logoUrl}
+                                            alt=""
+                                            className="absolute inset-0 h-full w-full bg-surface-el object-contain p-1"
+                                            onError={(event) => {
+                                              event.currentTarget.style.display = "none";
+                                            }}
+                                          />
+                                        )}
+                                    </span>
+                                    <span className="min-w-0 flex-1">
+                                      <span className="block truncate text-sm text-fg">
+                                        {endpoint.name}
+                                      </span>
+                                      <span className="block truncate text-xs text-fg/40">
+                                        {endpoint.id}
+                                      </span>
+                                      <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-fg/35">
+                                        {inputPrice && (
+                                          <span>
+                                            {t("editModel.pricing.input", { price: inputPrice })}
+                                          </span>
+                                        )}
+                                        {outputPrice && (
+                                          <span>
+                                            {t("editModel.pricing.output", { price: outputPrice })}
+                                          </span>
+                                        )}
+                                        {cacheReadPrice && (
+                                          <span className="text-accent/70">
+                                            {t("editModel.pricing.cacheRead", {
+                                              price: cacheReadPrice,
+                                            })}
+                                          </span>
+                                        )}
+                                        {cacheWritePrice && (
+                                          <span className="text-accent/70">
+                                            {t("editModel.pricing.cacheWrite", {
+                                              price: cacheWritePrice,
+                                            })}
+                                          </span>
+                                        )}
+                                        {endpoint.contextLength && (
+                                          <span>{endpoint.contextLength.toLocaleString()} ctx</span>
+                                        )}
+                                        {endpoint.uptimeLast30m != null && (
+                                          <span>{endpoint.uptimeLast30m.toFixed(1)}% uptime</span>
+                                        )}
+                                        {endpoint.supportsPromptCaching &&
+                                          !cacheReadPrice &&
+                                          !cacheWritePrice && (
+                                          <span className="font-medium text-accent/70">
+                                            {t("editModel.providerPin.cacheSupported")}
+                                          </span>
+                                        )}
+                                      </span>
+                                    </span>
+                                    {isSelected && (
+                                      <Check className="h-4 w-4 shrink-0 text-accent/80" />
+                                    )}
+                                  </button>
+                                );
+                              })
+                            )}
+                          </div>
+                        </BottomMenu>
                       </FieldBlock>
                     </div>
                   )}

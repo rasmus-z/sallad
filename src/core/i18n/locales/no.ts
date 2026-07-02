@@ -4259,6 +4259,16 @@ export const noMessages: DeepPartialMessageTree<LocaleMessages> = {
       free: "Gratis",
       input: "Inndata {{price}}",
       output: "Utdata {{price}}",
+      cacheRead: "Cachelesing {{price}}",
+      cacheWrite: "Cacheskriving {{price}}",
+    },
+    providerPin: {
+      action: "Fest leverandør", change: "Bytt leverandør", title: "Fest leverandør",
+      pinned: "Festet leverandør", clear: "Bruk automatisk ruting",
+      loading: "Laster leverandører...", error: "Leverandørene kunne ikke lastes.",
+      empty: "Ingen leverandører er tilgjengelige for denne modellen nå.", cacheSupported: "Hurtigbuffer",
+      sortButtonHint: "Endre sortering av leverandører",
+      sort: { price: "Billigst", uptime: "Oppetid", caching: "Hurtigbuffer", alphabetical: "A–Å" },
     },
     sdOffload: {
       auto: "Auto",

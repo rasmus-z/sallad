@@ -4259,6 +4259,16 @@ export const frMessages: DeepPartialMessageTree<LocaleMessages> = {
       free: "Gratuit",
       input: "Entrée {{price}}",
       output: "Sortie {{price}}",
+      cacheRead: "Lecture du cache {{price}}",
+      cacheWrite: "Écriture du cache {{price}}",
+    },
+    providerPin: {
+      action: "Épingler un fournisseur", change: "Changer de fournisseur", title: "Épingler un fournisseur",
+      pinned: "Fournisseur épinglé", clear: "Utiliser le routage automatique",
+      loading: "Chargement des fournisseurs...", error: "Impossible de charger les fournisseurs.",
+      empty: "Aucun fournisseur n’est disponible pour ce modèle.", cacheSupported: "Mise en cache",
+      sortButtonHint: "Modifier le tri des fournisseurs",
+      sort: { price: "Moins chers", uptime: "Disponibilité", caching: "Mise en cache", alphabetical: "A–Z" },
     },
     sdOffload: {
       auto: "Auto",

@@ -91,6 +91,7 @@ const PARAMETER_LABELS: Record<keyof AdvancedModelSettings, string> = {
   forceSendThinkingState: "Force Send Thinking State",
   promptCachingEnabled: "Prompt Caching",
   promptCachingTtl: "Prompt Caching TTL",
+  openRouterProvider: "Pinned OpenRouter Provider",
 };
 
 const PARAMETER_DESCRIPTIONS: Record<keyof AdvancedModelSettings, string> = {
@@ -176,6 +177,7 @@ const PARAMETER_DESCRIPTIONS: Record<keyof AdvancedModelSettings, string> = {
   forceSendThinkingState: "Explicitly send enable_thinking instead of omitting it",
   promptCachingEnabled: "Enable prompt caching",
   promptCachingTtl: "How long a cached prompt prefix stays reusable",
+  openRouterProvider: "Route this model through one OpenRouter endpoint",
 };
 
 /**

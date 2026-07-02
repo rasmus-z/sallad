@@ -4259,6 +4259,16 @@ export const koMessages: DeepPartialMessageTree<LocaleMessages> = {
       free: "무료",
       input: "입력 {{price}}",
       output: "출력 {{price}}",
+      cacheRead: "캐시 읽기 {{price}}",
+      cacheWrite: "캐시 쓰기 {{price}}",
+    },
+    providerPin: {
+      action: "제공업체 고정", change: "제공업체 변경", title: "제공업체 고정",
+      pinned: "고정된 제공업체", clear: "자동 라우팅 사용",
+      loading: "제공업체 불러오는 중...", error: "제공업체를 불러올 수 없습니다.",
+      empty: "현재 이 모델에 사용 가능한 제공업체가 없습니다.", cacheSupported: "캐싱",
+      sortButtonHint: "제공업체 정렬 변경",
+      sort: { price: "낮은 가격순", uptime: "가동률", caching: "캐싱", alphabetical: "가나다순" },
     },
     sdOffload: {
       auto: "자동",

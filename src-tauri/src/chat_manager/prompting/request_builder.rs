@@ -313,19 +313,9 @@ pub fn build_chat_request(
     }
 
     if let Some(map) = body.as_object_mut() {
-        for (key, mut value) in extra_body_fields {
+        for (key, value) in extra_body_fields {
             if key == "promptCachingTtl" || key == "llamaStreamingEnabled" {
                 continue;
-            }
-            // OpenRouter sticky routing only applies to OpenRouter payloads.
-            if prompt_caching_enabled && credential.provider_id == "openrouter" && key == "provider"
-            {
-                if let Some(provider_obj) = value.as_object_mut() {
-                    provider_obj.remove("order");
-                    if provider_obj.is_empty() {
-                        continue; // Completely drop the "provider" key from the payload
-                    }
-                }
             }
             map.insert(key, value);
         }

@@ -4259,6 +4259,16 @@ export const zhHantMessages: DeepPartialMessageTree<LocaleMessages> = {
       free: "免費",
       input: "輸入 {{price}}",
       output: "輸出 {{price}}",
+      cacheRead: "快取讀取 {{price}}",
+      cacheWrite: "快取寫入 {{price}}",
+    },
+    providerPin: {
+      action: "固定供應商", change: "更換供應商", title: "固定供應商",
+      pinned: "已固定的供應商", clear: "使用自動路由",
+      loading: "正在載入供應商...", error: "無法載入供應商。",
+      empty: "此模型目前沒有可用的供應商。", cacheSupported: "快取",
+      sortButtonHint: "變更供應商排序",
+      sort: { price: "價格最低", uptime: "可用率", caching: "快取", alphabetical: "字母順序" },
     },
     sdOffload: {
       auto: "自動 (Auto)",

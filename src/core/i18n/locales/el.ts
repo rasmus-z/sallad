@@ -4259,6 +4259,16 @@ export const elMessages: DeepPartialMessageTree<LocaleMessages> = {
       free: "Δωρεάν",
       input: "Είσοδος {{price}}",
       output: "Έξοδος {{price}}",
+      cacheRead: "Ανάγνωση cache {{price}}",
+      cacheWrite: "Εγγραφή cache {{price}}",
+    },
+    providerPin: {
+      action: "Καρφίτσωμα παρόχου", change: "Αλλαγή παρόχου", title: "Καρφίτσωμα παρόχου",
+      pinned: "Καρφιτσωμένος πάροχος", clear: "Χρήση αυτόματης δρομολόγησης",
+      loading: "Φόρτωση παρόχων...", error: "Δεν ήταν δυνατή η φόρτωση των παρόχων.",
+      empty: "Δεν υπάρχουν διαθέσιμοι πάροχοι για αυτό το μοντέλο.", cacheSupported: "Προσωρινή μνήμη",
+      sortButtonHint: "Αλλαγή ταξινόμησης παρόχων",
+      sort: { price: "Φθηνότερα", uptime: "Διαθεσιμότητα", caching: "Προσωρινή μνήμη", alphabetical: "Α–Ω" },
     },
     sdOffload: {
       auto: "Αυτόματο",

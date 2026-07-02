@@ -721,6 +721,17 @@ pub struct AdvancedModelSettings {
     #[serde(default)]
     pub prompt_caching_enabled: Option<bool>,
     pub prompt_caching_ttl: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub open_router_provider: Option<OpenRouterPinnedProvider>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct OpenRouterPinnedProvider {
+    pub id: String,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub logo_url: Option<String>,
 }
 
 impl Default for AdvancedModelSettings {
@@ -805,6 +816,7 @@ impl Default for AdvancedModelSettings {
             force_send_thinking_state: None,
             prompt_caching_enabled: Some(false),
             prompt_caching_ttl: Some("5min".to_string()),
+            open_router_provider: None,
         }
     }
 }

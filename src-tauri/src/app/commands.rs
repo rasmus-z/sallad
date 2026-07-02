@@ -15,6 +15,7 @@ macro_rules! invoke_handler {
             crate::providers::get_provider_configs,
             crate::providers::commands::get_remote_models,
             crate::providers::openrouter::get_openrouter_models,
+            crate::providers::openrouter::get_openrouter_endpoints,
             crate::asr_manager::asr_vocabulary_list,
             crate::asr_manager::asr_vocabulary_upsert,
             crate::asr_manager::asr_vocabulary_delete,

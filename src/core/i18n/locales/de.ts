@@ -4259,6 +4259,16 @@ export const deMessages: DeepPartialMessageTree<LocaleMessages> = {
       free: "Kostenlos",
       input: "Eingabe {{price}}",
       output: "Ausgabe {{price}}",
+      cacheRead: "Cache-Lesen {{price}}",
+      cacheWrite: "Cache-Schreiben {{price}}",
+    },
+    providerPin: {
+      action: "Anbieter anheften", change: "Anbieter ändern", title: "Anbieter anheften",
+      pinned: "Angehefteter Anbieter", clear: "Automatische Weiterleitung verwenden",
+      loading: "Anbieter werden geladen...", error: "Anbieter konnten nicht geladen werden.",
+      empty: "Für dieses Modell sind derzeit keine Anbieter verfügbar.", cacheSupported: "Caching",
+      sortButtonHint: "Anbietersortierung ändern",
+      sort: { price: "Günstigste", uptime: "Verfügbarkeit", caching: "Caching", alphabetical: "A–Z" },
     },
     sdOffload: {
       auto: "Auto",

@@ -4259,6 +4259,16 @@ export const filMessages: DeepPartialMessageTree<LocaleMessages> = {
       free: "Libre",
       input: "Input {{price}}",
       output: "Output {{price}}",
+      cacheRead: "Pagbasa ng cache {{price}}",
+      cacheWrite: "Pagsulat sa cache {{price}}",
+    },
+    providerPin: {
+      action: "I-pin ang provider", change: "Palitan ang provider", title: "I-pin ang provider",
+      pinned: "Naka-pin na provider", clear: "Gamitin ang awtomatikong pagruruta",
+      loading: "Nilo-load ang mga provider...", error: "Hindi ma-load ang mga provider.",
+      empty: "Walang provider na available para sa modelong ito.", cacheSupported: "Caching",
+      sortButtonHint: "Baguhin ang pagkakasunod ng provider",
+      sort: { price: "Pinakamura", uptime: "Uptime", caching: "Caching", alphabetical: "A–Z" },
     },
     sdOffload: {
       auto: "Auto",

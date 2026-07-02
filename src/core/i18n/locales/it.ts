@@ -8915,6 +8915,16 @@ export const itMessages: DeepPartialMessageTree<LocaleMessages> = {
       free: "Gratuito",
       input: "Input {{price}}",
       output: "Output {{price}}",
+      cacheRead: "Lettura cache {{price}}",
+      cacheWrite: "Scrittura cache {{price}}",
+    },
+    providerPin: {
+      action: "Fissa un provider", change: "Cambia provider", title: "Fissa un provider",
+      pinned: "Provider fissato", clear: "Usa instradamento automatico",
+      loading: "Caricamento provider...", error: "Impossibile caricare i provider.",
+      empty: "Nessun provider è attualmente disponibile per questo modello.", cacheSupported: "Cache",
+      sortButtonHint: "Cambia ordinamento dei provider",
+      sort: { price: "Più economici", uptime: "Disponibilità", caching: "Cache", alphabetical: "A–Z" },
     },
     sdOffload: {
       auto: "Auto",

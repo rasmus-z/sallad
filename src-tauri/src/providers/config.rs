@@ -74,8 +74,10 @@ fn supported_extra_body_keys(provider_id: &str) -> &'static [&'static str] {
         ],
         "ollama" => &["options"],
         // express omitted on purpose — it uses Gemini's implicit caching, no explicit toggle
-        "anthropic" | "custom-anthropic" | "openrouter" | "openai" | "gemini" | "google"
-        | "google-gemini" => &["promptCachingTtl"],
+        "openrouter" => &["promptCachingTtl", "provider"],
+        "anthropic" | "custom-anthropic" | "openai" | "gemini" | "google" | "google-gemini" => {
+            &["promptCachingTtl"]
+        }
         _ => &[],
     }
 }

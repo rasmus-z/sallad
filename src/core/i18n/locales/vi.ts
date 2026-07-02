@@ -7680,6 +7680,16 @@ export const viMessages: DeepPartialMessageTree<LocaleMessages> = {
       free: "Miễn phí",
       input: "Đầu vào {{price}}",
       output: "Đầu ra {{price}}",
+      cacheRead: "Đọc bộ nhớ đệm {{price}}",
+      cacheWrite: "Ghi bộ nhớ đệm {{price}}",
+    },
+    providerPin: {
+      action: "Ghim nhà cung cấp", change: "Đổi nhà cung cấp", title: "Ghim nhà cung cấp",
+      pinned: "Nhà cung cấp đã ghim", clear: "Dùng định tuyến tự động",
+      loading: "Đang tải nhà cung cấp...", error: "Không thể tải nhà cung cấp.",
+      empty: "Hiện không có nhà cung cấp nào cho mô hình này.", cacheSupported: "Bộ nhớ đệm",
+      sortButtonHint: "Thay đổi cách sắp xếp nhà cung cấp",
+      sort: { price: "Rẻ nhất", uptime: "Thời gian hoạt động", caching: "Bộ nhớ đệm", alphabetical: "A–Z" },
     },
     sdOffload: {
       auto: "Tự động",

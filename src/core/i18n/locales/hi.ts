@@ -8915,6 +8915,16 @@ export const hiMessages: DeepPartialMessageTree<LocaleMessages> = {
       free: "मुफ़्त",
       input: "इनपुट {{price}}",
       output: "आउटपुट {{price}}",
+      cacheRead: "कैश रीड {{price}}",
+      cacheWrite: "कैश राइट {{price}}",
+    },
+    providerPin: {
+      action: "प्रोवाइडर पिन करें", change: "प्रोवाइडर बदलें", title: "प्रोवाइडर पिन करें",
+      pinned: "पिन किया गया प्रोवाइडर", clear: "ऑटोमैटिक रूटिंग इस्तेमाल करें",
+      loading: "प्रोवाइडर लोड हो रहे हैं...", error: "प्रोवाइडर लोड नहीं किए जा सके।",
+      empty: "इस मॉडल के लिए अभी कोई प्रोवाइडर उपलब्ध नहीं है।", cacheSupported: "कैशिंग",
+      sortButtonHint: "प्रोवाइडर क्रम बदलें",
+      sort: { price: "सबसे सस्ता", uptime: "अपटाइम", caching: "कैशिंग", alphabetical: "अ–ह" },
     },
     sdOffload: {
       auto: "ऑटो",
