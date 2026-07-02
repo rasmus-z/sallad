@@ -315,7 +315,8 @@ export const enMessages = {
       corners: "Rounded corners",
       cornersDesc: "Round the window edges (square when maximized)",
       cornersOff: "Off",
-      flagsNote: "Launch flags --osdecorations (OS title bar) and --nobuttons (no controls) override this setting.",
+      flagsNote:
+        "Launch flags --osdecorations (OS title bar) and --nobuttons (no controls) override this setting.",
     },
     language: {
       appLanguage: "App language",
@@ -535,7 +536,8 @@ export const enMessages = {
       namePlaceholder: "e.g., Roleplay Master",
       content: "Content",
       variablesButton: "Variables",
-      contentPlaceholder: "You are a helpful AI assistant...\n\nUse {{char.name}} and {{scene}} in your prompt.",
+      contentPlaceholder:
+        "You are a helpful AI assistant...\n\nUse {{char.name}} and {{scene}} in your prompt.",
       characterCount: "{{count}} characters",
       preview: "Preview",
       characterPlaceholder: "Character…",
@@ -581,16 +583,20 @@ export const enMessages = {
     embeddingDownload: {
       downloadRequired: "Download Required",
       modelRequired: "Embedding Model Required",
-      description: "Dynamic Memory now downloads local memory and companion-analysis models (~265 MB for the default bundle).",
+      description:
+        "Dynamic Memory now downloads local memory and companion-analysis models (~265 MB for the default bundle).",
       localStorage: "• Model will be stored locally on your device",
       downloadSize: "• Download size: approximately 265 MB for the default bundle",
       summarization: "• Required for conversation summarization",
     },
     embeddingUpgrade: {
       title: "Embedding Model v4 Available",
-      v1Message: "You're using v1 with 512 tokens. Upgrade to v4 for better memory quality and long-context support.",
-      v2Message: "You're using legacy v2. Upgrade to v4 for better memory quality with the latest embedding model.",
-      v3Message: "v4 is out and dramatically improves roleplay memory recall over v3 (recall@1 0.02 -> 0.92). Upgrading is recommended.",
+      v1Message:
+        "You're using v1 with 512 tokens. Upgrade to v4 for better memory quality and long-context support.",
+      v2Message:
+        "You're using legacy v2. Upgrade to v4 for better memory quality with the latest embedding model.",
+      v3Message:
+        "v4 is out and dramatically improves roleplay memory recall over v3 (recall@1 0.02 -> 0.92). Upgrading is recommended.",
       button: "Upgrade to v4",
     },
     v2UpgradeToast: {
@@ -609,7 +615,8 @@ export const enMessages = {
     v3UpgradeToast: {
       title: "Memory model v4",
       badge: "Available",
-      message: "v4 dramatically improves roleplay memory recall over v3 (recall@1 0.02 → 0.92). Upgrading is recommended.",
+      message:
+        "v4 dramatically improves roleplay memory recall over v3 (recall@1 0.02 → 0.92). Upgrading is recommended.",
       dismiss: "Later",
       upgrade: "Upgrade",
     },
@@ -688,7 +695,8 @@ export const enMessages = {
       topKDesc: "Limit token pool size",
       reasoning: "Thinking / Reasoning",
       reasoningAutoDesc: "This model always uses reasoning. No configuration needed.",
-      reasoningEnableDesc: "Enable advanced thinking capabilities for complex problem solving and reasoning tasks.",
+      reasoningEnableDesc:
+        "Enable advanced thinking capabilities for complex problem solving and reasoning tasks.",
       effortMode: "Effort Mode",
       budgetMode: "Budget Mode",
       reasoningEffort: "Reasoning Effort",
@@ -710,8 +718,10 @@ export const enMessages = {
       reasoningNotSupportedBudgetOnly: "Not supported - this provider uses budget-only approach",
       reasoningNotSupported: "Not supported - this provider doesn't support reasoning",
       unsupportedParametersIgnored: "Unsupported parameters will be ignored by {{providerName}}.",
-      reasoningEffortSupported: "Reasoning effort is supported for thinking models (o1, DeepSeek-R1, etc.)",
-      reasoningBudgetSupported: "This provider uses budget-based thinking (no effort levels). Set reasoning budget tokens instead.",
+      reasoningEffortSupported:
+        "Reasoning effort is supported for thinking models (o1, DeepSeek-R1, etc.)",
+      reasoningBudgetSupported:
+        "This provider uses budget-based thinking (no effort levels). Set reasoning budget tokens instead.",
       reasoningNotSupportedProvider: "This provider doesn't support reasoning parameters.",
       matrixTitle: "Provider Parameter Support Matrix",
       providerColumn: "Provider",
@@ -720,7 +730,8 @@ export const enMessages = {
     },
     extra: {
       promptCachingTitle: "Prompt Caching",
-      promptCachingDescription: "Speeds up generation and reduces costs for long, repetitive contexts (like large system prompts or deep chat histories).",
+      promptCachingDescription:
+        "Speeds up generation and reduces costs for long, repetitive contexts (like large system prompts or deep chat histories).",
       avatarAlt: "Avatar",
       chooseFromLibrary: "Choose from library",
       chooseFromLibraryDesc: "Use an image already saved in the app",
@@ -743,8 +754,10 @@ export const enMessages = {
       referenceImagesLabel: "Reference images",
       writerHelpFallback: "the compatible scene writer model",
       writerHelpUses: "Uses {{model}} to draft from your avatar and reference images.",
-      writerHelpUnavailable: "Add a compatible scene writer model in Image Generation settings to draft this automatically.",
-      writerNotAvailableError: "Add a compatible scene writer model in Image Generation settings first.",
+      writerHelpUnavailable:
+        "Add a compatible scene writer model in Image Generation settings to draft this automatically.",
+      writerNotAvailableError:
+        "Add a compatible scene writer model in Image Generation settings first.",
       writerNoSourcesError: "Add an avatar or at least one reference image before generating.",
       noUsableReferences: "No usable reference images were found.",
       draftFailed: "Failed to generate design description.",
@@ -755,25 +768,33 @@ export const enMessages = {
       draftedBy: "Drafted by {{model}} from the current avatar and reference images.",
       draftedByFallback: "your scene writer model",
       noWriterUseHelper: "Add a compatible scene writer model before using this helper.",
-      emptyReferences: "Add a few clear reference shots to lock face, proportions, outfit, and style.",
+      emptyReferences:
+        "Add a few clear reference shots to lock face, proportions, outfit, and style.",
       designReferencesTitle: "Design references",
-      designReferencesDescription: "Upload a few clear reference images plus one canonical visual description.",
-      designReferencesPlaceholder: "Describe the stable look: face, hair, build, age presentation, outfit cues, accessories, and art/style direction.",
+      designReferencesDescription:
+        "Upload a few clear reference images plus one canonical visual description.",
+      designReferencesPlaceholder:
+        "Describe the stable look: face, hair, build, age presentation, outfit cues, accessories, and art/style direction.",
       dismissAria: "Dismiss",
-      v3MessageFallback: "lettuce-emb-v4 is out and dramatically improves roleplay memory recall. Upgrading is recommended.",
+      v3MessageFallback:
+        "lettuce-emb-v4 is out and dramatically improves roleplay memory recall. Upgrading is recommended.",
       uploadButton: "Upload",
       libraryButton: "Library",
       companionSetupTitle: "Companion needs setup",
-      companionSetupSubtitleSingle: "Companion mode needs one more model before it can run. Skipping will switch this character back to Roleplay.",
-      companionSetupSubtitleMany: "Companion mode needs {{count}} more models before it can run. Skipping will switch this character back to Roleplay.",
-      companionSetupBody: "Companion mode needs some local models to analyze emotion, extract entities, route memories, and recall past context.",
+      companionSetupSubtitleSingle:
+        "Companion mode needs one more model before it can run. Skipping will switch this character back to Roleplay.",
+      companionSetupSubtitleMany:
+        "Companion mode needs {{count}} more models before it can run. Skipping will switch this character back to Roleplay.",
+      companionSetupBody:
+        "Companion mode needs some local models to analyze emotion, extract entities, route memories, and recall past context.",
       companionUseRoleplay: "Use Roleplay instead",
       companionDownloadNow: "Download now",
       searchModelsPlaceholder: "Search models...",
       loadingModelsDefault: "Loading models...",
       noModelsAvailable: "No models available.",
-      noModelsMatching: "No models found matching \"{{query}}\".",
-      contentPlaceholderText: "You are a helpful AI assistant...\n\nUse {{char.name}} and {{scene}} in your prompt.",
+      noModelsMatching: 'No models found matching "{{query}}".',
+      contentPlaceholderText:
+        "You are a helpful AI assistant...\n\nUse {{char.name}} and {{scene}} in your prompt.",
       previewRenderFailed: "<failed to render preview>",
       charactersCount: "{{count}} characters",
     },
@@ -863,7 +884,7 @@ export const enMessages = {
       empty: "No branches in this conversation yet",
       branchedFrom: "Branched from {{title}}",
       goToParentTitle: "Go to parent branch?",
-      goToParentDesc: "This conversation branched from \"{{title}}\".",
+      goToParentDesc: 'This conversation branched from "{{title}}".',
       goToParentConfirm: "Open {{title}}",
       goToParentCancel: "Stay here",
       branchesFromHere: "{{count}} branches from here",
@@ -909,10 +930,14 @@ export const enMessages = {
     hideThisCharacter: "Hide this character",
     deleteCharacter: "Delete Character",
     deleteCharacterTitle: "Delete Character?",
-    deleteCharacterConfirmation: "Are you sure you want to delete \"{{name}}\"? This will also delete all chat sessions with this character.",
-    characterSpecificMatches: "This package is character-specific and matches the selected character.",
-    characterSpecificMismatch: "This package is character-specific and points to another character. It will be imported into {{name}}.",
-    nonCharacterSpecificImport: "This package is non-character-specific. It will be imported into {{name}}.",
+    deleteCharacterConfirmation:
+      'Are you sure you want to delete "{{name}}"? This will also delete all chat sessions with this character.',
+    characterSpecificMatches:
+      "This package is character-specific and matches the selected character.",
+    characterSpecificMismatch:
+      "This package is character-specific and points to another character. It will be imported into {{name}}.",
+    nonCharacterSpecificImport:
+      "This package is non-character-specific. It will be imported into {{name}}.",
     noCharactersYet: "No characters yet",
     createFirstCharacter: "Create your first character from the + button below to start chatting",
     scrollToBottom: "Scroll to bottom",
@@ -928,7 +953,8 @@ export const enMessages = {
     helpMeReply: "Help Me Reply",
     sceneImage: {
       modeTitle: "Scene Image",
-      modeDescription: "Choose whether to write the scene prompt yourself or let the AI draft it first.",
+      modeDescription:
+        "Choose whether to write the scene prompt yourself or let the AI draft it first.",
       writePrompt: "Write prompt",
       writePromptDesc: "Type the exact scene image prompt you want to use.",
       askAi: "Ask AI",
@@ -937,7 +963,8 @@ export const enMessages = {
       regenerateTitle: "Regenerate Scene Image",
       aiTitle: "AI Scene Prompt",
       promptLabel: "SCENE PROMPT",
-      promptPlaceholder: "Describe the scene, characters, mood, lighting, camera framing, and important details...",
+      promptPlaceholder:
+        "Describe the scene, characters, mood, lighting, camera framing, and important details...",
       suggestedPrompt: "Suggested prompt",
       regeneratePrompt: "Regenerate",
       editPrompt: "Edit prompt",
@@ -975,11 +1002,12 @@ export const enMessages = {
       noTag: "No tag",
       memoryFallbackTitle: "Memory",
       noPinnedMessages: "No pinned messages",
-      noPinnedMessagesDesc: "Pin important messages from the chat to always include them in context",
+      noPinnedMessagesDesc:
+        "Pin important messages from the chat to always include them in context",
       scrollToMessage: "Scroll to message",
       searchModels: "Search models...",
       loadingModels: "Loading available models...",
-      noModelsMatching: "No models found matching \"{{query}}\"",
+      noModelsMatching: 'No models found matching "{{query}}"',
       liveModelOutput: "Live model output",
       generating: "generating",
       tokensCount: "{{tokens}} tokens",
@@ -1004,7 +1032,8 @@ export const enMessages = {
       cycleStatusComplete: "complete",
       cycleStatusError: "failed",
       cycleStatusUnknown: "unknown",
-      skippedCycleNotice: "The previous Ask First cycle was skipped. Its messages will be included in the next cycle.",
+      skippedCycleNotice:
+        "The previous Ask First cycle was skipped. Its messages will be included in the next cycle.",
       failedUpdateTemperature: "Failed to update memory temperature",
       failedUnpinMessage: "Failed to unpin message",
       failedAddMemory: "Failed to add memory",
@@ -1106,11 +1135,13 @@ export const enMessages = {
       overridesCount: "Overrides ({{count}})",
       overridesSummary: "Overrides: {{summary}}",
       scheduledNotes: "Scheduled Notes",
-      scheduledNotesDesc: "Dated background context the companion picks up when the date arrives. Birthdays, anniversaries, seasonal beats.",
+      scheduledNotesDesc:
+        "Dated background context the companion picks up when the date arrives. Birthdays, anniversaries, seasonal beats.",
       searchModels: "Search models...",
       summaryTokensCount: "{{count}} summary tokens",
       timeAwareness: "Time Awareness",
-      timeAwarenessDesc: "Send the local system time with each message and stamp new companion memories with when they happened.",
+      timeAwarenessDesc:
+        "Send the local system time with each message and stamp new companion memories with when they happened.",
       toolEventsCount: "{{count}} tool events",
       useGlobalDefaultModel: "Use global default model",
     },
@@ -1159,7 +1190,8 @@ export const enMessages = {
       attachmentAlt: "Attachment",
       systemSend: {
         title: "Send as system message?",
-        description: "Sends the composer content as a visible system message. It does not trigger generation.",
+        description:
+          "Sends the composer content as a visible system message. It does not trigger generation.",
         sending: "Sending...",
         send: "Send",
       },
@@ -1181,7 +1213,8 @@ export const enMessages = {
       regenerateResponse: "Regenerate response",
       guidedRegenerationTitle: "Guide regeneration",
       guidedRegenerationLabel: "How should it change?",
-      guidedRegenerationDescription: "Describe the tone, length, details to keep or remove, and anything the next reply should do differently.",
+      guidedRegenerationDescription:
+        "Describe the tone, length, details to keep or remove, and anything the next reply should do differently.",
       guidedRegenerationPlaceholder: "Make it shorter, warmer, more direct...",
       guidedRegenerationSubmit: "Regenerate",
       cancelAudioGeneration: "Cancel audio generation",
@@ -1310,7 +1343,8 @@ export const enMessages = {
       sessionLoadFailed: "The chat session could not be loaded.",
       backToChat: "Back to chat",
       notCompanionTitle: "This chat is not in companion mode",
-      notCompanionDesc: "Companion relationship pages only render for chats whose character mode is companion.",
+      notCompanionDesc:
+        "Companion relationship pages only render for chats whose character mode is companion.",
       openRegularMemories: "Open regular memories",
       pageTitle: "Relationship state",
       memoryButton: "Memory",
@@ -1351,14 +1385,17 @@ export const enMessages = {
       recentTimeline: "Recent timeline",
       soulGrowth: "Soul growth",
       soulGrowthCount: "{{count}} changes",
-      soulGrowthDesc: "How the companion's changeable traits have evolved from memories. Identity-core traits never change here.",
+      soulGrowthDesc:
+        "How the companion's changeable traits have evolved from memories. Identity-core traits never change here.",
       soulGrowthEmpty: "No growth yet. As memories form, evolving traits will appear here.",
       soulGrowthClear: "Clear growth",
       soulGrowthRemove: "Remove this growth",
       soulGrowthRemoveConfirmTitle: "Remove this growth?",
-      soulGrowthRemoveConfirmMessage: "This drops the entry from the companion's evolving traits. It won't affect the authored soul.",
+      soulGrowthRemoveConfirmMessage:
+        "This drops the entry from the companion's evolving traits. It won't affect the authored soul.",
       soulGrowthClearConfirmTitle: "Clear all growth?",
-      soulGrowthClearConfirmMessage: "This removes every accumulated growth entry, including superseded history. The authored soul is not affected.",
+      soulGrowthClearConfirmMessage:
+        "This removes every accumulated growth entry, including superseded history. The authored soul is not affected.",
       soulGrowthSuperseded: "{{count}} earlier versions retired",
       soulGrowthSources: "from {{count}} memories",
       growthKindAdd: "added",
@@ -1367,7 +1404,8 @@ export const enMessages = {
       promptScore: "Prompt {{score}}",
       persistenceScore: "Persistence {{score}}",
       noTimeline: "No timeline yet",
-      noTimelineDesc: "Relationship, milestone, and emotional snapshot memories will appear here as the companion learns from conversations.",
+      noTimelineDesc:
+        "Relationship, milestone, and emotional snapshot memories will appear here as the companion learns from conversations.",
       notAuthoredYet: "Not authored yet.",
       noSignal: "No signal.",
     },
@@ -1417,7 +1455,8 @@ export const enMessages = {
       created: "Created",
       unknown: "unknown",
       missing: "missing",
-      noTraceFound: "No in-memory debug trace found for this message. Showing a reconstructed request snapshot from the current session state where possible.",
+      noTraceFound:
+        "No in-memory debug trace found for this message. Showing a reconstructed request snapshot from the current session state where possible.",
       reconstructionNotes: "Reconstruction Notes ({{count}})",
       reconstructFailed: "Failed to reconstruct request snapshot: {{error}}",
       attempt: "Attempt {{number}}",
@@ -1476,7 +1515,8 @@ export const enMessages = {
       sessionLoadFailed: "The chat session could not be loaded.",
       backToChat: "Back to chat",
       notCompanionTitle: "This chat is not in companion mode",
-      notCompanionDesc: "Roleplay chats still use the regular memory screen. Companion pages only appear for chats whose character mode is set to companion.",
+      notCompanionDesc:
+        "Roleplay chats still use the regular memory screen. Companion pages only appear for chats whose character mode is set to companion.",
       openRegularMemories: "Open regular memories",
       pageTitle: "Companion memory",
       cancelCycleTitle: "Cancel the running memory cycle",
@@ -1519,17 +1559,20 @@ export const enMessages = {
       noMatchingTitle: "No matching memories",
       emptyTitle: "Nothing stored yet",
       noMatchingDesc: "Try a different search term, or switch the state and category filters.",
-      emptyDesc: "Memories appear as the companion learns. You can also add the first one manually.",
+      emptyDesc:
+        "Memories appear as the companion learns. You can also add the first one manually.",
       deleteMemoryTitle: "Delete memory",
       deleteMemoryDesc: "Remove this companion memory from the session store?",
-      summaryEditorPlaceholder: "Short recap used to keep context consistent across companion messages...",
+      summaryEditorPlaceholder:
+        "Short recap used to keep context consistent across companion messages...",
       liveOutputTitle: "Live model output",
       generating: "generating",
       tokensSuffix: "{{count}} tokens",
       generationFinished: "generation finished",
       waitingForOutput: "Waiting for output…",
       memoryDateTitle: "Memory date",
-      memoryDateDesc: "Set when this memory happened. The companion reads recency from this date, so it stays correct as the conversation moves forward.",
+      memoryDateDesc:
+        "Set when this memory happened. The companion reads recency from this date, so it stays correct as the conversation moves forward.",
     },
     widgets: {
       types: {
@@ -1628,7 +1671,8 @@ export const enMessages = {
           firstMember: "First member (default)",
         },
         authorNote: {
-          descriptionHint: "The note itself is edited inline from the widget and saved to this chat.",
+          descriptionHint:
+            "The note itself is edited inline from the widget and saved to this chat.",
         },
         statTracker: {
           stats: "Stats",
@@ -1814,7 +1858,7 @@ export const enMessages = {
         editingTitle: "No widgets here yet.",
         addWidget: "Add a widget",
         title: "No widgets here.",
-        hint: "Tap \"Edit widgets\" above to add some.",
+        hint: 'Tap "Edit widgets" above to add some.',
       },
       wrapper: {
         dragToReorder: "Drag to reorder",
@@ -1887,7 +1931,8 @@ export const enMessages = {
       learning: "Learning...",
       ignore: "Ignore",
       noAudioCaptured: "No audio captured.",
-      noModelInstalled: "No installed Whisper model found. Install one in Speech Recognition settings.",
+      noModelInstalled:
+        "No installed Whisper model found. Install one in Speech Recognition settings.",
     },
     errors: {
       loadSourceSessionFailed: "Failed to load source session.",
@@ -1907,7 +1952,8 @@ export const enMessages = {
       badgeFrozen: "Frozen",
       badgeCustom: "Custom",
       badgeLive: "Live",
-      description: "Set the date and time the companion sees. Live uses the real clock, Frozen holds a fixed moment, Ticking keeps advancing from the time you set.",
+      description:
+        "Set the date and time the companion sees. Live uses the real clock, Frozen holds a fixed moment, Ticking keeps advancing from the time you set.",
       realClock: "(real {{time}})",
       changeTime: "Change time",
       now: "Now",
@@ -1924,9 +1970,11 @@ export const enMessages = {
       editGroup: "Edit Group",
       deleteGroup: "Delete Group",
       deleteConfirmTitle: "Delete Group Chat?",
-      deleteConfirmMessage: "Are you sure you want to delete \"{{name}}\"? This will also delete all messages in this group chat.",
+      deleteConfirmMessage:
+        'Are you sure you want to delete "{{name}}"? This will also delete all messages in this group chat.',
       noGroupChatsYet: "No group chats yet",
-      noGroupChatsDesc: "Create your first group chat from the + button below to have conversations with multiple characters at once",
+      noGroupChatsDesc:
+        "Create your first group chat from the + button below to have conversations with multiple characters at once",
       newChat: "New Chat",
       openChat: "Open Chat",
       chatSettings: "Chat Settings",
@@ -2000,7 +2048,7 @@ export const enMessages = {
         fromCharacterDesc: "Use a scene from one of your characters",
         sceneContent: "Scene Content",
         sceneContentPlaceholder: "Describe the starting scene for this roleplay...",
-        sceneReferenceTip: "Tip: Type {{@\" to reference characters",
+        sceneReferenceTip: 'Tip: Type {{@" to reference characters',
         selectScene: "Select a Scene",
         sceneLabel: "'s Scene",
         sceneNumber: "Scene {{number}}",
@@ -2238,7 +2286,8 @@ export const enMessages = {
       minTwoRequired: "Minimum 2 characters required",
       removeCharacter: "Remove character",
       groupMinCharacters: "A group requires at least 2 characters",
-      mutedCharactersNote: "Muted characters are skipped by auto speaker selection, but can still respond via explicit `@mention`.",
+      mutedCharactersNote:
+        "Muted characters are skipped by auto speaker selection, but can still respond via explicit `@mention`.",
       addCharacterTitle: "Add Character",
       allCharactersInGroup: "All characters are already in this group.",
       removeCharacterTitle: "Remove Character?",
@@ -2253,7 +2302,8 @@ export const enMessages = {
       authorNoteEmpty: "Private direction for replies",
       lorebooksAttached: "{{count}} attached",
       disableCharacterLorebooks: "Disable character lorebooks",
-      disableCharacterLorebooksDesc: "Group replies will use only the lorebooks attached to this session.",
+      disableCharacterLorebooksDesc:
+        "Group replies will use only the lorebooks attached to this session.",
       sessionActionsSubtitle: "Export, duplicate, or branch this conversation",
       enterGroupName: "Enter group name",
       participant: "participant",
@@ -2280,14 +2330,17 @@ export const enMessages = {
       llmDesc: "Uses your default model to choose who speaks (costs tokens)",
       heuristicDesc: "Uses participation balance and context clues (free)",
       roundRobinDesc: "Characters take turns in order (free)",
-      directorDesc: "Nothing auto-generates. Send adds your message; tap a character's avatar to make them respond.",
+      directorDesc:
+        "Nothing auto-generates. Send adds your message; tap a character's avatar to make them respond.",
       directorStyle: "Director Style",
       directorCue: "Cue",
       directorCueShort: "Pick, then send",
-      directorCueDesc: "Tap a character to choose who responds. Send delivers your message and triggers their reply.",
+      directorCueDesc:
+        "Tap a character to choose who responds. Send delivers your message and triggers their reply.",
       directorAction: "Action",
       directorActionShort: "Tap to respond",
-      directorActionDesc: "Send only adds your message. Tap a character's avatar to make them respond instantly.",
+      directorActionDesc:
+        "Send only adds your message. Tap a character's avatar to make them respond instantly.",
       characters: "Characters",
       participantsActive: "{{total}} participants · {{active}} active",
       add: "Add",
@@ -2297,7 +2350,8 @@ export const enMessages = {
       minTwoRequired: "Minimum 2 characters required",
       removeCharacter: "Remove character",
       groupMinCharacters: "A group chat requires at least 2 characters",
-      mutedCharactersNote: "Muted characters are skipped by auto speaker selection, but can still respond via explicit `@mention`.",
+      mutedCharactersNote:
+        "Muted characters are skipped by auto speaker selection, but can still respond via explicit `@mention`.",
       data: "Data",
       dataSubtitle: "Export or import conversations",
       export: "Export",
@@ -2325,7 +2379,8 @@ export const enMessages = {
       withoutMessages: "Without messages",
       withoutMessagesDesc: "Clone setup only (characters, starting scene)",
       branchWithCharacterTitle: "Branch with Character",
-      branchWithCharacterDesc: "Select a character to continue as a 1-on-1 conversation. All messages from this group will be converted.",
+      branchWithCharacterDesc:
+        "Select a character to continue as a 1-on-1 conversation. All messages from this group will be converted.",
       continueWith: "Continue conversation with {{name}}",
       exportChatPackageTitle: "Export Chat Package",
       includeCharacterSnapshots: "Include character snapshots",
@@ -2363,7 +2418,8 @@ export const enMessages = {
       helpMeReplyFailedGeneric: "Help Me Reply failed.",
       helpMeReplyFailedGenerate: "Help Me Reply failed to generate a reply.",
       noAudioCaptured: "No audio captured.",
-      noWhisperModel: "No installed Whisper model found. Install one in Speech Recognition settings.",
+      noWhisperModel:
+        "No installed Whisper model found. Install one in Speech Recognition settings.",
       cancelRecording: "Cancel recording",
       transcribing: "Transcribing",
       stopAndTranscribe: "Stop and transcribe",
@@ -2378,7 +2434,8 @@ export const enMessages = {
       cannotDeletePinned: "Cannot delete pinned message. Unpin it first.",
       failedToDelete: "Failed to delete",
       messageNotFound: "Message not found",
-      cannotRewindPinned: "Cannot rewind: there are pinned messages after this point. Unpin them first.",
+      cannotRewindPinned:
+        "Cannot rewind: there are pinned messages after this point. Unpin them first.",
       failedToRewind: "Failed to rewind",
       failedToTogglePin: "Failed to toggle pin",
       messagePinned: "Message pinned",
@@ -2497,7 +2554,8 @@ export const enMessages = {
       cannotDeletePinned: "Cannot delete pinned message. Unpin it first.",
       failedToDelete: "Failed to delete",
       messageNotFound: "Message not found",
-      cannotRewindPinned: "Cannot rewind: there are pinned messages after this point. Unpin them first.",
+      cannotRewindPinned:
+        "Cannot rewind: there are pinned messages after this point. Unpin them first.",
       failedToRewind: "Failed to rewind",
       failedToTogglePin: "Failed to toggle pin",
       messagePinned: "Message pinned",
@@ -2601,7 +2659,8 @@ export const enMessages = {
     },
     pageExtra: {
       noAudioCaptured: "No audio captured.",
-      noWhisperModelInstalled: "No installed Whisper model found. Install one in Speech Recognition settings.",
+      noWhisperModelInstalled:
+        "No installed Whisper model found. Install one in Speech Recognition settings.",
       scrollToBottomAria: "Scroll to bottom",
     },
     addContentMenu: {
@@ -2641,12 +2700,14 @@ export const enMessages = {
       chatHistoryTitle: "Chat History",
       chatHistoryDesc: "View and manage conversations",
       lorebrooksTitle: "Lorebooks",
-      lorebrooksDesc: "Attach session lorebooks and optionally ignore each character's own lorebooks.",
+      lorebrooksDesc:
+        "Attach session lorebooks and optionally ignore each character's own lorebooks.",
       manageLorebooks: "Manage lorebooks",
     },
     groupSettingsPageExtra: {
       lorebrooksTitle: "Lorebooks",
-      lorebrooksDesc: "Attach shared lorebooks and control whether character lorebooks apply by default.",
+      lorebrooksDesc:
+        "Attach shared lorebooks and control whether character lorebooks apply by default.",
       manageLorebooks: "Manage lorebooks",
     },
     appearance: {
@@ -2683,7 +2744,8 @@ export const enMessages = {
     },
     delete: {
       title: "Delete Character?",
-      confirmMessage: "Are you sure you want to delete \"{{name}}\"? This will also delete all chat sessions with this character.",
+      confirmMessage:
+        'Are you sure you want to delete "{{name}}"? This will also delete all chat sessions with this character.',
     },
     progress: {
       identity: "Identity",
@@ -2812,8 +2874,10 @@ export const enMessages = {
       creatorTitle: "AI {{goal}} Creator",
       modeBadge: "{{goal}} Mode",
       preview: "Preview",
-      welcomePersona: "I'll help you create a persona through conversation. Tell me who you want to be.",
-      welcomeCharacter: "I'll help you create a character through conversation. Just tell me what you have in mind!",
+      welcomePersona:
+        "I'll help you create a persona through conversation. Tell me who you want to be.",
+      welcomeCharacter:
+        "I'll help you create a character through conversation. Just tell me what you have in mind!",
       starting: "Starting...",
       generationFailed: "Generation failed",
       generatedImage: "Generated image",
@@ -2926,10 +2990,12 @@ export const enMessages = {
       newLorebookTitle: "New Lorebook",
       nameLabel: "NAME",
       enterNamePlaceholder: "Enter lorebook name...",
-      lorebookExplanation: "Lorebooks contain lore entries that are injected into prompts when keywords match.",
+      lorebookExplanation:
+        "Lorebooks contain lore entries that are injected into prompts when keywords match.",
       keywordDetectionMode: "KEYWORD DETECTION",
       keywordDetectionRecentWindow: "Recent 10 messages",
-      keywordDetectionRecentWindowDesc: "Matches against the recent 10-message conversation window.",
+      keywordDetectionRecentWindowDesc:
+        "Matches against the recent 10-message conversation window.",
       keywordDetectionLatestUser: "Latest user message only",
       keywordDetectionLatestUserDesc: "Matches only against the most recent user-sent message.",
       viewEntries: "View Entries",
@@ -3000,7 +3066,8 @@ export const enMessages = {
         composeHeader: "Scratch pad",
         composeMatches: "{{count}} matches",
         activeLabel: "{{count}} active",
-        composePlaceholder: "Type or paste text to test keyword matching...\n\ne.g.\nThe library was quiet, just the hum of the old heaters.\nShe asked if I'd read the book she lent me last week.",
+        composePlaceholder:
+          "Type or paste text to test keyword matching...\n\ne.g.\nThe library was quiet, just the hum of the old heaters.\nShe asked if I'd read the book she lent me last week.",
         sectionActive: "Active · {{count}}",
         sectionInactive: "Inactive · {{count}}",
         statusMatched: "Matched",
@@ -3016,7 +3083,7 @@ export const enMessages = {
         saveFailed: "Failed to save entry.",
         deleteFailed: "Failed to delete entry.",
         deleteConfirmTitle: "Are you sure?",
-        deleteConfirmMessage: "Delete \"{{title}}\"? This can't be undone.",
+        deleteConfirmMessage: 'Delete "{{title}}"? This can\'t be undone.',
         contextMenuTitle: "{{count}} entries use this",
         entriesTab: "Entries",
       },
@@ -3027,7 +3094,8 @@ export const enMessages = {
       noGeneratedKeywords: "No generated keywords to apply",
       reviewKeywordsTitle: "Review Keywords",
       directionPromptLabel: "DIRECTION PROMPT",
-      directionPromptPlaceholder: "Optional guidance, like: focus on aliases, locations, and broad recall terms.",
+      directionPromptPlaceholder:
+        "Optional guidance, like: focus on aliases, locations, and broad recall terms.",
       directionPromptRegenerateHint: "Edits here affect the next regenerate pass.",
       directionPromptDefaultHint: "Optional. Leave blank to use defaults.",
       modelResponseLabel: "MODEL RESPONSE",
@@ -3045,14 +3113,15 @@ export const enMessages = {
       templateCount: "{{count}} template(s)",
       newTemplate: "New Template",
       noTemplatesYet: "No templates yet",
-      explanation: "Chat templates let you start conversations with pre-written messages from both you and {{name}}.",
+      explanation:
+        "Chat templates let you start conversations with pre-written messages from both you and {{name}}.",
       createTemplate: "Create Template",
       messageCount: "{{count}} message(s)",
       deleteTemplate: "Delete template",
       contextMenuFallbackTitle: "Template",
       importedToast: {
         title: "Imported",
-        message: "Added \"{{name}}\".",
+        message: 'Added "{{name}}".',
       },
       importFailed: "Import failed",
       exportFailed: "Export failed",
@@ -3092,7 +3161,8 @@ export const enMessages = {
       lorebooks: "Lorebooks",
       activeLorebooks: "Active Lorebooks",
       noLorebooks: "No lorebooks",
-      noLorebooksDesc: "Template sessions override the character and start with no active lorebooks.",
+      noLorebooksDesc:
+        "Template sessions override the character and start with no active lorebooks.",
       useCharacterDefault: "Use character default",
       useCharacterDefaultDesc: "Template sessions inherit the character active lorebooks.",
       lorebookEnabled: "Enabled for this template",
@@ -3118,20 +3188,23 @@ export const enMessages = {
       loadFailed: "Failed to load lorebooks",
       inheritHint: "Sessions inherit these unless the session overrides them.",
       clear: "Clear",
-      chooseHint: "Choose the lorebooks this character should activate by default. Existing sessions can still override this list.",
+      chooseHint:
+        "Choose the lorebooks this character should activate by default. Existing sessions can still override this list.",
       emptyState: "No lorebooks yet. Create lorebooks from the lorebook manager first.",
     },
     description: {
       descriptionLabel: "Description",
       descriptionPlaceholder: "Short summary shown on cards and lists...",
-      descriptionHint: "Optional short description for the UI; the full definition is used in prompts.",
+      descriptionHint:
+        "Optional short description for the UI; the full definition is used in prompts.",
       companionPromptLabel: "Companion Prompt (Optional)",
       companionModeRequiredHint: "Enable companion mode to edit",
       systemPromptLabel: "System Prompt (Optional)",
       loadingTemplates: "Loading templates...",
       useAppCompanionDefault: "Use app companion default",
       useAppDefault: "Use app default",
-      companionPromptHint: "Stored separately as the companion prompt. The normal roleplay system prompt is not changed.",
+      companionPromptHint:
+        "Stored separately as the companion prompt. The normal roleplay system prompt is not changed.",
       systemPromptHint: "Choose a custom system prompt or use the default.",
       groupChatConvLabel: "Group Chat Prompt (Conversation)",
       groupChatConvHint: "Override this character's conversation prompt in group chats",
@@ -3163,7 +3236,8 @@ export const enMessages = {
       memoryDynamic: "Dynamic",
       memoryDynamicDescDesktop: "Automatic summaries and context updates.",
       memoryDynamicDescMobile: "Automatic summaries and context updates for this character.",
-      memoryHint: "Dynamic memory requires it to be enabled in Advanced settings. Otherwise, manual memory is used.",
+      memoryHint:
+        "Dynamic memory requires it to be enabled in Advanced settings. Otherwise, manual memory is used.",
       selectModelTitle: "Select Model",
       searchModelsPlaceholder: "Search models...",
       selectVoiceTitle: "Select Voice",
@@ -3172,11 +3246,13 @@ export const enMessages = {
       providerVoicesLabel: "{{provider}} Voices",
       providerFallback: "Provider",
       designReferencesLabel: "Design references",
-      designReferencesEditorHint: "Attach a few stable image references and one concise visual note so scene generation keeps the same face, proportions, outfit cues, and style.",
+      designReferencesEditorHint:
+        "Attach a few stable image references and one concise visual note so scene generation keeps the same face, proportions, outfit cues, and style.",
     },
     interactionMode: {
       sectionLabel: "Interaction Mode",
-      sectionHint: "Choose whether this character behaves like an RP character or a persistent companion.",
+      sectionHint:
+        "Choose whether this character behaves like an RP character or a persistent companion.",
       activeBadge: "Active",
       roleplayTitle: "Roleplay",
       roleplaySubtitle: "Scene-driven chats, narrative framing, and starting scenarios.",
@@ -3191,50 +3267,64 @@ export const enMessages = {
       triggerNeedsMany: "{{count}} models needed - tap to set up",
       triggerReady: "Ready - tap to see how it works",
       stepOptional: "Optional",
-      modelsBody: "Companion runs entirely on your device. It needs a few small models to read emotion, track who and what gets mentioned, and recall past moments. This is a one-time download.",
+      modelsBody:
+        "Companion runs entirely on your device. It needs a few small models to read emotion, track who and what gets mentioned, and recall past moments. This is a one-time download.",
       modelsChecking: "Checking installed models...",
       modelsDoneTitle: "On-device models installed",
-      explainIntro: "Your companion is ready. Here is what makes it different from a roleplay character.",
+      explainIntro:
+        "Your companion is ready. Here is what makes it different from a roleplay character.",
       downloadOne: "Download 1 model",
       downloadMany: "Download {{count}} models",
       soulTitle: "Shape the soul (optional)",
-      soulBody: "The soul is who they are underneath: personality, voice, and how they handle feelings. It comes with sensible defaults, so you can skip it for now, generate a draft from the character, or fine-tune it anytime in the Companion Soul tab.",
+      soulBody:
+        "The soul is who they are underneath: personality, voice, and how they handle feelings. It comes with sensible defaults, so you can skip it for now, generate a draft from the character, or fine-tune it anytime in the Companion Soul tab.",
       conceptsTitle: "How a companion thinks",
       conceptEmotionTitle: "Emotional state",
-      conceptEmotionBody: "Their mood shifts turn by turn from what you say, then eases back toward the soul's baseline.",
+      conceptEmotionBody:
+        "Their mood shifts turn by turn from what you say, then eases back toward the soul's baseline.",
       conceptRelationshipTitle: "Relationship",
-      conceptRelationshipBody: "Closeness, trust, and affection grow or fray as you talk. Each chat starts from the soul's relationship defaults.",
+      conceptRelationshipBody:
+        "Closeness, trust, and affection grow or fray as you talk. Each chat starts from the soul's relationship defaults.",
       conceptMemoryTitle: "Memory",
-      conceptMemoryBody: "Meaningful moments are saved and recalled later, so they remember names, events, and how things felt.",
+      conceptMemoryBody:
+        "Meaningful moments are saved and recalled later, so they remember names, events, and how things felt.",
       whereTitle: "Where things live",
-      whereBody: "Edit identity and feelings in the Companion Soul tab here. Inside a chat, open the menu to review its memory, current emotional state, and the relationship as it grows.",
+      whereBody:
+        "Edit identity and feelings in the Companion Soul tab here. Inside a chat, open the menu to review its memory, current emotional state, and the relationship as it grows.",
     },
     startingScene: {
       openingContextTitle: "Opening Context",
-      openingContextSubtitle: "Optional first-chat context for this companion. Companion sessions can start without a scene.",
+      openingContextSubtitle:
+        "Optional first-chat context for this companion. Companion sessions can start without a scene.",
       sceneDirectionLabel: "Scene Direction",
       setAsDefault: "Set as Default",
       noOpeningContext: "No opening context yet",
       noScenesYet: "No scenes yet",
       skipForCompanion: "You can skip this for companion mode.",
       createFirstScene: "Create your first scene to get started",
-      openingPlaceholder: "Optional opening context, like where the companion is or what they were doing before the first message...",
-      scenePlaceholder: "Create a starting scene or scenario for roleplay (e.g., 'You find yourself in a mystical forest at twilight...')",
+      openingPlaceholder:
+        "Optional opening context, like where the companion is or what they were doing before the first message...",
+      scenePlaceholder:
+        "Create a starting scene or scenario for roleplay (e.g., 'You find yourself in a mystical forest at twilight...')",
       addDirection: "+ Add Direction",
       directionAdded: "Direction added",
       wordsCount: "{{count}} words",
-      placeholderHelp: "Use {{charTag}} for the character and {{userTag}} (alias {{personaTag}}) for the persona.",
+      placeholderHelp:
+        "Use {{charTag}} for the character and {{userTag}} (alias {{personaTag}}) for the persona.",
       sceneBackgroundLabel: "Scene Background",
       optionalLabel: "Optional",
       sceneBgOverrideHint: "Overrides the character background for chats using this scene.",
-      sceneBgUsedHint: "Used as the chat background for this scene unless the session overrides it.",
+      sceneBgUsedHint:
+        "Used as the chat background for this scene unless the session overrides it.",
       cancel: "Cancel",
       directionPlaceholderNew: "e.g., 'The hostage will be rescued' or 'Maintain tense atmosphere'",
       directionPlaceholderEdit: "e.g., 'The hostage will be rescued' or 'Build tension gradually'",
       directionAiHint: "Hidden guidance for the AI on how this scene should unfold",
       addScene: "Add Scene",
-      multipleScenesHint: "Create multiple starting scenarios. One will be selected when starting a new chat.",
-      companionContextHint: "Opening context is optional for companions; long-term continuity comes from companion memory.",
+      multipleScenesHint:
+        "Create multiple starting scenarios. One will be selected when starting a new chat.",
+      companionContextHint:
+        "Opening context is optional for companions; long-term continuity comes from companion memory.",
       skipContext: "Skip Context",
       editSceneTitle: "Edit Scene",
       sceneContentPlaceholder: "Enter scene content...",
@@ -3247,7 +3337,8 @@ export const enMessages = {
     },
     companionSoul: {
       title: "Companion Soul",
-      subtitle: "Shape who they are underneath. Generation uses the opening context you set in the previous step.",
+      subtitle:
+        "Shape who they are underneath. Generation uses the opening context you set in the previous step.",
       retry: "Retry",
       back: "Back",
       continue: "Continue",
@@ -3260,9 +3351,11 @@ export const enMessages = {
       generateDefaultDesc: "Drafts a soul from the character's name, definition, and scenes.",
       directionLabel: "Direction",
       directionOptional: "Optional steering for the LLM",
-      directionPlaceholder: "e.g. \"Lean tsundere - guarded outside, soft once trusted. Less anxious, more pride.\"",
+      directionPlaceholder:
+        'e.g. "Lean tsundere - guarded outside, soft once trusted. Less anxious, more pride."',
       directionEditTooltip: "Optional direction for generation",
-      directionMenuDesc: "Steer how the soul is drafted. Leave empty to let the model decide from the character alone.",
+      directionMenuDesc:
+        "Steer how the soul is drafted. Leave empty to let the model decide from the character alone.",
       directionClear: "Clear",
       generating: "Generating",
       generate: "Generate",
@@ -3273,11 +3366,13 @@ export const enMessages = {
       exampleEg: "e.g., {{example}}",
       fineTuneLabel: "Fine-tune feelings",
       baselineAffect: "Baseline Affect",
-      baselineAffectInfo: "How they feel by default; the emotional waterline before anything happens.",
+      baselineAffectInfo:
+        "How they feel by default; the emotional waterline before anything happens.",
       regulationStyle: "Regulation Style",
       regulationStyleInfo: "How they handle and express what they feel; venting vs. burying.",
       relationshipDefaults: "Relationship Defaults",
-      relationshipDefaultsInfo: "Where this session starts. The engine evolves these as the conversation continues.",
+      relationshipDefaultsInfo:
+        "Where this session starts. The engine evolves these as the conversation continues.",
       generatingEllipsis: "Generating...",
       generateSoul: "Generate soul",
       stop: "Stop",
@@ -3292,10 +3387,12 @@ export const enMessages = {
       },
       companionContextLabel: "Companion context",
       timeAwarenessTitle: "Time Awareness",
-      timeAwarenessDesc: "Default for new chats with this companion. Sends the local system time with each message and stamps companion memories with when they happened. Individual chats can override this in their settings.",
+      timeAwarenessDesc:
+        "Default for new chats with this companion. Sends the local system time with each message and stamps companion memories with when they happened. Individual chats can override this in their settings.",
       timeAwarenessAria: "Time awareness default",
       sharedMemoryTitle: "Shared Memory Across Sessions",
-      sharedMemoryDesc: "New and existing chats with this companion share one memory pool. Edits in one chat affect the others. Emotional state and relationship state stay per chat.",
+      sharedMemoryDesc:
+        "New and existing chats with this companion share one memory pool. Edits in one chat affect the others. Emotional state and relationship state stay per chat.",
       sharedMemoryAria: "Shared memory across sessions",
     },
     soulPresets: {
@@ -3315,13 +3412,16 @@ export const enMessages = {
     soulFields: {
       essence: "Essence",
       essencePlaceholder: "Who they are underneath the card definition.",
-      essenceExample: "A practiced calm that breaks easily for the people they trust. Reads books to feel less alone, not to be impressive.",
+      essenceExample:
+        "A practiced calm that breaks easily for the people they trust. Reads books to feel less alone, not to be impressive.",
       voice: "Inner Voice",
       voicePlaceholder: "How they sound in close conversation.",
-      voiceExample: "Low, deliberate, with long pauses. Drops formality when they let down their guard. Almost never sarcastic.",
+      voiceExample:
+        "Low, deliberate, with long pauses. Drops formality when they let down their guard. Almost never sarcastic.",
       relationalStyle: "Relational Style",
       relationalStylePlaceholder: "How they attach, trust, retreat, reconnect.",
-      relationalStyleExample: "Slow to open up, but loyal once they do. Goes quiet when overwhelmed; comes back with a small gesture rather than an apology.",
+      relationalStyleExample:
+        "Slow to open up, but loyal once they do. Goes quiet when overwhelmed; comes back with a small gesture rather than an apology.",
       vulnerabilities: "Vulnerabilities",
       vulnerabilitiesPlaceholder: "Soft spots, insecurities, things they rarely say.",
       vulnerabilitiesExample: "Afraid of being a burden. Hates feeling watched while struggling.",
@@ -3330,25 +3430,32 @@ export const enMessages = {
       fearsExample: "Fears being abandoned again. Freezes around open flames after the fire.",
       habits: "Habits",
       habitsPlaceholder: "Recurring tells, rituals, conversational patterns.",
-      habitsExample: "Tucks hair behind ear when nervous. Replies with questions when they don't know what to feel.",
+      habitsExample:
+        "Tucks hair behind ear when nervous. Replies with questions when they don't know what to feel.",
       boundaries: "Boundaries",
       boundariesPlaceholder: "Lines they won't cross. Pace. Comfort limits.",
-      boundariesExample: "Won't be rushed into vulnerability. Steps back from cruelty even in jokes.",
+      boundariesExample:
+        "Won't be rushed into vulnerability. Steps back from cruelty even in jokes.",
       traits: "Traits",
       traitsPlaceholder: "Defining personality traits, in a few words each.",
-      traitsExample: "Courageous to a fault, quietly stubborn, resourceful under pressure, slow to forgive.",
+      traitsExample:
+        "Courageous to a fault, quietly stubborn, resourceful under pressure, slow to forgive.",
       backstory: "Backstory",
       backstoryPlaceholder: "How they came to be. Origin, formative events, what they do.",
-      backstoryExample: "Orphaned young and raised by a traveling apothecary. Now keeps a small shop, but never stopped looking for the people who left.",
+      backstoryExample:
+        "Orphaned young and raised by a traveling apothecary. Now keeps a small shop, but never stopped looking for the people who left.",
       appearance: "Appearance",
       appearancePlaceholder: "How they look and dress. Signature outfit or style.",
-      appearanceExample: "Worn leather coat over mismatched layers. Always the same scuffed boots. Hair tied back when working.",
+      appearanceExample:
+        "Worn leather coat over mismatched layers. Always the same scuffed boots. Hair tied back when working.",
       goals: "Goals",
       goalsPlaceholder: "What they're working toward. Ambitions, quests, unfinished business.",
-      goalsExample: "Wants to rebuild the family name, find the brother who vanished, and prove they were never the weak one.",
+      goalsExample:
+        "Wants to rebuild the family name, find the brother who vanished, and prove they were never the weak one.",
       likes: "Likes & Favorites",
       likesPlaceholder: "Favorites and small joys. Food, color, music, gestures.",
-      likesExample: "Honey in black tea, the color of dusk, old sea shanties, the smell of rain on stone.",
+      likesExample:
+        "Honey in black tea, the color of dusk, old sea shanties, the smell of rain on stone.",
     },
     soulSliders: {
       warmth: "Warmth",
@@ -3434,7 +3541,8 @@ export const enMessages = {
       nChanges: "{{count}} change(s)",
       direction: "Direction",
       directionApplyHint: "Edits apply on next Regenerate",
-      directionPlaceholder: "e.g. \"Lean tsundere - guarded outside, soft once trusted. Less anxious.\"",
+      directionPlaceholder:
+        'e.g. "Lean tsundere - guarded outside, soft once trusted. Less anxious."',
       directionTooltip: "Edit direction before regenerating",
       regenerate: "Regenerate",
       discard: "Discard",
@@ -3449,11 +3557,13 @@ export const enMessages = {
       avatarProcessFailed: "Failed to process avatar image",
       avatarConvertFailed: "Avatar URL could not be converted",
       avatarUrlLoadFailed: "Failed to load avatar URL",
-      remoteAvatarDisabled: "Remote avatar download is disabled in Security settings.\nUpload an avatar manually.",
+      remoteAvatarDisabled:
+        "Remote avatar download is disabled in Security settings.\nUpload an avatar manually.",
       importReadyTitle: "Import ready",
       importReadyMessage: "Detected {{label}}",
       legacyJsonTitle: "Legacy JSON import detected",
-      legacyJsonMessage: "JSON imports are deprecated and will be removed soon. Use Settings > Convert Files.",
+      legacyJsonMessage:
+        "JSON imports are deprecated and will be removed soon. Use Settings > Convert Files.",
       loadFailed: "Failed to load character",
       exportFailed: "Failed to export character",
     },
@@ -3503,13 +3613,15 @@ export const enMessages = {
       addNote: "Add note",
       addANote: "Add a note",
       emptyTitle: "No scheduled notes yet",
-      emptyDescription: "Schedule a birthday, anniversary, or seasonal beat. The companion only sees the note once its date arrives.",
+      emptyDescription:
+        "Schedule a birthday, anniversary, or seasonal beat. The companion only sees the note once its date arrives.",
       previewingNowTooltip: "Showing what the companion sees now",
       previewingFutureTooltip: "Previewing a future date",
       activeNow: "Active now",
       asOf: "As of {{date}}",
       now: "Now",
-      previewHelp: "Pick a date to see which notes would be active. Does not affect the actual prompt.",
+      previewHelp:
+        "Pick a date to see which notes would be active. Does not affect the actual prompt.",
       loading: "Loading scheduled notes...",
       untitledNote: "Untitled note",
       statusOff: "off",
@@ -3559,7 +3671,8 @@ export const enMessages = {
       addMiddleColor: "+ Add middle color",
       textColorsAutoHint: "Text colors are auto-calculated based on gradient brightness",
       companionSoulTitle: "Companion Soul",
-      companionSoulSubtitle: "Persistent identity, emotional baseline, and how this companion regulates feelings.",
+      companionSoulSubtitle:
+        "Persistent identity, emotional baseline, and how this companion regulates feelings.",
       tapToAddAvatar: "Tap to add or generate avatar",
       cardTypeLabel: "Card type",
       cardTypeCircle: "Circle",
@@ -3590,7 +3703,8 @@ export const enMessages = {
       descriptionPlaceholder: "Short summary shown in lists and cards...",
       descriptionHint: "Optional short description for display purposes.",
       definitionTitle: "Definition",
-      definitionPlaceholder: "Describe who this character is, their personality, background, speaking style, and how they should interact...",
+      definitionPlaceholder:
+        "Describe who this character is, their personality, background, speaking style, and how they should interact...",
       definitionDetailHint: "Be detailed to create a unique personality",
       wordsCount: "{{count}} words",
       availablePlaceholders: "Available Placeholders",
@@ -3598,7 +3712,8 @@ export const enMessages = {
       placeholderUser: "- Persona name (preferred, empty if none)",
       placeholderPersona: "- Persona name (alias)",
       designReferencesTitle: "Design references",
-      designReferencesEditorHint: "Attach a few stable image references and one concise visual note so scene generation keeps the same face, proportions, outfit cues, and style.",
+      designReferencesEditorHint:
+        "Attach a few stable image references and one concise visual note so scene generation keeps the same face, proportions, outfit cues, and style.",
       openingContextTitle: "Opening Context",
       startingScenesTitle: "Starting Scenes",
       sceneDefaultBadge: "Default",
@@ -3610,12 +3725,14 @@ export const enMessages = {
       deleteSceneAria: "Delete scene {{number}}",
       newOpeningContextTitle: "New opening context",
       newStartingSceneTitle: "New starting scene",
-      newOpeningContextDesc: "Optional first-chat context. Companion continuity comes from memory after that.",
+      newOpeningContextDesc:
+        "Optional first-chat context. Companion continuity comes from memory after that.",
       newStartingSceneDesc: "Create a scenario and optional direction for the opening moment.",
       createScene: "Create Scene",
       continueDraft: "Continue draft",
       companionScenesOptionalHint: "Companion mode can start without context; these are optional.",
-      multipleScenesHint: "Create multiple starting scenarios. One will be selected when starting a new chat.",
+      multipleScenesHint:
+        "Create multiple starting scenarios. One will be selected when starting a new chat.",
       defaultModelTitle: "Default Model",
       loadingModels: "Loading models...",
       selectedModelFallback: "Selected Model",
@@ -3639,7 +3756,8 @@ export const enMessages = {
       memoryManualDesc: "Manage notes yourself (current system).",
       memoryDynamicTitle: "Dynamic Memory",
       memoryDynamicDesc: "Automatic summaries when enabled globally.",
-      memoryModeHint: "Dynamic Memory must be turned on in Advanced settings; otherwise manual memory is used.",
+      memoryModeHint:
+        "Dynamic Memory must be turned on in Advanced settings; otherwise manual memory is used.",
       companionPromptTitle: "Companion Prompt",
       companionModeRequiredHint: "Enable companion mode to edit",
       systemPromptTitle: "System Prompt",
@@ -3647,17 +3765,22 @@ export const enMessages = {
       useDefaultCompanionPrompt: "Use default companion prompt",
       useDefaultSystemPrompt: "Use default system prompt",
       usingAppDefault: "Using app default",
-      noCompanionTemplatesHint: "No custom companion templates yet. Create one in Settings to Prompts.",
-      noDirectTemplatesHint: "No custom direct-chat templates yet. Create one in Settings to Prompts.",
-      companionPromptStoredHint: "Stored separately as companion prompt ID; the roleplay system prompt is unchanged.",
+      noCompanionTemplatesHint:
+        "No custom companion templates yet. Create one in Settings to Prompts.",
+      noDirectTemplatesHint:
+        "No custom direct-chat templates yet. Create one in Settings to Prompts.",
+      companionPromptStoredHint:
+        "Stored separately as companion prompt ID; the roleplay system prompt is unchanged.",
       systemPromptOverrideHint: "Override the default system prompt for this character.",
       groupChatPromptTitle: "Group Chat Prompt",
       conversationSuffix: "(Conversation)",
       roleplaySuffix: "(Roleplay)",
       useDefaultGroupConversationPrompt: "Use default group conversation prompt",
       useDefaultGroupRoleplayPrompt: "Use default group roleplay prompt",
-      noGroupConversationTemplatesHint: "No custom conversation group chat templates yet. Create one in Settings to Prompts.",
-      noGroupRoleplayTemplatesHint: "No custom roleplay group chat templates yet. Create one in Settings to Prompts.",
+      noGroupConversationTemplatesHint:
+        "No custom conversation group chat templates yet. Create one in Settings to Prompts.",
+      noGroupRoleplayTemplatesHint:
+        "No custom roleplay group chat templates yet. Create one in Settings to Prompts.",
       groupConversationOverrideHint: "Override this character's conversation prompt in group chats",
       groupRoleplayOverrideHint: "Override this character's roleplay prompt in group chats",
       editSceneTitle: "Edit Scene",
@@ -3669,7 +3792,8 @@ export const enMessages = {
       sceneDirectionPlaceholder: "e.g., 'The hostage will be rescued' or 'Build tension gradually'",
       sceneDirectionHint: "Hidden guidance for the AI on how this scene should unfold.",
       sceneBackgroundTitle: "Scene Background",
-      sceneBackgroundHint: "Becomes the active chat background for this scene unless the session overrides it.",
+      sceneBackgroundHint:
+        "Becomes the active chat background for this scene unless the session overrides it.",
       library: "Library",
       upload: "Upload",
       sceneBackgroundPreviewLabel: "Scene background preview",
@@ -3707,7 +3831,8 @@ export const enMessages = {
       openKokoroStudioDesc: "Manage voices and design blends",
     },
     extra: {
-      apiKeyNotFound: "OpenRouter API key not found. Please configure it in Settings > Providers first.",
+      apiKeyNotFound:
+        "OpenRouter API key not found. Please configure it in Settings > Providers first.",
       audioEmpty: {
         title: "No audio providers",
         description: "Add a TTS provider to generate voices for your characters.",
@@ -3768,7 +3893,8 @@ export const enMessages = {
         verificationFailed: "Verification failed",
       },
       loadingVariants: "Loading variants...",
-      kokoroVariantHint: "Mobile builds only support int8. Install the model from Kokoro Studio after saving.",
+      kokoroVariantHint:
+        "Mobile builds only support int8. Install the model from Kokoro Studio after saving.",
       managed: "Managed",
       managedPath: "Managed: {{path}}",
       requestPathHint: "Use the provider path if it differs from the OpenAI default",
@@ -3807,7 +3933,8 @@ export const enMessages = {
       allowInvalidTls: "Allow Invalid TLS",
       allowInvalidTlsDesc: "Ignore certificate validation errors for this self-hosted endpoint",
       sprout: "Use Sprout for Runnability",
-      sproutDesc: "Query a Sprout hardware probe on this host to check which models fit its GPU and memory",
+      sproutDesc:
+        "Query a Sprout hardware probe on this host to check which models fit its GPU and memory",
       sproutUrl: "Sprout URL",
       sproutApiKey: "Sprout API Key (optional)",
       sproutApiKeyPlaceholder: "Bearer token from the Sprout console",
@@ -3888,7 +4015,7 @@ export const enMessages = {
     toasts: {
       exportFailed: "Export failed",
       importSuccessTitle: "Imported successfully",
-      importSuccessDescription: "Model \"{{name}}\" was imported.",
+      importSuccessDescription: 'Model "{{name}}" was imported.',
       importFailed: "Import failed",
     },
     downloadQueue: {
@@ -3922,7 +4049,8 @@ export const enMessages = {
     loadFailed: "Failed to load installed models: {{error}}",
     empty: {
       title: "No installed GGUF models found",
-      description: "Download models from the browser first, or place `.gguf` files inside the models folder.",
+      description:
+        "Download models from the browser first, or place `.gguf` files inside the models folder.",
     },
     columns: {
       type: "Type",
@@ -3934,7 +4062,8 @@ export const enMessages = {
     },
     confirm: {
       deleteTitle: "Delete model file",
-      deleteMessage: "Delete {{filename}}? This only removes the local GGUF file from the models folder.",
+      deleteMessage:
+        "Delete {{filename}}? This only removes the local GGUF file from the models folder.",
     },
     toasts: {
       pathCopied: "Path copied",
@@ -3948,7 +4077,8 @@ export const enMessages = {
       noProviders: "No Ollama providers configured. Add one in Settings → Providers.",
       empty: {
         title: "No models installed on this Ollama instance",
-        description: "Pull a model from the browser or use `ollama pull` on the host to populate this list.",
+        description:
+          "Pull a model from the browser or use `ollama pull` on the host to populate this list.",
       },
       searchPlaceholder: "Search by model name, family, or quantization",
       columns: {
@@ -3961,7 +4091,8 @@ export const enMessages = {
       },
       confirm: {
         deleteTitle: "Delete model",
-        deleteMessage: "Delete {{name}} from {{provider}}? This frees the disk space on the Ollama host and cannot be undone.",
+        deleteMessage:
+          "Delete {{name}} from {{provider}}? This frees the disk space on the Ollama host and cannot be undone.",
       },
       toasts: {
         modelDeleted: "Model deleted",
@@ -3988,7 +4119,8 @@ export const enMessages = {
   editModel: {
     setup: {
       title: "Model setup",
-      description: "Choose the platform, give this entry a readable name, and connect it to the model identifier or file you want to use.",
+      description:
+        "Choose the platform, give this entry a readable name, and connect it to the model identifier or file you want to use.",
       selectPlatform: "Select platform",
     },
     errors: {
@@ -4016,9 +4148,12 @@ export const enMessages = {
         failed: "The last local run failed before llama.cpp could complete.",
       },
       detail: {
-        succeeded: "This report also seeds the smart offload cache so future runs can reuse the last stable GPU setup.",
-        cpuFallbackSucceeded: "We stored the CPU-safe context and batch that did run so you can reuse them.",
-        cpuFallbackFailed: "The model was retried on CPU, but the recovered configuration still failed.",
+        succeeded:
+          "This report also seeds the smart offload cache so future runs can reuse the last stable GPU setup.",
+        cpuFallbackSucceeded:
+          "We stored the CPU-safe context and batch that did run so you can reuse them.",
+        cpuFallbackFailed:
+          "The model was retried on CPU, but the recovered configuration still failed.",
         failed: "This report keeps the last known runtime state so you can inspect what happened.",
       },
     },
@@ -4059,7 +4194,8 @@ export const enMessages = {
       budgetTokens: "Budget Tokens",
       providerDefault: "Provider default",
       forceSend: "Force send thinking state",
-      forceSendDescription: "Explicitly send enable_thinking to the model instead of omitting it. Helps local models that default to thinking when no value is sent.",
+      forceSendDescription:
+        "Explicitly send enable_thinking to the model instead of omitting it. Helps local models that default to thinking when no value is sent.",
     },
     runtimeFacts: {
       updated: "Updated",
@@ -4160,7 +4296,8 @@ export const enMessages = {
       localPathHelp: "Use the full file path to a local GGUF model.",
       mmprojTitle: "Downloaded MMProj Files",
       mmprojEmpty: "No downloaded mmproj files yet",
-      mmprojEmptyHint: "Download a multimodal projector from the Model Browser, or enter a path manually.",
+      mmprojEmptyHint:
+        "Download a multimodal projector from the Model Browser, or enter a path manually.",
     },
     sdOffload: {
       auto: "Auto",
@@ -4174,33 +4311,42 @@ export const enMessages = {
       modelFilesFilter: "Model files",
       selectModel: "Select Local Model",
       pathPlaceholder: "/path/to/model.safetensors",
-      idHelp: "Pick an installed local model from the library, or use the full path to a checkpoint or diffusion model file.",
-      configurationHelp: "Files this model passes to the engine. A checkpoint or diffusion model is required; encoders and VAE depend on the architecture. Changes apply immediately.",
+      idHelp:
+        "Pick an installed local model from the library, or use the full path to a checkpoint or diffusion model file.",
+      configurationHelp:
+        "Files this model passes to the engine. A checkpoint or diffusion model is required; encoders and VAE depend on the architecture. Changes apply immediately.",
     },
     modelSource: {
       useCatalog: "Use catalog",
       enterManually: "Enter manually",
       refreshModelList: "Refresh model list",
       onlyFreeModels: "only free models",
-      customEndpointFetchDisabled: "Model fetching is disabled for this custom endpoint. Enable it in Provider settings and set a Models Endpoint if you want model list discovery.",
+      customEndpointFetchDisabled:
+        "Model fetching is disabled for this custom endpoint. Enable it in Provider settings and set a Models Endpoint if you want model list discovery.",
     },
     promptCaching: {
       automatic: {
         title: "Automatic Provider Caching",
-        description: "This provider handles prompt caching automatically on the upstream API. There is no app-side toggle to send.",
+        description:
+          "This provider handles prompt caching automatically on the upstream API. There is no app-side toggle to send.",
       },
       enableTitle: "Enable Context Caching",
       enableDescription: "Preserve static system prompts and document context across interactions.",
       ttlTitle: "Cache TTL",
       ttlDescription: "How long cached prefixes remain valid between requests.",
       pricingTitle: "Note on pricing:",
-      pricingDescription: "While caching reduces the cost of repeated input tokens, the initial write to the cache may incur a slight premium depending on the selected provider.",
-      oneHourNote: "Extended 1-hour TTL may not be honoured by all providers. Falls back to the provider's default cache lifetime when unsupported.",
-      openai24hNote: "OpenAI uses `in_memory` and `24h` retention policies rather than a 1-hour TTL.",
+      pricingDescription:
+        "While caching reduces the cost of repeated input tokens, the initial write to the cache may incur a slight premium depending on the selected provider.",
+      oneHourNote:
+        "Extended 1-hour TTL may not be honoured by all providers. Falls back to the provider's default cache lifetime when unsupported.",
+      openai24hNote:
+        "OpenAI uses `in_memory` and `24h` retention policies rather than a 1-hour TTL.",
       groqLabel: "Groq:",
-      groqDescription: "caching is automatic on supported models only. This app does not force or tune it per request.",
+      groqDescription:
+        "caching is automatic on supported models only. This app does not force or tune it per request.",
       geminiLabel: "Gemini:",
-      geminiDescription: "implicit caching is automatic for supported models. Explicit cached content resources are not created by this app yet.",
+      geminiDescription:
+        "implicit caching is automatic for supported models. Explicit cached content resources are not created by this app yet.",
       ttl: {
         inMemory: "In-memory",
         "24h": "24 hr",
@@ -4210,9 +4356,11 @@ export const enMessages = {
     },
     toasts: {
       runtimeConfigApplied: "Runtime config applied",
-      runtimeConfigAppliedDescription: "Future local runs will reuse the last CPU-safe context and batch.",
+      runtimeConfigAppliedDescription:
+        "Future local runs will reuse the last CPU-safe context and batch.",
       modelPathRequired: "Model path required",
-      modelPathRequiredDescription: "Select a GGUF model path before reading the embedded template.",
+      modelPathRequiredDescription:
+        "Select a GGUF model path before reading the embedded template.",
       embeddedTemplatePasted: "Embedded template pasted into editor",
     },
     search: {
@@ -4223,7 +4371,8 @@ export const enMessages = {
       input: "Input",
       output: "Output",
       automatic1111Fixed: "AUTOMATIC1111 models are fixed to text + image input and image output.",
-      localDiffusionFixed: "Local diffusion models are fixed to text + image input and image output.",
+      localDiffusionFixed:
+        "Local diffusion models are fixed to text + image input and image output.",
     },
     runtimeSummary: {
       ram: "RAM",
@@ -4263,8 +4412,10 @@ export const enMessages = {
       saveToContinue: "Save a model to continue",
     },
     generation: {
-      automatic1111Help: "AUTOMATIC1111 uses Stable Diffusion controls here. These values become the default sampler settings for avatars, scene images, and other local diffusion requests.",
-      localDiffusionHelp: "These values become the defaults for this model when generating avatars and scene images. Leave a field empty to use the engine default for this model type.",
+      automatic1111Help:
+        "AUTOMATIC1111 uses Stable Diffusion controls here. These values become the default sampler settings for avatars, scene images, and other local diffusion requests.",
+      localDiffusionHelp:
+        "These values become the defaults for this model when generating avatars and scene images. Leave a field empty to use the engine default for this model type.",
       formatWidthHeight: "Format: width x height",
     },
     generationDescriptions: {
@@ -4280,7 +4431,8 @@ export const enMessages = {
       sdExtraPromptTitle: "Extra Prompt",
       sdExtraPrompt: "Always added before the prompt. Put quality tags and style boilerplate here",
       sdWriterInstructionsTitle: "Prompt Writer Instructions",
-      sdWriterInstructions: "Format guidance for the scene writer when it composes prompts for this model",
+      sdWriterInstructions:
+        "Format guidance for the scene writer when it composes prompts for this model",
       temperature: "Higher = more creative",
       topP: "Lower = more focused",
       maxOutputTokens: "Limit response length",
@@ -4299,7 +4451,8 @@ export const enMessages = {
       description: "Simple starts collapsed. Advanced keeps the current full editor.",
       simple: "Simple",
       advanced: "Advanced",
-      emptyState: "Open a section to adjust its settings. The advanced editor stays available when you need the full form.",
+      emptyState:
+        "Open a section to adjust its settings. The advanced editor stays available when you need the full form.",
     },
     templateOverride: {
       title: "Template Override",
@@ -4416,15 +4569,18 @@ export const enMessages = {
       contextLength: "Context Length",
       contextOverride: "Override llama.cpp context window",
       calculatingMemory: "Calculating memory limits for this model...",
-      contextWarning: "Are you sure? This may not run on your device. We recommend {{recommended}} tokens.",
-      contextCritical: "This model likely won't fit in memory on your device. Try a smaller model or a much shorter context.",
+      contextWarning:
+        "Are you sure? This may not run on your device. We recommend {{recommended}} tokens.",
+      contextCritical:
+        "This model likely won't fit in memory on your device. Try a smaller model or a much shorter context.",
       kvCacheType: "KV Cache Type",
       kvCacheTypeDescription: "Quantize KV cache to save VRAM",
       offloadKqv: "Offload KQV",
       offloadKqvCpuOnly: "Disabled on CPU-only backends",
       offloadKqvDescription: "KV cache & KQV ops on GPU",
       fullSwaCache: "Full SWA Cache",
-      fullSwaCacheDescription: "Keep the full attention window for sliding-window models. Improves long-context recall at a high VRAM cost. Leave off unless you have VRAM to spare.",
+      fullSwaCacheDescription:
+        "Keep the full attention window for sliding-window models. Improves long-context recall at a high VRAM cost. Leave off unless you have VRAM to spare.",
       toggleFullSwaCache: "Toggle full SWA cache",
       ropeBase: "RoPE Base",
       ropeBaseDescription: "Frequency base override",
@@ -4464,18 +4620,20 @@ export const enMessages = {
       dryPenaltyLastN: "DRY Penalty Last N",
       dryPenaltyLastNDescription: "Use `-1` to scan the full context",
       drySequenceBreakers: "DRY Sequence Breakers",
-      drySequenceBreakersDescription: "Comma-separated boundaries like `\\n`, `:`, `\"`, `*`",
+      drySequenceBreakersDescription: 'Comma-separated boundaries like `\\n`, `:`, `"`, `*`',
       seed: "Seed",
       seedDescription: "Leave blank for random",
     },
     mtp: {
       title: "Multi-Token Prediction",
-      description: "Speculative decoding via bundled MTP layers or an external draft file. Ignored when the model has neither.",
+      description:
+        "Speculative decoding via bundled MTP layers or an external draft file. Ignored when the model has neither.",
       toggle: "Toggle multi-token prediction",
       draftTokens: "Draft Tokens",
       draftTokensDescription: "Speculative tokens per step (1 to 8)",
       draftFile: "MTP Draft File",
-      draftFileDescription: "Optional external draft GGUF. Auto-discovered from a sibling mtp-*.gguf when empty.",
+      draftFileDescription:
+        "Optional external draft GGUF. Auto-discovered from a sibling mtp-*.gguf when empty.",
       draftFilePlaceholder: "Auto-discover",
     },
     templates: {
@@ -4490,8 +4648,10 @@ export const enMessages = {
       rawCompletionFallbackDescription: "Only for raw-tuned models",
       rawCompletionDefault: "Default (disabled)",
       strictMode: "Strict Mode",
-      strictModeDescription: "Don't use this if you don't know what you are doing. This bypasses llama.cpp safety fallbacks that lower GPU layers, clamp context or batch, or switch a failed GPU load to CPU.",
-      strictModeWarning: "Use only when you want manual layer offload, context, and batch settings enforced as-is.",
+      strictModeDescription:
+        "Don't use this if you don't know what you are doing. This bypasses llama.cpp safety fallbacks that lower GPU layers, clamp context or batch, or switch a failed GPU load to CPU.",
+      strictModeWarning:
+        "Use only when you want manual layer offload, context, and batch settings enforced as-is.",
     },
     ollamaParams: {
       contextLength: "Context Length",
@@ -4569,12 +4729,18 @@ export const enMessages = {
     destinationLocalSection: "On this device",
     destinationOllamaSection: "Remote Ollama",
     destinationPickerTitle: "Where should models go?",
-    destinationPickerSubtitle: "Pick where to send the next download. You can change this any time.",
-    destinationNoOllama: "No Ollama providers configured. Add one in Settings → Providers to pull models to a remote instance.",
+    destinationPickerSubtitle:
+      "Pick where to send the next download. You can change this any time.",
+    destinationNoOllama:
+      "No Ollama providers configured. Add one in Settings → Providers to pull models to a remote instance.",
+    mobileOllamaTitle: "Connect an Ollama provider",
+    mobileOllamaCta: "Add Ollama Provider",
     ollamaModeNoticeTitle: "Recommendations unavailable",
-    ollamaModeNoticeBody: "This model runs on the remote host, so the app cannot estimate runnability on its own. Enable Sprout for this Ollama provider to probe the host's GPU and memory, and recommendations will reflect that machine.",
+    ollamaModeNoticeBody:
+      "This model runs on the remote host, so the app cannot estimate runnability on its own. Enable Sprout for this Ollama provider to probe the host's GPU and memory, and recommendations will reflect that machine.",
     getSprout: "Get Sprout",
-    ollamaVisionUnsupported: "Vision is not available for models imported to Ollama, even with an mmproj file. Run this model locally for image support.",
+    ollamaVisionUnsupported:
+      "Vision is not available for models imported to Ollama, even with an mmproj file. Run this model locally for image support.",
     sortTrending: "Trending",
     sortDownloads: "Most Downloaded",
     sortLikes: "Most Liked",
@@ -4586,7 +4752,8 @@ export const enMessages = {
     libraryEmpty: "No downloaded models yet",
     libraryEmptyHint: "Download GGUF models from the Model Browser, or enter a path manually.",
     libraryTitle: "Downloaded Models",
-    moveToLibrary: "This model is outside the LettuceAI GGUF library. Move it into the library to keep local models stored in a single location.",
+    moveToLibrary:
+      "This model is outside the LettuceAI GGUF library. Move it into the library to keep local models stored in a single location.",
     moveToLibraryYes: "Move to library",
     moveToLibraryNo: "Keep current location",
     moveToLibraryMoving: "Moving model...",
@@ -4652,7 +4819,8 @@ export const enMessages = {
     detailKvDistribution: "KV Cache Distribution",
     detailKvOnGpu: "GPU (VRAM)",
     detailKvOnRam: "System RAM",
-    kvDistributionTip: "{{pct}}% of KV cache is on RAM. Prompt processing (prefill) will be slower — 100% GPU keeps it instant.",
+    kvDistributionTip:
+      "{{pct}}% of KV cache is on RAM. Prompt processing (prefill) will be slower — 100% GPU keeps it instant.",
     "detailLayers-ngl": "Layers to Offload (-ngl)",
     detailOptimalGpuCtx: "Optimal GPU Context",
     detailOptimalRamCtx: "Max RAM Context",
@@ -4661,7 +4829,8 @@ export const enMessages = {
     optimalGpuCtxShort: "GPU: {{ctx}}",
     optimalRamCtxShort: "Max: {{ctx}}",
     fullGpuOffloadShort: "100% GPU: {{ctx}}",
-    ctxExceedsGpu: "Context exceeds GPU-optimal ({{ctx}}). KV cache will spill to RAM, reducing speed.",
+    ctxExceedsGpu:
+      "Context exceeds GPU-optimal ({{ctx}}). KV cache will spill to RAM, reducing speed.",
     modelExceedsVram: "Model exceeds VRAM. Running from RAM with partial GPU offload.",
     clearSearch: "Clear search",
     filters: "Filters",
@@ -4695,9 +4864,11 @@ export const enMessages = {
     mtpHintBundled: "Use bundled MTP layers for faster output",
     mtpHintSidecar: "Download MTP draft sidecar for faster output",
     mtpFile: "MTP File",
-    gpuOffloadUnavailable: "GPU offload is unavailable on this backend. Model offload and KV placement stay on automatic CPU-safe defaults.",
+    gpuOffloadUnavailable:
+      "GPU offload is unavailable on this backend. Model offload and KV placement stay on automatic CPU-safe defaults.",
     kvLocationLabel: "KV cache location",
-    kvPlacementUnavailable: "KV cache placement is unavailable until a Vulkan or CUDA backend is detected.",
+    kvPlacementUnavailable:
+      "KV cache placement is unavailable until a Vulkan or CUDA backend is detected.",
     compare: "Compare",
     kvF32: "F32 (maximum quality)",
     kvF16: "F16 (high quality)",
@@ -4723,7 +4894,8 @@ export const enMessages = {
     filterMax: "Max",
     filterMinPlaceholder: "e.g. 2",
     filterMaxPlaceholder: "e.g. 12",
-    filterParamNote: "Models without a detectable parameter size are excluded when this filter is active.",
+    filterParamNote:
+      "Models without a detectable parameter size are excluded when this filter is active.",
     filterQuickPresets: "Quick presets",
     filterResetAll: "Reset all filters",
     runabilityTooltip: "Runability: {{score}}/100 ({{label}}) · {{mode}}{{ram}}{{vram}}",
@@ -4734,10 +4906,13 @@ export const enMessages = {
     imageSupportUnavailable: "Image support unavailable",
     imageSupportUnavailableBody: "Select a multimodal projector file first.",
     downloadPartiallyQueued: "Download partially queued",
-    downloadPartiallyQueuedBody: "The mmproj file was queued, but the main model file could not be queued.",
+    downloadPartiallyQueuedBody:
+      "The mmproj file was queued, but the main model file could not be queued.",
     modelInstalled: "Model installed",
-    modelInstalledWithFeatures: "{{name}} added with {{features}}, {{ctx}} ctx, {{kv}} KV cache, {{offload}} model offload, and {{placement}} KV placement.",
-    modelInstalledNoFeatures: "{{name}} added with {{ctx}} ctx, {{kv}} KV cache, {{offload}} model offload, and {{placement}} KV placement.",
+    modelInstalledWithFeatures:
+      "{{name}} added with {{features}}, {{ctx}} ctx, {{kv}} KV cache, {{offload}} model offload, and {{placement}} KV placement.",
+    modelInstalledNoFeatures:
+      "{{name}} added with {{ctx}} ctx, {{kv}} KV cache, {{offload}} model offload, and {{placement}} KV placement.",
     featureImageSupport: "image support",
     featureMtp: "multi-token prediction",
     featureJoin: " and ",
@@ -4839,7 +5014,7 @@ export const enMessages = {
       reorder: "Reorder",
       delete: "Delete",
       deleteTitle: "Delete entry?",
-      deleteMessage: "Remove \"{{name}}\" from the prompt template? This cannot be undone.",
+      deleteMessage: 'Remove "{{name}}" from the prompt template? This cannot be undone.',
       deleteConfirm: "Delete",
       thisEntry: "this entry",
       condensedName: "Condensed System Prompt",
@@ -4880,7 +5055,8 @@ export const enMessages = {
     },
     delete: {
       title: "Delete Prompt?",
-      fallbackWarning: "This action cannot be undone. Any characters using this prompt will fall back to the default.",
+      fallbackWarning:
+        "This action cannot be undone. Any characters using this prompt will fall back to the default.",
       deleting: "Deleting...",
     },
     updateProtected: {
@@ -4888,7 +5064,8 @@ export const enMessages = {
       updating: "Updating...",
       title: "Update protected prompts?",
       warningTitle: "This discards your edits",
-      warningBody: "Every built-in (protected) prompt is reset to its latest bundled version and reconnected to auto-refresh. Any changes you made to protected prompts will be lost. Your own custom prompts are not affected.",
+      warningBody:
+        "Every built-in (protected) prompt is reset to its latest bundled version and reconnected to auto-refresh. Any changes you made to protected prompts will be lost. Your own custom prompts are not affected.",
       confirm: "Update to latest",
       successTitle: "Protected prompts updated",
       successMessage: "All protected prompts were reset to their latest version.",
@@ -4900,7 +5077,7 @@ export const enMessages = {
     toasts: {
       exportFailedTitle: "Export failed",
       importedTitle: "Imported successfully",
-      importedMessage: "Prompt set \"{{name}}\" was imported.",
+      importedMessage: 'Prompt set "{{name}}" was imported.',
       importFailedTitle: "Import failed",
       noImportablePrompts: "No importable prompts found in this file.",
     },
@@ -4936,7 +5113,8 @@ export const enMessages = {
       nicknamePlaceholder: "e.g., Work Variant, RPG Mode...",
       nicknameHint: "A private nickname to distinguish variants of this persona in your library",
       descriptionLabel: "DESCRIPTION",
-      descriptionPlaceholder: "Describe how the AI should address you, your preferences, background, or communication style...",
+      descriptionPlaceholder:
+        "Describe how the AI should address you, your preferences, background, or communication style...",
       wordCount: "words",
       descriptionHint: "Be specific about how you want to be addressed",
       setAsDefault: "Set as Default",
@@ -4945,11 +5123,13 @@ export const enMessages = {
     },
     designReferences: {
       title: "Design references",
-      description: "Attach a few stable image references and one concise design note for scene generation.",
+      description:
+        "Attach a few stable image references and one concise design note for scene generation.",
     },
     create: {
       namePlaceholderExample: "Professional Writer",
-      descriptionPlaceholderExample: "Write in a professional, clear, and concise style. Use formal language and focus on delivering information effectively...",
+      descriptionPlaceholderExample:
+        "Write in a professional, clear, and concise style. Use formal language and focus on delivering information effectively...",
     },
     errors: {
       exportFailed: "Failed to export persona",
@@ -4959,7 +5139,8 @@ export const enMessages = {
     },
     importToast: {
       legacyJsonTitle: "Legacy JSON import detected",
-      legacyJsonMessage: "JSON imports are deprecated and will be removed soon. Use Settings > Convert Files.",
+      legacyJsonMessage:
+        "JSON imports are deprecated and will be removed soon. Use Settings > Convert Files.",
       successMessage: "Persona imported successfully! Opening it for review.",
     },
   },
@@ -4983,7 +5164,8 @@ export const enMessages = {
       sectionTitle: "Data Protection",
       remoteAvatarTitle: "Remote Avatar Download",
       remoteAvatarDesc: "Auto-download avatar images from HTTPS URLs during character card import",
-      remoteAvatarFooter: "Disable this to prevent network avatar fetches when importing character cards",
+      remoteAvatarFooter:
+        "Disable this to prevent network avatar fetches when importing character cards",
       analyticsTitle: "Analytics",
       unavailable: "Unavailable",
       analyticsDescAvailable: "Help improve the app with anonymous usage events",
@@ -4992,13 +5174,16 @@ export const enMessages = {
       analyticsFooterUnavailable: "Set APTABASE_KEY to enable analytics",
       aptabaseTitle: "Aptabase Analytics",
       aptabaseBadge: "Anonymous",
-      aptabaseDesc: "Events are anonymous and contain only the event name and not-identifying properties we define. We do not send message content or personal identifiers.",
+      aptabaseDesc:
+        "Events are anonymous and contain only the event name and not-identifying properties we define. We do not send message content or personal identifiers.",
     },
     certificates: {
       sectionTitle: "Trusted Certificates",
       customRootCasTitle: "Custom Root CAs",
-      customRootCasDesc: "Import PEM certificates for self-hosted HTTPS endpoints such as Ollama behind Caddy or a private CA",
-      footer: "These certificates are added to the app trust store. They do not disable TLS verification.",
+      customRootCasDesc:
+        "Import PEM certificates for self-hosted HTTPS endpoints such as Ollama behind Caddy or a private CA",
+      footer:
+        "These certificates are added to the app trust store. They do not disable TLS verification.",
       empty: "No custom certificates imported.",
       importedAt: "Imported {{date}}",
       errorNotPem: "The selected file is not a PEM certificate.",
@@ -5039,15 +5224,18 @@ export const enMessages = {
       title: "Dynamic Memory",
       contextWindow: "Context Window",
       contextWindowDesc: "Number of recent messages to include (1-1000)",
-      infoText: "Dynamic Memory uses AI to automatically summarize and manage conversation context, enabling longer, more coherent conversations.",
-      disabledText: "When disabled, the app uses a simple sliding window of recent messages determined by the Context Window setting.",
+      infoText:
+        "Dynamic Memory uses AI to automatically summarize and manage conversation context, enabling longer, more coherent conversations.",
+      disabledText:
+        "When disabled, the app uses a simple sliding window of recent messages determined by the Context Window setting.",
     },
     usageAnalytics: {
       recalculateTitle: "Recalculate Usage Costs",
       recalculateDesc: "Update all historical usage records with correct pricing",
       recalculating: "Recalculating...",
       recalculateButton: "Recalculate All Costs",
-      openRouterApiKeyRequired: "OpenRouter API key required. Configure it in Settings → Providers.",
+      openRouterApiKeyRequired:
+        "OpenRouter API key required. Configure it in Settings → Providers.",
       importantLabel: "Important:",
       warningCannotUndo: "This operation cannot be undone",
       warningMayTakeTime: "It may take time if you have many records",
@@ -5055,14 +5243,18 @@ export const enMessages = {
       warningExistingValues: "Existing cost values will be overwritten",
     },
     extra: {
-      creationHelperDetail: "Get intelligent suggestions for personality traits, backstory, and dialogue style",
+      creationHelperDetail:
+        "Get intelligent suggestions for personality traits, backstory, and dialogue style",
       helpMeReplyDetail: "Generate contextual response options based on conversation history",
       lorebookEntryGenerator: "Lorebook Entry Generator",
-      lorebookEntryDesc: "Turn selected chat messages into durable lorebook entries and configure the draft prompts for entry writing and keyword generation.",
+      lorebookEntryDesc:
+        "Turn selected chat messages into durable lorebook entries and configure the draft prompts for entry writing and keyword generation.",
       companions: "Companions",
-      companionModeDesc: "Manage local analysis models for emotion, entity extraction, and memory routing used by companion characters.",
+      companionModeDesc:
+        "Manage local analysis models for emotion, entity extraction, and memory routing used by companion characters.",
       companionSoulWriter: "Companion Soul Writer",
-      companionSoulDesc: "Pick the model, fallback model, and prompt template used to draft Companion Souls. Tool-calling first, structured fallback if unsupported.",
+      companionSoulDesc:
+        "Pick the model, fallback model, and prompt template used to draft Companion Souls. Tool-calling first, structured fallback if unsupported.",
       network: "Network",
       apiServer: "API Server",
       apiServerDesc: "Expose models via an OpenAI-compatible API server",
@@ -5082,7 +5274,7 @@ export const enMessages = {
       availableBackups: "Available Backups",
       browseFiles: "Browse Files",
       noBackupsFound: "No backups found",
-      noBackupsDesc: "Create a backup or tap \"Browse Files\" to find one",
+      noBackupsDesc: 'Create a backup or tap "Browse Files" to find one',
       browseDesc: "Browse for .lettuce file",
       restoreDialogTitle: "Restore Backup",
       deleteDialogTitle: "Delete Backup",
@@ -5095,7 +5287,7 @@ export const enMessages = {
       savedLocation: "Saved to Downloads",
     },
     footer: {
-      note: "Backups are saved as encrypted .lettuce files in your Downloads folder. If a backup isn't showing, tap \"Browse Files\" to select it manually.",
+      note: 'Backups are saved as encrypted .lettuce files in your Downloads folder. If a backup isn\'t showing, tap "Browse Files" to select it manually.',
     },
     export: {
       passwordPrompt: "Choose a password to encrypt your backup. You'll need this to restore.",
@@ -5115,11 +5307,14 @@ export const enMessages = {
     embedding: {
       modalTitle: "Embedding Model Required",
       detectedTitle: "Dynamic Memory Detected",
-      detectedDescription: "This backup contains characters with dynamic memory enabled, which requires the embedding model (~260MB).",
-      choiceDescription: "You can download the model now to enable dynamic memory, or continue without it (dynamic memory will be disabled for affected characters).",
+      detectedDescription:
+        "This backup contains characters with dynamic memory enabled, which requires the embedding model (~260MB).",
+      choiceDescription:
+        "You can download the model now to enable dynamic memory, or continue without it (dynamic memory will be disabled for affected characters).",
       downloadButton: "Download Model",
       continueButton: "Continue Without Dynamic Memory",
-      reenableNote: "You can re-enable dynamic memory later in character settings after downloading the model.",
+      reenableNote:
+        "You can re-enable dynamic memory later in character settings after downloading the model.",
     },
     item: {
       filesCount: "{{count}} files",
@@ -5127,11 +5322,13 @@ export const enMessages = {
   },
   reset: {
     title: "Reset Everything",
-    description: "This will permanently delete all providers, models, characters, chat sessions, and preferences from this device.",
+    description:
+      "This will permanently delete all providers, models, characters, chat sessions, and preferences from this device.",
     warning: "This action cannot be undone",
     resetButton: "Reset All Data",
     confirmTitle: "Are You Sure?",
-    confirmDescription: "All your data will be permanently deleted. The app will return to first-time setup.",
+    confirmDescription:
+      "All your data will be permanently deleted. The app will return to first-time setup.",
     confirmButton: "Yes, Reset Everything",
     willBeRemoved: "Will be removed",
     items: {
@@ -5146,7 +5343,8 @@ export const enMessages = {
   helpPage: {
     backToSetup: "Back to setup",
     title: "Help & FAQ",
-    subtitle: "New to LettuceAI? Start here. The basics, BYOK explained, and answers to the most common questions.",
+    subtitle:
+      "New to LettuceAI? Start here. The basics, BYOK explained, and answers to the most common questions.",
     sections: {
       gettingStarted: "Getting started",
       privacySafety: "Privacy & safety",
@@ -5163,58 +5361,70 @@ export const enMessages = {
     faq: {
       whatIsLettuceai: {
         question: "What is LettuceAI?",
-        answer: "LettuceAI is a chat app for AI characters. Unlike apps that route your messages through a single hosted service, LettuceAI lets you bring your own API key from providers like Mistral, Cerebras, Google AI Studio, OpenAI, Anthropic, or run models locally on your device. Your chats stay on your device.",
+        answer:
+          "LettuceAI is a chat app for AI characters. Unlike apps that route your messages through a single hosted service, LettuceAI lets you bring your own API key from providers like Mistral, Cerebras, Google AI Studio, OpenAI, Anthropic, or run models locally on your device. Your chats stay on your device.",
       },
       whatIsApiKey: {
         question: "What is an API key and why do I need one? (BYOK explained)",
-        p1: "BYOK means \"Bring Your Own Key.\" Think of an API key as a personal pass card that lets an app talk to a service on your behalf. When you sign up with a provider like Mistral, Cerebras, Google AI Studio, or OpenAI, they give you a long string of letters and numbers. That's your key.",
-        p2: "The AI models that write the replies don't live on your phone. They run on big servers owned by those providers. Every message you send needs to travel to one of those servers, get a reply, and come back. The key tells the provider \"this request is from me, charge it to my account.\"",
+        p1: 'BYOK means "Bring Your Own Key." Think of an API key as a personal pass card that lets an app talk to a service on your behalf. When you sign up with a provider like Mistral, Cerebras, Google AI Studio, or OpenAI, they give you a long string of letters and numbers. That\'s your key.',
+        p2: 'The AI models that write the replies don\'t live on your phone. They run on big servers owned by those providers. Every message you send needs to travel to one of those servers, get a reply, and come back. The key tells the provider "this request is from me, charge it to my account."',
         p3: "Most other AI chat apps hide this from you by running their own server in the middle: they hold one big key, you pay them a subscription, and your conversations pass through their machines. LettuceAI doesn't do that. You put your own key in the app, and messages go straight from your device to the provider you picked. Nothing in between.",
         p4: "That's why you have to add a key once before you can chat, and also why the app is free, your chats stay private, and you only pay for what you actually use.",
       },
       cheapestStart: {
         question: "What's the cheapest or easiest way to start?",
         mistralName: "Mistral",
-        mistralBefore: " has a generous free tier and good open-weight models. Sign up at console.mistral.ai, create a key, and paste it into Settings ",
+        mistralBefore:
+          " has a generous free tier and good open-weight models. Sign up at console.mistral.ai, create a key, and paste it into Settings ",
         mistralAfter: " Providers.",
         cerebrasName: "Cerebras",
-        cerebrasText: " is the fastest option out there with a free tier on Llama and Qwen models. Sign up at cloud.cerebras.ai.",
+        cerebrasText:
+          " is the fastest option out there with a free tier on Llama and Qwen models. Sign up at cloud.cerebras.ai.",
         googleName: "Google AI Studio",
         googleText: " also offers a generous free tier for Gemini models.",
-        localText: "If you don't want to use any cloud service, you can run models locally via the built-in llama.cpp option on desktop (Windows, macOS, or Linux). Local models aren't supported on mobile.",
+        localText:
+          "If you don't want to use any cloud service, you can run models locally via the built-in llama.cpp option on desktop (Windows, macOS, or Linux). Local models aren't supported on mobile.",
       },
       alternative: {
         question: "Is this an alternative to other AI chat apps?",
-        answer: "Yes. If you've used an AI chat app where everything just worked but you couldn't pick your model, couldn't control your data, or felt limited by a subscription, LettuceAI is built for that. You bring your own API key, pick the model you want, and your chats stay on your device. The trade-off is a short one-time setup; the upside is total control over cost, quality, and privacy.",
+        answer:
+          "Yes. If you've used an AI chat app where everything just worked but you couldn't pick your model, couldn't control your data, or felt limited by a subscription, LettuceAI is built for that. You bring your own API key, pick the model you want, and your chats stay on your device. The trade-off is a short one-time setup; the upside is total control over cost, quality, and privacy.",
       },
       cost: {
         question: "How much does it cost?",
-        answer: "LettuceAI itself is free. You pay the model provider directly, usually a fraction of a cent per message. Free tiers exist on Mistral, Cerebras, and Google AI Studio. Heavy use of frontier models (Claude Opus 4.7, GPT-5.1, Gemini 3 Pro) can add up, so check the provider's pricing page before picking a model.",
+        answer:
+          "LettuceAI itself is free. You pay the model provider directly, usually a fraction of a cent per message. Free tiers exist on Mistral, Cerebras, and Google AI Studio. Heavy use of frontier models (Claude Opus 4.7, GPT-5.1, Gemini 3 Pro) can add up, so check the provider's pricing page before picking a model.",
       },
       apiKeySafe: {
         question: "Is my API key safe?",
-        answer: "Your API key is stored locally on your device and only ever sent to the provider you configured it for. LettuceAI does not have a server that sees your key or your messages.",
+        answer:
+          "Your API key is stored locally on your device and only ever sent to the provider you configured it for. LettuceAI does not have a server that sees your key or your messages.",
       },
       chatsStored: {
         question: "Where are my chats stored? Can anyone read them?",
-        answer: "Chats are stored locally in the app's database on your device. They are not uploaded anywhere. When you send a message, only that conversation's text is sent to your chosen provider for a reply, then their response comes back and is saved locally.",
+        answer:
+          "Chats are stored locally in the app's database on your device. They are not uploaded anywhere. When you send a message, only that conversation's text is sent to your chosen provider for a reply, then their response comes back and is saved locally.",
       },
       chatsDeleted: {
         question: "Can my chats get deleted on their own?",
-        answer: "No. Chats live in a local database on your device and only you can delete them. They aren't synced to any LettuceAI server, so we can't wipe them, and no automatic cleanup runs in the background. The only ways your chats go away are: you delete them yourself, you uninstall the app, you reset the app, or your device storage is wiped.",
+        answer:
+          "No. Chats live in a local database on your device and only you can delete them. They aren't synced to any LettuceAI server, so we can't wipe them, and no automatic cleanup runs in the background. The only ways your chats go away are: you delete them yourself, you uninstall the app, you reset the app, or your device storage is wiped.",
       },
       editRemotely: {
         question: "Can someone edit my data remotely?",
-        answer: "No. There's no remote admin panel, no LettuceAI account, and no server with a copy of your characters, chats, or settings. Nobody at LettuceAI can push a change to your data, lock you out, or reach into the app to modify anything. Your data only changes when you change it on your own device.",
+        answer:
+          "No. There's no remote admin panel, no LettuceAI account, and no server with a copy of your characters, chats, or settings. Nobody at LettuceAI can push a change to your data, lock you out, or reach into the app to modify anything. Your data only changes when you change it on your own device.",
       },
       shutdown: {
         question: "What happens to my data if LettuceAI shuts down?",
-        before: "Your characters and chats keep working as long as the app is on your device. Cloud models would stop replying if you have no key or your provider goes away, but everything you've created stays readable locally and exportable via Settings ",
+        before:
+          "Your characters and chats keep working as long as the app is on your device. Cloud models would stop replying if you have no key or your provider goes away, but everything you've created stays readable locally and exportable via Settings ",
         after: " Backup & Restore.",
       },
       training: {
         question: "Will providers train on my conversations?",
-        answer: "That depends on the provider's policy, not on LettuceAI. Most paid API tiers (OpenAI, Anthropic, Mistral) do not train on API traffic by default. Free tiers sometimes do. If this matters to you, read the privacy page of whichever provider you use.",
+        answer:
+          "That depends on the provider's policy, not on LettuceAI. Most paid API tiers (OpenAI, Anthropic, Mistral) do not train on API traffic by default. Free tiers sometimes do. If this matters to you, read the privacy page of whichever provider you use.",
       },
       whatIsModel: {
         question: "What's a 'model'? Which should I pick?",
@@ -5225,7 +5435,8 @@ export const enMessages = {
         deepseekName: "DeepSeek V4",
         deepseekText: " (cheap and very capable), or ",
         glmName: "GLM 4.7 / GLM 5",
-        glmText: " (strong roleplay quality). Cerebras runs many of these at extreme speed on its free tier. You can switch any time from a chat's settings.",
+        glmText:
+          " (strong roleplay quality). Cerebras runs many of these at extreme speed on its free tier. You can switch any time from a chat's settings.",
       },
       freeProviders: {
         question: "Are there free providers?",
@@ -5235,52 +5446,62 @@ export const enMessages = {
         cerebrasName: "Cerebras",
         afterCerebras: ", and ",
         googleName: "Google AI Studio",
-        afterGoogle: " all offer free tiers that are enough for casual everyday chatting. You still need to sign up and create an API key, but you don't add a payment method to start. Each provider has its own rate limits (how many messages per minute or per day), so if you hit a wall, just switch to another free provider or upgrade.",
+        afterGoogle:
+          " all offer free tiers that are enough for casual everyday chatting. You still need to sign up and create an API key, but you don't add a payment method to start. Each provider has its own rate limits (how many messages per minute or per day), so if you hit a wall, just switch to another free provider or upgrade.",
       },
       freeVsPaid: {
         question: "What's the difference between free and paid providers?",
         freeName: "Free tiers",
-        freeText: " usually give you access to smaller or older models, slower speeds, lower rate limits, and sometimes the provider may use your messages to train their next model. Great for trying things out or light daily use.",
+        freeText:
+          " usually give you access to smaller or older models, slower speeds, lower rate limits, and sometimes the provider may use your messages to train their next model. Great for trying things out or light daily use.",
         paidName: "Paid tiers",
-        paidText: " unlock the latest and largest models, higher rate limits, faster responses, and stronger privacy guarantees (most don't train on paid API traffic). You pay per message, typically a fraction of a cent, with no monthly minimum.",
-        mixText: "You can mix and match: keep a free key for everyday chat and a paid key for when you want the best quality.",
+        paidText:
+          " unlock the latest and largest models, higher rate limits, faster responses, and stronger privacy guarantees (most don't train on paid API traffic). You pay per message, typically a fraction of a cent, with no monthly minimum.",
+        mixText:
+          "You can mix and match: keep a free key for everyday chat and a paid key for when you want the best quality.",
       },
       whatIsToken: {
         question: "What is a token?",
-        p1: "A token is roughly a small piece of a word, about 4 characters or three-quarters of an English word on average. \"Hello there!\" is around 3 tokens. A full sentence might be 15-20.",
+        p1: 'A token is roughly a small piece of a word, about 4 characters or three-quarters of an English word on average. "Hello there!" is around 3 tokens. A full sentence might be 15-20.',
         p2: "Providers charge per token, not per message. Each request counts both the tokens you send (your message plus the character's setup and chat history) and the tokens the model writes back. That's why long chats with lots of context cost more than short fresh ones.",
-        p3: "You don't need to count tokens yourself. The app handles it. It just helps to know that \"1 million tokens\" on a pricing page is a lot of chatting.",
+        p3: 'You don\'t need to count tokens yourself. The app handles it. It just helps to know that "1 million tokens" on a pricing page is a lot of chatting.',
       },
       noDefaultModel: {
         question: "I see 'no default model configured'",
         p1: "This means either you haven't added any model to LettuceAI yet, or you added models but the character you're chatting with doesn't have one picked.",
         p2Before: "Open Settings ",
-        p2After: " Models and add a model from one of your configured providers. Then either set it as your global default on the same page, or open the character's settings and pick a model just for that character.",
+        p2After:
+          " Models and add a model from one of your configured providers. Then either set it as your global default on the same page, or open the character's settings and pick a model just for that character.",
         p3: "Each character can use its own model, or fall back to your global default if none is set.",
       },
       cloudVsLocal: {
         question: "What's the difference between cloud and local models?",
-        answer: "Cloud models (Mistral, Cerebras, OpenAI, Google) run on someone else's hardware, need an internet connection, and cost money per message. Local models run directly on your desktop computer through the built-in llama.cpp option, are private and offline, but need a capable PC and take more storage. Local models aren't supported on mobile.",
+        answer:
+          "Cloud models (Mistral, Cerebras, OpenAI, Google) run on someone else's hardware, need an internet connection, and cost money per message. Local models run directly on your desktop computer through the built-in llama.cpp option, are private and offline, but need a capable PC and take more storage. Local models aren't supported on mobile.",
       },
       whatIsCharacter: {
         question: "What's a character? Can I make my own?",
-        answer: "A character is an AI persona with a name, image, and description that shapes how it talks. Tap the + button on the Chats screen to create one, or import character cards from the discover tab or other communities.",
+        answer:
+          "A character is an AI persona with a name, image, and description that shapes how it talks. Tap the + button on the Chats screen to create one, or import character cards from the discover tab or other communities.",
       },
       whatIsPersona: {
         question: "What's a persona?",
         before: "A persona is ",
         yourWord: "your",
-        afterYour: " side of the conversation: your name, pronouns, and details the character should know about you. Set one up under Settings ",
+        afterYour:
+          " side of the conversation: your name, pronouns, and details the character should know about you. Set one up under Settings ",
         after: " Personas and it'll be used across your chats.",
       },
       charactersPrivate: {
         question: "Are the characters I create private?",
-        answer: "Yes. Characters you create stay on your device. LettuceAI has no upload button and no server to upload them to. They're only ever shared if you explicitly export a character card file and send it somewhere yourself.",
+        answer:
+          "Yes. Characters you create stay on your device. LettuceAI has no upload button and no server to upload them to. They're only ever shared if you explicitly export a character card file and send it somewhere yourself.",
       },
       backupMove: {
         question: "How do I back up or move to another device?",
         before: "Settings ",
-        after: " Backup & Restore lets you export everything to a file. To move to a new phone or computer, install LettuceAI there and use the \"Sync from another device\" option on the welcome screen, or restore from a backup file.",
+        after:
+          ' Backup & Restore lets you export everything to a file. To move to a new phone or computer, install LettuceAI there and use the "Sync from another device" option on the welcome screen, or restore from a backup file.',
       },
     },
   },
@@ -5333,13 +5554,14 @@ export const enMessages = {
     info: {
       exposesBefore: "Exposes an ",
       exposesBold: "OpenAI-compatible API",
-      exposesAfter: " on your local network so other devices and apps can use your configured models.",
+      exposesAfter:
+        " on your local network so other devices and apps can use your configured models.",
       endpoints: "Endpoints: ",
     },
     selector: {
       title: "Select Models to Expose",
       searchPlaceholder: "Search models...",
-      noResults: "No models found matching \"{{query}}\"",
+      noResults: 'No models found matching "{{query}}"',
       noModels: "No text-capable models configured",
       addModelsHint: "Add models in Settings first",
     },
@@ -5422,7 +5644,8 @@ export const enMessages = {
       showTokensPerSecond: "Show Tokens / Second",
       showTokensPerSecondDesc: "Display the generation speed in tokens per second (local models).",
       showMtp: "Show MTP Stats",
-      showMtpDesc: "Show speculative decoding efficiency (tokens per round and draft acceptance) for local models that support MTP.",
+      showMtpDesc:
+        "Show speculative decoding efficiency (tokens per round and draft acceptance) for local models that support MTP.",
       infoPlacement: {
         label: "Info Placement",
         belowHeader: "Below Header (Inside)",
@@ -5462,18 +5685,22 @@ export const enMessages = {
           right: "Right",
         },
         moveHeader: "Move Header",
-        moveHeaderDesc: "Align the header with the messages column. With Widget Area on, the header sits inside the column instead of above the widget panels.",
+        moveHeaderDesc:
+          "Align the header with the messages column. With Widget Area on, the header sits inside the column instead of above the widget panels.",
         moveFooter: "Move Input Area",
-        moveFooterDesc: "Align the input area with the messages column. With Widget Area on, the input sits inside the column instead of below the widget panels.",
+        moveFooterDesc:
+          "Align the input area with the messages column. With Widget Area on, the input sits inside the column instead of below the widget panels.",
         widgetArea: "Widget Area",
-        widgetAreaDesc: "Show side panels for widgets in the empty space around the messages column. Needs extra room on the desktop.",
+        widgetAreaDesc:
+          "Show side panels for widgets in the empty space around the messages column. Needs extra room on the desktop.",
         widgetCenterModeLabel: "Center Widget Layout",
         widgetCenterMode: {
           both: "Both",
           left: "Left only",
           right: "Right only",
         },
-        widgetEditHint: "Use the pencil icon at the top of the widget area to add and arrange widgets.",
+        widgetEditHint:
+          "Use the pencil icon at the top of the widget area to add and arrange widgets.",
       },
     },
     avatar: {
@@ -5493,7 +5720,8 @@ export const enMessages = {
     participantsBar: {
       title: "Participants Bar",
       enabled: "Show Participants Bar",
-      enabledDesc: "Show character avatars above the composer in group chats. Tap to mention, long-press or right-click to mute.",
+      enabledDesc:
+        "Show character avatars above the composer in group chats. Tap to mention, long-press or right-click to mute.",
       sizeLabel: "Avatar Size",
       shapeLabel: "Avatar Shape",
       shapeRound: "Round",
@@ -5544,7 +5772,8 @@ export const enMessages = {
       heavy: "Heavy",
       bubbleOpacity: "Bubble Opacity",
       transparentHeader: "Transparent Header",
-      transparentHeaderDesc: "When a chat background image is active, remove the header scrim and let the image show through.",
+      transparentHeaderDesc:
+        "When a chat background image is active, remove the header scrim and let the image show through.",
     },
     textColorMode: {
       label: "Text Color Mode",
@@ -5658,7 +5887,7 @@ export const enMessages = {
       exportName: "Export preset name",
       exportDefaultName: "Custom Preset {{date}}",
       renameName: "Rename preset",
-      deleteConfirm: "Delete imported preset \"{{name}}\"?",
+      deleteConfirm: 'Delete imported preset "{{name}}"?',
     },
     toasts: {
       loadFailedTitle: "Load failed",
@@ -5672,7 +5901,7 @@ export const enMessages = {
       importNoValidHex: "No valid hex colors found in file.",
       importReadFailed: "Could not read selected file.",
       importedTitle: "Imported",
-      importedMessage: "Added preset \"{{name}}\".",
+      importedMessage: 'Added preset "{{name}}".',
     },
     extra: {
       surface: "Surface",
@@ -5713,7 +5942,8 @@ export const enMessages = {
       auto: "Automatic",
       autoDescription: "Memory updates run on their own in the background.",
       askFirst: "Ask First",
-      askFirstDescription: "Ask before each update so you can start it now or skip and roll it into the next one.",
+      askFirstDescription:
+        "Ask before each update so you can start it now or skip and roll it into the next one.",
       manual: "Manual",
       manualDescription: "Updates only run when you trigger them from the memory panel.",
     },
@@ -5726,11 +5956,13 @@ export const enMessages = {
     page: {
       info: "Dynamic Memory automatically summarizes conversations to maintain context efficiently. Choose a preset or fine-tune settings for your needs.",
       disabledDirectTitle: "Dynamic memory is disabled for direct chats",
-      disabledDirectDescription: "Toggle the switch in the Direct Chats tab to enable it. Group chats use per-session memory mode.",
+      disabledDirectDescription:
+        "Toggle the switch in the Direct Chats tab to enable it. Group chats use per-session memory mode.",
       directChats: "Direct Chats",
       groupChats: "Group Chats",
       enableDirectChats: "Enable for Direct Chats",
-      groupChatsInfo: "Group chats use per-session memory mode. Enable dynamic memory in each group's settings. These settings control how dynamic memory behaves.",
+      groupChatsInfo:
+        "Group chats use per-session memory mode. Enable dynamic memory in each group's settings. These settings control how dynamic memory behaves.",
       memoryProfile: "Memory Profile",
       customSettings: "Custom settings - adjust values in Advanced Options below.",
       contextEnrichment: "Context Enrichment",
@@ -5749,7 +5981,8 @@ export const enMessages = {
       retrievalMode: "Retrieval Mode",
       retrievalModeSmart: "Smart",
       retrievalModeCosine: "Cosine",
-      retrievalModeDescription: "Smart blends relevance with recency/frequency. Cosine uses pure top similarity.",
+      retrievalModeDescription:
+        "Smart blends relevance with recency/frequency. Cosine uses pure top similarity.",
       retrievalLimit: "Retrieval Limit",
       retrievalLimitDescription: "Max memories selected per turn",
       decayRate: "Decay Rate",
@@ -5770,10 +6003,12 @@ export const enMessages = {
       tokenCapacity: "Token Capacity",
       tokenCapacityDescription: "Higher values = better memory for longer conversations",
       keepModelLoaded: "Keep Model Loaded",
-      keepModelLoadedDescription: "Keeps embedding model + tokenizer in memory to avoid reload overhead",
+      keepModelLoadedDescription:
+        "Keeps embedding model + tokenizer in memory to avoid reload overhead",
       installedModel: "Installed model: {{version}} ({{tokens}} max tokens)",
       downloadEmbeddingModel: "Download Embedding Model",
-      downloadEmbeddingDescription: "Choose which version to download. Installed versions are disabled.",
+      downloadEmbeddingDescription:
+        "Choose which version to download. Installed versions are disabled.",
       downloadVersion: "Download {{version}}",
       downloadV2Description: "Legacy model",
       downloadV3Description: "Deprecated but still supported",
@@ -5781,7 +6016,8 @@ export const enMessages = {
       selectModel: "Select Model",
       searchModels: "Search models...",
       deleteEmbeddingTitle: "Delete {{version}} model?",
-      deleteEmbeddingMessage: "Are you sure you want to delete {{version}}? You can download it again later.",
+      deleteEmbeddingMessage:
+        "Are you sure you want to delete {{version}}? You can download it again later.",
       msgsUnit: "msgs",
       entriesUnit: "entries",
       tokensUnit: "tokens",
@@ -5789,27 +6025,34 @@ export const enMessages = {
       perCycleUnit: "/ cycle",
       turnsUnit: "turns",
       recursiveMemoryLoops: "Recursive Memory Loops",
-      recursiveMemoryLoopsDescription: "When enabled, Dynamic Memory sends tool results back to the model and keeps looping until it calls done. This can help weaker models extract multiple memories, but increases latency and token usage.",
+      recursiveMemoryLoopsDescription:
+        "When enabled, Dynamic Memory sends tool results back to the model and keeps looping until it calls done. This can help weaker models extract multiple memories, but increases latency and token usage.",
       deleteConfidenceDefault: "Delete Confidence Default",
-      deleteConfidenceDefaultDescription: "Used when the model omits delete confidence. Lower values prefer cold storage instead of hard delete.",
+      deleteConfidenceDefaultDescription:
+        "Used when the model omits delete confidence. Lower values prefer cold storage instead of hard delete.",
       maxHardDeleteRatio: "Max Hard Delete Ratio",
-      maxHardDeleteRatioDescription: "Caps how much of the starting memory set can be hard-deleted in one cycle. Extra deletes are downgraded to cold storage.",
+      maxHardDeleteRatioDescription:
+        "Caps how much of the starting memory set can be hard-deleted in one cycle. Extra deletes are downgraded to cold storage.",
       recursiveLoopHardCap: "Recursive Loop Hard Cap",
-      recursiveLoopHardCapDescription: "Maximum number of recursive memory-manager turns before the system stops even if the model never calls done.",
+      recursiveLoopHardCapDescription:
+        "Maximum number of recursive memory-manager turns before the system stops even if the model never calls done.",
       summarisationSection: "Summarisation",
       summaryPrompt: "Summary Prompt",
       summaryPromptDescription: "Used to summarize recent conversation turns into durable context.",
       memoryManagerPrompt: "Memory Manager Prompt",
-      memoryManagerPromptDescription: "Used to add, update, and delete memories for both direct and group chats.",
+      memoryManagerPromptDescription:
+        "Used to add, update, and delete memories for both direct and group chats.",
       useBuiltInDefault: "Use built-in default",
       structuredFallback: "Structured Fallback",
       structuredFallbackJsonTitle: "JSON",
-      structuredFallbackJsonDescription: "Compact structured output when tool calling is unavailable.",
+      structuredFallbackJsonDescription:
+        "Compact structured output when tool calling is unavailable.",
       structuredFallbackXmlTitle: "XML",
       structuredFallbackXmlDescription: "Use when the model formats XML more reliably than JSON.",
       structuredFallbackHint: "Used only when the model can't call tools directly.",
       overwriteSampler: "Overwrite Sampler Configuration",
-      overwriteSamplerDescription: "Use a fixed, loop-resistant llama.cpp sampler setup for dynamic memory instead of the summarisation model's saved configuration. Enables DRY repetition suppression to stop models (e.g. Gemma) from getting stuck in repeating loops during memory generation.",
+      overwriteSamplerDescription:
+        "Use a fixed, loop-resistant llama.cpp sampler setup for dynamic memory instead of the summarisation model's saved configuration. Enables DRY repetition suppression to stop models (e.g. Gemma) from getting stuck in repeating loops during memory generation.",
       samplerValues: "Sampler values",
       samplerOrder: "order",
       samplerTemperature: "Temperature",
@@ -5828,8 +6071,10 @@ export const enMessages = {
       embeddingV3Deprecated: "v3 remains usable but is deprecated.",
       embeddingV4Latest: "v4 is the latest memory model and supports Matryoshka dimensions.",
       embeddingDimensions: "Embedding dimensions",
-      embeddingDimensionsHelper: "v4 supports Matryoshka slicing. Lower dimensions use less storage and run faster; higher dimensions preserve more recall.",
-      installedMemoryModel: "Installed memory model {{version}} · {{tokens}} tokens · {{dimensions}}d",
+      embeddingDimensionsHelper:
+        "v4 supports Matryoshka slicing. Lower dimensions use less storage and run faster; higher dimensions preserve more recall.",
+      installedMemoryModel:
+        "Installed memory model {{version}} · {{tokens}} tokens · {{dimensions}}d",
       downloadV4Description: "Latest roleplay memory quality with Matryoshka dimensions",
     },
     presets: {
@@ -5867,9 +6112,12 @@ export const enMessages = {
       maxTokensDescription: "Maximum length of suggestions",
       historyCount: "Messages Sent",
       historyCountDescription: "How many recent messages to include as context",
-      conversationalHint: "Suggestions will be written as natural dialogue, suitable for casual chats.",
-      roleplayHint: "Suggestions will include roleplay elements like *actions* and narrative descriptions.",
-      footerInfo: "This setting applies globally across all conversations. Lower token counts generate shorter, quicker suggestions while higher counts allow for more detailed responses.",
+      conversationalHint:
+        "Suggestions will be written as natural dialogue, suitable for casual chats.",
+      roleplayHint:
+        "Suggestions will include roleplay elements like *actions* and narrative descriptions.",
+      footerInfo:
+        "This setting applies globally across all conversations. Lower token counts generate shorter, quicker suggestions while higher counts allow for more detailed responses.",
       selectReplyModel: "Select Reply Model",
       searchModels: "Search models...",
     },
@@ -5901,11 +6149,13 @@ export const enMessages = {
     sdSection: "sd.cpp Defaults",
     engineTitle: "Stable Diffusion Engine (sd.cpp)",
     useExistingBinary: "Use Existing Installation",
-    customBinaryHint: "Point to an sd-cli binary already on this computer instead of downloading one.",
+    customBinaryHint:
+      "Point to an sd-cli binary already on this computer instead of downloading one.",
     customBinarySet: "Custom engine path saved",
     customBinaryFailed: "Failed to set engine path",
     llamaTitle: "llama.cpp Defaults",
-    llamaDescription: "Baseline values used by the runnability calculator and model recommendations.",
+    llamaDescription:
+      "Baseline values used by the runnability calculator and model recommendations.",
     llamaContextTitle: "Default Context Length",
     llamaContextDescription: "Context size assumed when scoring models. Empty uses 8192.",
     llamaKvTitle: "Default KV Cache Quant",
@@ -5927,7 +6177,8 @@ export const enMessages = {
     moveMenuTitle: "Move existing models?",
     moveCount: "{{count}} models are stored in the current folder.",
     moveConfirm: "Move them to the new folder",
-    moveConfirmDescription: "Recommended. Relocates your models and keeps them working automatically.",
+    moveConfirmDescription:
+      "Recommended. Relocates your models and keeps them working automatically.",
     moveKeep: "Leave them where they are",
     moveKeepDescription: "Only new downloads use the new folder. Existing models stay put.",
     moveWorking: "Moving models...",
@@ -5945,8 +6196,7 @@ export const enMessages = {
     llamaGpuNone: "No discrete GPU devices reported by llama.cpp.",
     llamaGpuMemory: "{{free}} / {{total}} GB free",
     llamaGpuMinTwo: "Select at least two GPUs to activate multi-GPU loading.",
-    llamaMultiGpuRequiresTwo:
-      "Requires two or more discrete GPUs. Integrated GPUs are never used.",
+    llamaMultiGpuRequiresTwo: "Requires two or more discrete GPUs. Integrated GPUs are never used.",
     llamaDistributionTitle: "Distribution",
     llamaDistributionDescription: "Default way layers are spread across the selected GPUs.",
     llamaDistBalanced: "Balanced",
@@ -6019,9 +6269,11 @@ export const enMessages = {
       auto: "Automatic",
       autoDescription: "Generate the scene image as soon as the model provides a scene prompt.",
       askFirst: "Ask first",
-      askFirstDescription: "Show the detected scene prompt and wait for your approval before generating an image.",
+      askFirstDescription:
+        "Show the detected scene prompt and wait for your approval before generating an image.",
       manual: "Manual",
-      manualDescription: "Ignore scene prompts in model responses. Only use actions you trigger yourself.",
+      manualDescription:
+        "Ignore scene prompts in model responses. Only use actions you trigger yourself.",
     },
     empty: {
       title: "No Image Models",
@@ -6033,18 +6285,22 @@ export const enMessages = {
       promptingTitle: "Prompting",
       avatar: {
         title: "Avatar Generation",
-        description: "Default model used when generating avatars from the avatar picker or related profile image flows.",
+        description:
+          "Default model used when generating avatars from the avatar picker or related profile image flows.",
       },
       scene: {
         title: "Scene Generation",
-        description: "Reserved model for scene images generated from conversation context or scene prompts.",
+        description:
+          "Reserved model for scene images generated from conversation context or scene prompts.",
       },
       writer: {
         title: "Scene Writer",
-        description: "Reserved multimodal text model for drafting scene prompts and design reference descriptions from chat context, avatars, and reference images.",
+        description:
+          "Reserved multimodal text model for drafting scene prompts and design reference descriptions from chat context, avatars, and reference images.",
       },
     },
-    cardDisabledHint: "Model selection stays saved, but this flow will not run until you turn it back on.",
+    cardDisabledHint:
+      "Model selection stays saved, but this flow will not run until you turn it back on.",
     errors: {
       loadFailed: "Failed to load settings",
       saveFailed: "Failed to save image generation settings",
@@ -6064,7 +6320,8 @@ export const enMessages = {
       installEngine: "Download Engine",
       recommended: "recommended",
       updateFailed: "Failed to update model files",
-      noModels: "No local models yet. Download one from Hugging Face or create a model with the Local Diffusion platform.",
+      noModels:
+        "No local models yet. Download one from Hugging Face or create a model with the Local Diffusion platform.",
       missingFiles: "No checkpoint or diffusion model file yet. Attach one to finish setup.",
       roles: {
         checkpoint: "Checkpoint",
@@ -6117,12 +6374,14 @@ export const enMessages = {
     },
     usageTracking: {
       recalculateAll: "Recalculate All Usage Costs",
-      recalculateAllDesc: "Re-fetches pricing and recalculates costs for all OpenRouter usage records",
+      recalculateAllDesc:
+        "Re-fetches pricing and recalculates costs for all OpenRouter usage records",
     },
     crashTesting: {
       forceCrash: "Crash App Now",
       forceCrashDesc: "Immediately terminates the native app process to test crash detection",
-      forceCrashConfirm: "This will immediately crash the app to test the crash detector. Continue?",
+      forceCrashConfirm:
+        "This will immediately crash the app to test the crash detector. Continue?",
     },
     environmentInfo: {
       mode: "Mode",
@@ -6154,7 +6413,8 @@ export const enMessages = {
       createGroupBenchmarkFailed: "Failed to create seeded benchmark group session: {{error}}",
       dbOptimizeFailed: "DB optimize failed: {{error}}",
       backupFailed: "Backup failed: {{error}}",
-      openRouterKeyMissing: "OpenRouter API key not found. Please configure it in Settings > Providers first.",
+      openRouterKeyMissing:
+        "OpenRouter API key not found. Please configure it in Settings > Providers first.",
       recalculationFailed: "Recalculation failed: {{error}}",
       resetToursFailed: "Failed to reset tours: {{error}}",
       crashFailed: "Failed to crash app: {{error}}",
@@ -6166,9 +6426,11 @@ export const enMessages = {
     },
     benchmarks: {
       createChat: "Create seeded benchmark chat",
-      createChatDesc: "Creates a dynamic-memory character, starting scene, and a 20-message continuity test session, then opens it.",
+      createChatDesc:
+        "Creates a dynamic-memory character, starting scene, and a 20-message continuity test session, then opens it.",
       createGroupChat: "Create seeded benchmark group chat",
-      createGroupChatDesc: "Creates a dynamic-memory group chat with three benchmark characters and 30 seeded messages, then opens it.",
+      createGroupChatDesc:
+        "Creates a dynamic-memory group chat with three benchmark characters and 30 seeded messages, then opens it.",
     },
     extra: {
       testCharacter: "Test Character",
@@ -6219,7 +6481,8 @@ export const enMessages = {
       testsPassed: "All tests passed successfully",
       verificationFailed: "Verification failed",
     },
-    capacityHint: "Higher capacity means better memory for longer conversations, but uses more processing power per embedding.",
+    capacityHint:
+      "Higher capacity means better memory for longer conversations, but uses more processing power per embedding.",
     recommended: "Recommended",
     downloadButton: "Download {{version}} Model ({{size}})",
     retryDownload: "Retry Download",
@@ -6356,8 +6619,8 @@ export const enMessages = {
       tips: {
         title: "Search Tips",
         tip1: "Search by character name, author, or description",
-        tip2: "Use tags like \"anime\", \"fantasy\", or \"romance\"",
-        tip3: "Try specific traits like \"tsundere\" or \"villain\"",
+        tip2: 'Use tags like "anime", "fantasy", or "romance"',
+        tip3: 'Try specific traits like "tsundere" or "villain"',
       },
       loading: "Loading...",
       loadMore: "Load More",
@@ -6444,7 +6707,8 @@ export const enMessages = {
     welcome: {
       title: "Welcome to Lettuce Engine",
       subtitle: "Let's configure your AI character engine. This will take about 2 minutes.",
-      feature1: "The Engine gives your AI characters persistent memory, emotions, relationships, and a real identity.",
+      feature1:
+        "The Engine gives your AI characters persistent memory, emotions, relationships, and a real identity.",
       feature2: "First, we'll set up an LLM backend, then configure your engine settings.",
       getStarted: "Let's Go",
     },
@@ -6477,7 +6741,8 @@ export const enMessages = {
     },
     providers: {
       title: "LLM Provider",
-      subtitle: "The Engine needs at least one LLM backend to function. Configure one or more providers below.",
+      subtitle:
+        "The Engine needs at least one LLM backend to function. Configure one or more providers below.",
       importFromProviders: "Import from your providers",
       imported: "Imported",
       use: "Use",
@@ -6534,7 +6799,8 @@ export const enMessages = {
     },
     settingsStep: {
       title: "Engine Settings",
-      subtitle: "Configure engine-wide settings. These all have sensible defaults — feel free to skip.",
+      subtitle:
+        "Configure engine-wide settings. These all have sensible defaults — feel free to skip.",
       completingSetup: "Completing Setup...",
       completeSetup: "Complete Setup",
     },
@@ -6564,7 +6830,8 @@ export const enMessages = {
           settingLabel: "Setting",
           settingPlaceholder: "Describe where the character lives (first person)...",
           coreIdentityLabel: "Core Identity",
-          coreIdentityPlaceholder: "Who is this character at their core? (first person, 3-5 sentences)",
+          coreIdentityPlaceholder:
+            "Who is this character at their core? (first person, 3-5 sentences)",
           backstoryLabel: "Backstory",
           backstoryPlaceholder: "Life story and key events (first person)...",
         },
@@ -6572,11 +6839,13 @@ export const enMessages = {
           title: "Create Character",
           subtitle: "Generate a character with AI or build one from scratch.",
           aiBoost: "AI Boost",
-          aiBoostDesc: "Describe your character idea and the AI will generate a full character definition.",
+          aiBoostDesc:
+            "Describe your character idea and the AI will generate a full character definition.",
           nameOptional: "Name (optional)",
           namePlaceholder: "e.g. Marcus Cole",
           seedDescription: "Seed Description *",
-          seedPlaceholder: "e.g. jazz pianist in 1950s Harlem, philosophical, loves late-night conversations",
+          seedPlaceholder:
+            "e.g. jazz pianist in 1950s Harlem, philosophical, loves late-night conversations",
           eraOptional: "Era (optional)",
           eraPlaceholder: "e.g. 1950s, modern, Victorian",
           generating: "Generating...",
@@ -6772,7 +7041,8 @@ export const enMessages = {
       searchPlaceholder: "Search by filename, path, session id, or entity id",
       empty: {
         title: "No images match this view",
-        description: "Try a different filter or search term. The library only lists images already stored in the app's local storage.",
+        description:
+          "Try a different filter or search term. The library only lists images already stored in the app's local storage.",
       },
       actions: {
         sort: "Sort",
@@ -6795,7 +7065,8 @@ export const enMessages = {
       },
       deleteConfirm: {
         title: "Delete image?",
-        message: "Are you sure you want to delete \"{{filename}}\"? This may break avatars, chat backgrounds, or message attachments that still use it.",
+        message:
+          'Are you sure you want to delete "{{filename}}"? This may break avatars, chat backgrounds, or message attachments that still use it.',
       },
       sort: {
         newest: "Newest",
@@ -6897,31 +7168,36 @@ export const enMessages = {
         tag: "How it works",
         title: "The app is the car, not the engine",
         body: "Think of this app as a car with no engine yet. It has the dashboard, the seats, and your characters, but it cannot drive on its own. You add an engine, and these few steps show you how.",
-        plain: "This app is the screen and the characters. The AI that actually writes the replies runs online, and you connect the app to it.",
+        plain:
+          "This app is the screen and the characters. The AI that actually writes the replies runs online, and you connect the app to it.",
       },
       provider: {
         tag: "Step 1 of 3",
         title: "Pick where the engine comes from",
         body: "A provider is the company that supplies and runs the engine, like Google or OpenRouter. You open a free or paid account with one, and the app borrows their engine to power your chats.",
-        plain: "A provider is a company that runs AI models. You make an account with one, and the app sends your messages to them to get replies.",
+        plain:
+          "A provider is a company that runs AI models. You make an account with one, and the app sends your messages to them to get replies.",
       },
       apiKey: {
         tag: "Step 2 of 3",
         title: "Your key starts the engine",
         body: "An API key works just like a car key. The provider hands you one, you slot it into the app, and it switches the engine on. Keep it to yourself. It stays on your device, like a key in your pocket.",
-        plain: "An API key is a secret code from your provider that lets the app use your account. You paste it in once, and it is saved only on your device.",
+        plain:
+          "An API key is a secret code from your provider that lets the app use your account. You paste it in once, and it is saved only on your device.",
       },
       model: {
         tag: "Step 3 of 3",
         title: "Choose your engine",
         body: "A model is the engine itself. Providers offer small, efficient engines and big, powerful ones. Bigger engines drive better but burn more fuel, so they cost more. You can swap engines any time.",
-        plain: "A model is the specific AI that writes the replies. Bigger models are smarter but cost more, and you can switch between them whenever you want.",
+        plain:
+          "A model is the specific AI that writes the replies. Bigger models are smarter but cost more, and you can switch between them whenever you want.",
       },
       cost: {
         tag: "The cost",
         title: "Free or paid, your choice",
         body: "Some models are completely free to use, with a daily limit on how much you chat. Paid models charge a small amount for each message, often less than a cent.",
-        plain: "You only ever pay the provider, never this app. You can start free and switch to paid later if you ever want to.",
+        plain:
+          "You only ever pay the provider, never this app. You can start free and switch to paid later if you ever want to.",
       },
     },
     path: {
@@ -7109,10 +7385,12 @@ export const enMessages = {
       availableProviders: "Available Providers",
       chooseProvider: "Choose a provider",
       titleMobile: "Choose your AI provider",
-      descMobile: "Select an AI provider to get started. Your API keys are securely encrypted on your device. No account signup needed.",
+      descMobile:
+        "Select an AI provider to get started. Your API keys are securely encrypted on your device. No account signup needed.",
       configureProvider: "Configure {{name}}",
       connectProvider: "Connect {{name}}",
-      connectProviderDesc: "Paste your API key below to enable chats. Need a key? Get one from the provider dashboard.",
+      connectProviderDesc:
+        "Paste your API key below to enable chats. Need a key? Get one from the provider dashboard.",
       localLLMs: "Local LLMs",
       useLocalLLMs: "I want to use Local LLMs",
       browseModelLibrary: "Browse Model Library",
@@ -7218,7 +7496,8 @@ export const enMessages = {
       yourProviders: "Your Providers",
       yourProvidersHint: "Select which provider to use",
       setDefaultModel: "Set your default model",
-      setDefaultModelDesc: "Choose which provider and model name LettuceAI should use by default. You'll be able to add more later.",
+      setDefaultModelDesc:
+        "Choose which provider and model name LettuceAI should use by default. You'll be able to add more later.",
       setDefaultModelDescDesktop: "Select a provider from the list to configure your model.",
       modelDetails: "Model Details",
       modelDetailsDesc: "Define the API identifier and the label you'll see inside the app.",
@@ -7239,7 +7518,7 @@ export const enMessages = {
         selectModel: "Select Model",
         selectAModel: "Select a model...",
         searchModels: "Search models...",
-        noModelsFound: "No models found matching \"{{query}}\"",
+        noModelsFound: 'No models found matching "{{query}}"',
       },
       fillBothFields: "Fill out both fields above to enable the finish button.",
       providerNames: {
@@ -7262,8 +7541,10 @@ export const enMessages = {
       oneLastStep: "One Last Step",
       downloadAndEnable: "Download & Enable",
       chooseStyle: "Choose your memory style",
-      howRemember: "How should your AI companions remember details about you and your conversations?",
-      dynamicDescription: "Uses a <0>local embedding model</0> to smartly manage context. This cuts token costs while maintaining high quality, even in long chats.",
+      howRemember:
+        "How should your AI companions remember details about you and your conversations?",
+      dynamicDescription:
+        "Uses a <0>local embedding model</0> to smartly manage context. This cuts token costs while maintaining high quality, even in long chats.",
       dynamicFeatures: {
         quality: "Maintains quality in long chats",
         cost: "Reduces API costs significantly",
@@ -7272,12 +7553,14 @@ export const enMessages = {
       },
       manualTitle: "Manual Memory",
       manualBadge: "Classic experience",
-      manualDescription: "You explicitly pin messages and edit the \"World Info\" or character definitions yourself. Good for total control.",
+      manualDescription:
+        'You explicitly pin messages and edit the "World Info" or character definitions yourself. Good for total control.',
       manualFeatures: {
         control: "Total control over facts",
         scenarios: "Best for specific scenarios",
       },
-      setupModelMessage: "To use Dynamic Memory, we need to download a small embedding model (~120MB) to your device.",
+      setupModelMessage:
+        "To use Dynamic Memory, we need to download a small embedding model (~120MB) to your device.",
       setupBullets: {
         offline: "Model runs 100% offline on your device",
         remembering: "Required for remembering context",
@@ -7287,7 +7570,8 @@ export const enMessages = {
       stepLabelMemory: "Memory System",
       embeddingPrompt: {
         title: "Dynamic Memory needs setup",
-        description: "This data uses Dynamic Memory, which needs a local embedding model before those memory features can run.",
+        description:
+          "This data uses Dynamic Memory, which needs a local embedding model before those memory features can run.",
         continueWithout: "Continue without Dynamic Memory",
         downloadModel: "Download model",
       },
@@ -7301,7 +7585,8 @@ export const enMessages = {
       },
       betaWarning: {
         title: "Desktop Beta build",
-        description: "You're using the desktop version. Some features may differ from mobile. Report issues on GitHub.",
+        description:
+          "You're using the desktop version. Some features may differ from mobile. Report issues on GitHub.",
       },
       languageSelector: {
         title: "Language",
@@ -7327,7 +7612,8 @@ export const enMessages = {
       skipWarning: {
         title: "Stop! Read this first",
         warningTitle: "The app will not work without a model",
-        warningMessage: "If you skip this, you will NOT be able to chat with your characters, create group chats, or generate anything. The app needs an AI model to function. Set one up now. It takes a minute.",
+        warningMessage:
+          "If you skip this, you will NOT be able to chat with your characters, create group chats, or generate anything. The app needs an AI model to function. Set one up now. It takes a minute.",
         addProvider: "Set up a model now",
         skipAnyway: "Skip anyway (app won't work)",
       },
@@ -7344,14 +7630,18 @@ export const enMessages = {
         passwordPlaceholder: "Enter password",
         restoreButton: "Restore Backup",
         restoring: "Restoring...",
-        infoMessage: "This will set up the app with your backed up data, including characters, chats, and settings.",
+        infoMessage:
+          "This will set up the app with your backed up data, including characters, chats, and settings.",
         embeddingTitle: "Embedding Model Required",
         dynamicMemoryDetected: "Dynamic Memory Detected",
-        dynamicMemoryMessage: "This backup contains characters with dynamic memory enabled, which requires the embedding model (~120MB).",
-        embeddingOptions: "You can download the model now to enable dynamic memory, or continue without it (dynamic memory will be disabled for affected characters).",
+        dynamicMemoryMessage:
+          "This backup contains characters with dynamic memory enabled, which requires the embedding model (~120MB).",
+        embeddingOptions:
+          "You can download the model now to enable dynamic memory, or continue without it (dynamic memory will be disabled for affected characters).",
         downloadModel: "Download Model",
         continueWithoutDynamic: "Continue Without Dynamic Memory",
-        embeddingNote: "You can re-enable dynamic memory later in character settings after downloading the model.",
+        embeddingNote:
+          "You can re-enable dynamic memory later in character settings after downloading the model.",
         back: "Back",
         cancel: "Cancel",
         errors: {
@@ -7365,14 +7655,18 @@ export const enMessages = {
     },
     syncOnboarding: {
       title: "Sync from another device",
-      subtitle: "Pair with a device that already has LettuceAI set up. Your data will be copied over your local network.",
-      hostHint: "On the other device, open Settings, then Sync, and start hosting to get an address and PIN.",
+      subtitle:
+        "Pair with a device that already has LettuceAI set up. Your data will be copied over your local network.",
+      hostHint:
+        "On the other device, open Settings, then Sync, and start hosting to get an address and PIN.",
       finalizing: "Finalizing setup...",
       rejectedTitle: "Connection declined",
-      rejectedMessage: "The host device declined the connection. Check the address and PIN, then try again.",
+      rejectedMessage:
+        "The host device declined the connection. Check the address and PIN, then try again.",
       missingModels: {
         title: "One more setup step",
-        description: "Your synced setup includes local features that need on-device models before they can fully run. Download them now in one queue, or continue and install them later.",
+        description:
+          "Your synced setup includes local features that need on-device models before they can fully run. Download them now in one queue, or continue and install them later.",
         continueForNow: "Continue for now",
         downloadRequired: "Download required models",
       },
@@ -7391,26 +7685,30 @@ export const enMessages = {
     modelGuide: {
       badge: "Model Guide",
       title: "How do I choose a model?",
-      intro: "LettuceAI doesn't force a single \"best\" model. Instead, you pick what fits your <0>use case, budget, and vibe</0>. Use this guide to decide what to try and where to look.",
+      intro:
+        'LettuceAI doesn\'t force a single "best" model. Instead, you pick what fits your <0>use case, budget, and vibe</0>. Use this guide to decide what to try and where to look.',
       askYourself: "Ask yourself:",
       factors: {
         quality: {
           title: "Quality & capabilities",
-          description: "How smart does the model need to be? Bigger, newer models usually reason better, write nicer text, and handle messy prompts more gracefully.",
+          description:
+            "How smart does the model need to be? Bigger, newer models usually reason better, write nicer text, and handle messy prompts more gracefully.",
           q1: "Do you need deep character consistency and emotional intelligence?",
           q2: "Do you care about immersive storytelling and believable character personalities?",
           q3: "Do you want the model to remember character details and stay in-character across long sessions?",
         },
         speed: {
           title: "Speed & latency",
-          description: "Faster models feel better for chatty and back-and-forth conversations. Some models trade a bit of quality for a lot more speed.",
+          description:
+            "Faster models feel better for chatty and back-and-forth conversations. Some models trade a bit of quality for a lot more speed.",
           q1: "Do you want near-instant replies to keep roleplay flowing naturally?",
           q2: "Are you doing rapid-fire dialogue scenes where waiting would break immersion?",
           q3: "Is this for casual RP where quick back-and-forth matters more than perfect responses?",
         },
         budget: {
           title: "Budget & usage",
-          description: "Every provider bills per token. Even cheap models add up if you chat a lot, so pick something that matches how often and how heavily you use it.",
+          description:
+            "Every provider bills per token. Even cheap models add up if you chat a lot, so pick something that matches how often and how heavily you use it.",
           q1: "Are you okay paying more for richer character interactions, or do you want something cheap for daily RP?",
           q2: "Do you have free models from your provider/router you can try first?",
           q3: "Will you run long roleplay sessions with detailed scene descriptions?",
@@ -7418,7 +7716,8 @@ export const enMessages = {
         },
         safety: {
           title: "Safety, privacy & extras",
-          description: "Providers differ in how they handle safety, logging, and extra features like images, tools, or long context windows.",
+          description:
+            "Providers differ in how they handle safety, logging, and extra features like images, tools, or long context windows.",
           q1: "Do you need fewer content filters for mature or creative roleplay scenarios?",
           q2: "Do you care if your private RP conversations are logged or used for training?",
           q3: "Do you need long context windows for complex storylines and character histories?",
@@ -7426,28 +7725,37 @@ export const enMessages = {
       },
       where: {
         title: "Where can I find models?",
-        intro: "Most providers and routers have a <0>model list or catalog</0>. Browse those pages to see what they offer, pricing, limits, and special features.",
+        intro:
+          "Most providers and routers have a <0>model list or catalog</0>. Browse those pages to see what they offer, pricing, limits, and special features.",
         directTitle: "Direct providers",
-        directDesc: "OpenAI, Anthropic, Google Gemini, xAI, Mistral, etc. Each has a console/dashboard where you can see official model names, capabilities, and pricing.",
+        directDesc:
+          "OpenAI, Anthropic, Google Gemini, xAI, Mistral, etc. Each has a console/dashboard where you can see official model names, capabilities, and pricing.",
         routersTitle: "Routers & hubs",
-        routersDesc: "Services like OpenRouter or other aggregators list many models from different providers in one place, often with benchmarks and pricing comparisons.",
+        routersDesc:
+          "Services like OpenRouter or other aggregators list many models from different providers in one place, often with benchmarks and pricing comparisons.",
         communityTitle: "Community recommendations",
-        communityDesc: "Look at docs, blogs, or community posts from your provider/router. They usually highlight which models are best for chat, coding, or speed.",
+        communityDesc:
+          "Look at docs, blogs, or community posts from your provider/router. They usually highlight which models are best for chat, coding, or speed.",
       },
       rules: {
         title: "Simple rules of thumb",
         casual: "For casual chatting: pick a fast, cheap chat model from your provider/router.",
-        experiments: "For experiments or high volume: start with the cheapest model that feels good enough, then upgrade if needed.",
-        switch: "If something feels off (too slow / too dumb / too expensive): you can always switch models later in LettuceAI.",
+        experiments:
+          "For experiments or high volume: start with the cheapest model that feels good enough, then upgrade if needed.",
+        switch:
+          "If something feels off (too slow / too dumb / too expensive): you can always switch models later in LettuceAI.",
       },
-      disclaimer: "Always check the provider's own documentation for the latest model list, limits, and pricing. This page is about how to think, not what to buy.",
+      disclaimer:
+        "Always check the provider's own documentation for the latest model list, limits, and pricing. This page is about how to think, not what to buy.",
     },
     whereToFind: {
       badge: "API Key Help",
-      intro: "Follow these steps to get your API key, then return to LettuceAI and paste it into the provider settings.",
+      intro:
+        "Follow these steps to get your API key, then return to LettuceAI and paste it into the provider settings.",
       readyPrompt: "Ready to get the key?",
       openProviderSite: "Open provider site",
-      keyWarning: "Never share your API key publicly. Anyone with this key can use your account balance.",
+      keyWarning:
+        "Never share your API key publicly. Anyone with this key can use your account balance.",
       stuckPrompt: "Still can't figure it out?",
       joinDiscord: "Join our Discord server for help",
       guides: {
@@ -7694,7 +8002,8 @@ export const enMessages = {
     },
     requirements: {
       title: "More setup needed",
-      description: "This synced data uses local features that need on-device models before they can fully run. You can download everything in one queue now or continue and install them later.",
+      description:
+        "This synced data uses local features that need on-device models before they can fully run. You can download everything in one queue now or continue and install them later.",
       continueForNow: "Continue for now",
       download: "Download required models",
     },
@@ -7718,11 +8027,14 @@ export const enMessages = {
       toolSelection: "Tool Selection",
       smartToolSelection: "Smart Tool Selection",
       smartToolDescription: "AI automatically chooses which tools to use",
-      smartToolEnabledHint: "When enabled, the AI Creator Helper asks what you want to create and loads only the relevant tool set.",
-      smartToolDisabledHint: "When disabled, the AI Creator Helper opens directly and uses all enabled tools; the assistant decides what to build.",
+      smartToolEnabledHint:
+        "When enabled, the AI Creator Helper asks what you want to create and loads only the relevant tool set.",
+      smartToolDisabledHint:
+        "When disabled, the AI Creator Helper opens directly and uses all enabled tools; the assistant decides what to build.",
       quickPresets: "Quick Presets",
       customSelection: "Custom selection - {{count}} tools enabled",
-      footerInfo: "When Smart Tool Selection is enabled, the AI decides which tools to use based on context. Disable it to manually control which tools are available.",
+      footerInfo:
+        "When Smart Tool Selection is enabled, the AI decides which tools to use based on context. Disable it to manually control which tools are available.",
       selectChatModel: "Select Chat Model",
       selectImageModel: "Select Image Model",
       searchModels: "Search models...",
@@ -8120,7 +8432,7 @@ export const enMessages = {
       penaltyLastN: "DRY Penalty Last N",
       penaltyLastNDesc: "Use `-1` to scan the full context.",
       sequenceBreakers: "DRY Sequence Breakers",
-      sequenceBreakersDesc: "Comma-separated boundaries like `\\n`, `:`, `\"`, `*`.",
+      sequenceBreakersDesc: 'Comma-separated boundaries like `\\n`, `:`, `"`, `*`.',
     },
     streaming: {
       title: "Streaming",
@@ -8174,7 +8486,8 @@ export const enMessages = {
   designReference: {
     title: "Design references",
     description: "Upload a few clear reference images plus one canonical visual description.",
-    descriptionPlaceholder: "Describe the stable look: face, hair, build, age presentation, outfit cues, accessories, and art/style direction.",
+    descriptionPlaceholder:
+      "Describe the stable look: face, hair, build, age presentation, outfit cues, accessories, and art/style direction.",
     addReferences: "Add references",
     visualDescription: "Visual description",
     draftWithAi: "Draft with AI",
@@ -8184,11 +8497,13 @@ export const enMessages = {
     removeAria: "Remove design reference",
     noImages: "No reference images attached yet",
     imageCount: "{{count}} reference image(s) attached",
-    emptyReferences: "Add a few clear reference shots to lock face, proportions, outfit, and style.",
+    emptyReferences:
+      "Add a few clear reference shots to lock face, proportions, outfit, and style.",
     noWriterModel: "Add a compatible scene writer model in Image Generation settings first.",
     noImagesForGeneration: "Add an avatar or at least one reference image before generating.",
     writerModelHelp: "Uses {{model}} to draft from your avatar and reference images.",
-    noWriterModelHelp: "Add a compatible scene writer model in Image Generation settings to draft this automatically.",
+    noWriterModelHelp:
+      "Add a compatible scene writer model in Image Generation settings to draft this automatically.",
     draftMenuTitle: "AI Design Draft",
     draftMenuDesc: "Drafted by {{model}} from the current avatar and reference images.",
     draftMenuNoWriter: "Add a compatible scene writer model before using this helper.",
@@ -8332,7 +8647,7 @@ export const enMessages = {
       noMemoryEntriesSummaryOnly: "No memory entries. Only the summary will be used.",
       noMemoriesMatch: "No memories match the filter.",
       noEntryGenerated: "No entry generated.",
-      directionPlaceholder: "Optional direction. e.g. \"Focus on world lore, ignore banter.\"",
+      directionPlaceholder: 'Optional direction. e.g. "Focus on world lore, ignore banter."',
       statusMessages: "{{count}} messages · ~{{tokens}} tokens",
       statusSelectMessages: "Select messages to generate",
       statusMemories: "{{count}} memories{{summary}} · ~{{tokens}} tokens",
@@ -8360,12 +8675,12 @@ export const enMessages = {
       contentLabel: "Content",
       charsCount: "{{count}} chars",
       editsApplyNextRegenerate: "Edits apply on next Regenerate",
-      directionExamplePlaceholder: "e.g. \"Focus on world lore, ignore banter.\"",
+      directionExamplePlaceholder: 'e.g. "Focus on world lore, ignore banter."',
       regenerate: "Regenerate",
       discard: "Discard",
       saveEntry: "Save Entry",
       errorUnsupportedFile: "Unsupported file type: {{name}}. Use .txt, .md, or .pdf.",
-      errorFileTooLarge: "File \"{{name}}\" exceeds 50 MB limit.",
+      errorFileTooLarge: 'File "{{name}}" exceeds 50 MB limit.',
       errorReadFile: "Failed to read {{name}}: {{error}}",
       stepBrief: "Brief",
       stepOutline: "Outline",
@@ -8408,7 +8723,8 @@ export const enMessages = {
       targetEntryCount: "Target entry count",
       rangeHint: "Range {{min}} to {{max}}.",
       planEntries: "Plan entries",
-      outlineIntro: "Review and edit the planned entries. Approve to draft each one (in batches of 3).",
+      outlineIntro:
+        "Review and edit the planned entries. Approve to draft each one (in batches of 3).",
       commaSeparatedKeys: "comma-separated keys",
       rationalePlaceholder: "rationale",
       addEntry: "Add entry",
@@ -8422,14 +8738,15 @@ export const enMessages = {
       coherenceToggleHint: "Toggle each change to accept or reject before applying.",
       coherenceAll: "(all)",
       coherenceMergeKeys: "Remove keys [{{keys}}] from entry {{entry}}. {{reason}}",
-      coherenceRenameTerm: "Rename \"{{oldTerm}}\" to \"{{newTerm}}\" across entries {{entries}}. {{reason}}",
+      coherenceRenameTerm:
+        'Rename "{{oldTerm}}" to "{{newTerm}}" across entries {{entries}}. {{reason}}',
       coherenceContradiction: "Contradiction in entries {{entries}}: {{description}}",
       coherenceToggleAlwaysActive: "Set entry {{entry}} alwaysActive to {{value}}. {{reason}}",
       skip: "Skip",
       applySelected: "Apply selected",
       commitIntro: "Save {{count}} entries into a lorebook.",
       destination: "Destination",
-      createNewLorebook: "Create new lorebook · \"{{name}}\"",
+      createNewLorebook: 'Create new lorebook · "{{name}}"',
       appendTo: "Append to: {{name}}",
       askForChangesTitle: "Ask for changes: {{title}}",
       describeChangesPlaceholder: "Describe what to change…",
@@ -8448,12 +8765,14 @@ export const enMessages = {
       entryDescription: "Turn selected chat messages into single lorebook entries.",
     },
     full: {
-      infoText: "The Lorebook Generator plans, drafts, and refines a complete lorebook from a brief and source materials. Tool calling is attempted first; if unsupported, all stages fall back to {{format}} structured output.",
+      infoText:
+        "The Lorebook Generator plans, drafts, and refines a complete lorebook from a brief and source materials. Tool calling is attempted first; if unsupported, all stages fall back to {{format}} structured output.",
       generationHeading: "Generation",
       generationModel: "Generation Model",
       generationModelFallback: "Generation Model",
       noTextModels: "No text-capable models configured.",
-      modelHint: "Used for all four pipeline stages. Leave unset to use the app's default text model.",
+      modelHint:
+        "Used for all four pipeline stages. Leave unset to use the app's default text model.",
       useAppDefault: "Use App Default",
       useAppDefaultWith: "Use App Default ({{name}})",
       structuredFallback: "Structured Fallback",
@@ -8464,7 +8783,8 @@ export const enMessages = {
       defaultEntryCount: "Default Entry Count: {{count}}",
       entryCountHint: "Pre-fills the slider on the generator page. Range {{min}} to {{max}}.",
       maxOutputTokens: "Max output tokens",
-      maxTokensHint: "Per-stage completion cap. Larger entries and big outlines need higher limits. Range {{min}} to {{max}}.",
+      maxTokensHint:
+        "Per-stage completion cap. Larger entries and big outlines need higher limits. Range {{min}} to {{max}}.",
       stagePromptsHeading: "Stage Prompts",
       useBuiltInDefault: "Use built-in default",
       plannerTitle: "Planner Prompt",
@@ -8475,11 +8795,13 @@ export const enMessages = {
       refineDescription: "Used to revise an entry from a user feedback message.",
       coherenceTitle: "Coherence Prompt",
       coherenceDescription: "Used to propose surgical changes across all drafted entries.",
-      footerHint: "Open Library, click \"New Lorebook\", and choose \"Generate with AI\" to start a generation flow that uses these defaults. Manage prompt templates in Settings > Prompts.",
+      footerHint:
+        'Open Library, click "New Lorebook", and choose "Generate with AI" to start a generation flow that uses these defaults. Manage prompt templates in Settings > Prompts.',
       noAppDefaultModel: "No app default model configured",
     },
     entry: {
-      infoText: "Configure the model and prompt that draft lorebook entries from selected chat messages and generate lorebook keywords from entry content. Tool calling is attempted first; if unsupported, both flows fall back to {{format}} structured output.",
+      infoText:
+        "Configure the model and prompt that draft lorebook entries from selected chat messages and generate lorebook keywords from entry content. Tool calling is attempted first; if unsupported, both flows fall back to {{format}} structured output.",
       generationHeading: "Generation",
       generationModel: "Generation Model",
       generationModelFallback: "Generation Model",
@@ -8496,23 +8818,29 @@ export const enMessages = {
       promptTemplateHeading: "Prompt Template",
       entryWriterPrompt: "Entry Writer Prompt",
       useBuiltInDefault: "Use built-in default",
-      entryWriterHint: "Override the default lorebook entry writer prompt. Manage templates in Settings > Prompts.",
+      entryWriterHint:
+        "Override the default lorebook entry writer prompt. Manage templates in Settings > Prompts.",
       keywordGeneratorPrompt: "Keyword Generator Prompt",
-      keywordGeneratorHint: "Uses the same model and structured fallback as the entry generator. Manage templates in Settings > Prompts.",
-      footerHint: "Open a character's lorebook or the library lorebook editor, then pick \"Generate entry\" or \"Generate Keywords\" to use these defaults.",
+      keywordGeneratorHint:
+        "Uses the same model and structured fallback as the entry generator. Manage templates in Settings > Prompts.",
+      footerHint:
+        'Open a character\'s lorebook or the library lorebook editor, then pick "Generate entry" or "Generate Keywords" to use these defaults.',
       noAppDefaultModel: "No app default model configured",
     },
   },
   companion: {
     models: {
       emotionTitle: "Emotion classifier",
-      emotionSubtitle: "Reads turns and updates the companion's felt, expressed, and blocked emotion vectors.",
+      emotionSubtitle:
+        "Reads turns and updates the companion's felt, expressed, and blocked emotion vectors.",
       emotionSize: "~120 MB",
       nerTitle: "Entity extractor (NER)",
-      nerSubtitle: "Identifies people, places, and objects so memories can be canonicalized and linked.",
+      nerSubtitle:
+        "Identifies people, places, and objects so memories can be canonicalized and linked.",
       nerSize: "~140 MB",
       routerTitle: "Memory router",
-      routerSubtitle: "Decides whether new turns should be stored as relationship, milestone, episodic, or other memory categories.",
+      routerSubtitle:
+        "Decides whether new turns should be stored as relationship, milestone, episodic, or other memory categories.",
       routerSize: "~70 MB",
       embeddingTitle: "Embedding model",
       embeddingSubtitle: "Powers dynamic memory recall and semantic search across past turns.",
@@ -8520,13 +8848,16 @@ export const enMessages = {
     },
     download: {
       emotionClassifier: "Emotion classifier",
-      emotionClassifierDesc: "Reads turns and updates the companion's felt, expressed, and blocked emotion vectors.",
+      emotionClassifierDesc:
+        "Reads turns and updates the companion's felt, expressed, and blocked emotion vectors.",
       emotionSize: "~120 MB",
       entityExtractor: "Entity extractor (NER)",
-      entityExtractorDesc: "Identifies people, places, and objects so memories can be canonicalized and linked.",
+      entityExtractorDesc:
+        "Identifies people, places, and objects so memories can be canonicalized and linked.",
       entitySize: "~140 MB",
       memoryRouter: "Memory router",
-      memoryRouterDesc: "Decides whether new turns should be stored as relationship, milestone, episodic, or other memory categories.",
+      memoryRouterDesc:
+        "Decides whether new turns should be stored as relationship, milestone, episodic, or other memory categories.",
       routerSize: "~70 MB",
       unknownModel: "Unknown companion model. Provide ?kind=emotion|ner|router.",
       installedTitle: "{{name}} installed",
@@ -8577,7 +8908,8 @@ export const enMessages = {
       readyTitle: "Companion runtime ready",
       incompleteTitle: "Companion runtime incomplete",
       readyDescription: "All local analysis models for companion characters are installed.",
-      incompleteDescription: "{{count}} of 3 analysis models installed. Install the remaining models below.",
+      incompleteDescription:
+        "{{count}} of 3 analysis models installed. Install the remaining models below.",
       refreshAria: "Refresh status",
     },
     sections: {
@@ -8585,11 +8917,14 @@ export const enMessages = {
       localAnalysisModels: "Local analysis models",
       aboutCompanionMode: "About companion mode",
       dynamicMemoryTitle: "Companion chats use Dynamic Memory",
-      dynamicMemoryDescription: "Long-term memory creation and retrieval share the Dynamic Memory backend with normal chats. Companion mode keeps its own emotional state, relationship state, Soul data, and per-turn effect tracking.",
+      dynamicMemoryDescription:
+        "Long-term memory creation and retrieval share the Dynamic Memory backend with normal chats. Companion mode keeps its own emotional state, relationship state, Soul data, and per-turn effect tracking.",
     },
     about: {
-      paragraph1: "Companion mode turns a character into a long-running social agent. It tracks an emotional state, a relationship state with you, and a richer episodic memory store rather than a single chat summary.",
-      paragraph2: "Switch any character to companion mode from its character settings. Companion chats use a dedicated memory and relationship UI accessible from the chat header.",
+      paragraph1:
+        "Companion mode turns a character into a long-running social agent. It tracks an emotional state, a relationship state with you, and a richer episodic memory store rather than a single chat summary.",
+      paragraph2:
+        "Switch any character to companion mode from its character settings. Companion chats use a dedicated memory and relationship UI accessible from the chat header.",
     },
   },
   voices: {
@@ -8651,11 +8986,13 @@ export const enMessages = {
         selectVoice: "Select a voice...",
         elevenlabsVoiceHint: "Select from your ElevenLabs voices",
         fishVoice: "Fish Audio Cloud Voice Model",
-        fishVoiceHint: "Select one of your Fish Audio cloud voice models, or paste a model ID below",
+        fishVoiceHint:
+          "Select one of your Fish Audio cloud voice models, or paste a model ID below",
         fishVoiceIdPlaceholder: "7f92f8afb8ec43bf81429cc1c9199cb1",
         fishVoiceIdHint: "Use the Fish Audio cloud voice model ID returned by the /model endpoint",
         fishSpeechVoiceIdPlaceholder: "my-speaker",
-        fishSpeechVoiceIdHint: "Optional: enter a Fish Speech local reference_id if your server is configured with one",
+        fishSpeechVoiceIdHint:
+          "Optional: enter a Fish Speech local reference_id if your server is configured with one",
         geminiVoice: "Gemini Voice",
         geminiVoiceHint: "Select a Gemini TTS voice",
         voiceId: "Voice ID",
@@ -8668,14 +9005,17 @@ export const enMessages = {
         exampleTextPlaceholder: "Hello! This is how I sound when speaking...",
         exampleTextHint: "Sample text for testing the voice",
         voiceDesignChars: "{{current}}/{{minimum}} characters required for voice design preview",
-        exampleTextMinChars: "Example text must be at least {{minimum}} characters for voice design.",
+        exampleTextMinChars:
+          "Example text must be at least {{minimum}} characters for voice design.",
         nameVoiceFirst: "Please preview the voice first to generate it.",
         fishVoiceIdRequired: "Voice ID is required for Fish Audio (Cloud).",
         openaiModelIdRequired: "Model ID is required for OpenAI-compatible TTS.",
         openaiVoiceIdRequired: "Voice ID is required for OpenAI-compatible TTS.",
-        resolveElevenlabsFailed: "Unable to resolve ElevenLabs voice ID. Please recreate the voice.",
+        resolveElevenlabsFailed:
+          "Unable to resolve ElevenLabs voice ID. Please recreate the voice.",
         saveVoiceFailed: "Failed to save voice.",
-        defaultSample: "Hello! This is how I sound when speaking. I can read longer passages with warmth, clarity, and emotion so you can judge my tone and pace.",
+        defaultSample:
+          "Hello! This is how I sound when speaking. I can read longer passages with warmth, clarity, and emotion so you can judge my tone and pace.",
         playing: "Playing...",
         previewVoice: "Preview Voice",
       },
@@ -8684,7 +9024,8 @@ export const enMessages = {
         newBlend: "New blend",
         editBlend: "Edit blend",
         tryText: "Hello! This is a quick test of how I sound.",
-        experimentDefaultText: "Hello! This is how I sound when speaking. I can read longer passages with warmth, clarity, and emotion.",
+        experimentDefaultText:
+          "Hello! This is how I sound when speaking. I can read longer passages with warmth, clarity, and emotion.",
         livePreview: "Live preview",
         savedBlend: "Saved blend",
         defaultPreviewText: "Hello! This is a quick preview of how this voice sounds.",
@@ -8753,15 +9094,20 @@ export const enMessages = {
       },
       kokoroSetup: {
         title: "Set up voice engine",
-        intro: "This voice runs entirely on this device. Pick the quality that fits your hardware, then download. You can switch later.",
-        variantInt8Description: "Light on battery and quick to start. Natural enough for most character voices.",
+        intro:
+          "This voice runs entirely on this device. Pick the quality that fits your hardware, then download. You can switch later.",
+        variantInt8Description:
+          "Light on battery and quick to start. Natural enough for most character voices.",
         variantInt8Tag: "Mobile",
-        variantFp16Description: "The sweet spot for desktop. Warmer voices than int8 with no real wait between replies.",
+        variantFp16Description:
+          "The sweet spot for desktop. Warmer voices than int8 with no real wait between replies.",
         variantFp16Tag: "Recommended",
-        variantFp32Description: "The most lifelike characters, with the richest detail. Slower and heavier on memory.",
+        variantFp32Description:
+          "The most lifelike characters, with the richest detail. Slower and heavier on memory.",
         variantFp32Tag: "High-end",
         starterPackTitle: "Starter voice pack",
-        starterPackDescription: "Heart, Adam, Emma, and George. A balanced set of US and UK voices.",
+        starterPackDescription:
+          "Heart, Adam, Emma, and George. A balanced set of US and UK voices.",
         downloading: "Downloading...",
         download: "Download",
       },
@@ -8787,38 +9133,47 @@ export const enMessages = {
         fastestEnglishTitle: "Fastest English",
         fastestEnglishSummary: "Lowest memory use. Best for quick voice notes on weaker devices.",
         fastestMultilingualTitle: "Fastest Multilingual",
-        fastestMultilingualSummary: "Very light model with broad language support and the lowest quality ceiling.",
+        fastestMultilingualSummary:
+          "Very light model with broad language support and the lowest quality ceiling.",
         fastEnglishTitle: "Fast English",
         fastEnglishSummary: "Quick and compact. Good default for mobile if you only need English.",
         fastMultilingualTitle: "Fast Multilingual",
         fastMultilingualSummary: "Compact multilingual option for phones and lower-power laptops.",
         balancedEnglishTitle: "Balanced English",
-        balancedEnglishSummary: "Better accuracy than the fast presets without a large jump in size.",
+        balancedEnglishSummary:
+          "Better accuracy than the fast presets without a large jump in size.",
         balancedMultilingualTitle: "Balanced Multilingual",
         balancedMultilingualSummary: "Solid middle ground for multilingual use on modest hardware.",
         betterEnglishTitle: "Better English",
         betterEnglishSummary: "A step up in quality for English while staying fairly lightweight.",
         betterMultilingualTitle: "Better Multilingual",
-        betterMultilingualSummary: "Higher quality multilingual transcription for capable mobile devices.",
+        betterMultilingualSummary:
+          "Higher quality multilingual transcription for capable mobile devices.",
         desktopBalancedEnglishTitle: "Desktop Balanced English",
-        desktopBalancedEnglishSummary: "Good desktop default when you want speed and quality to stay balanced.",
+        desktopBalancedEnglishSummary:
+          "Good desktop default when you want speed and quality to stay balanced.",
         desktopBalancedMultilingualTitle: "Desktop Balanced Multilingual",
         desktopBalancedMultilingualSummary: "General-purpose multilingual desktop option.",
         highAccuracyEnglishTitle: "High Accuracy English",
-        highAccuracyEnglishSummary: "Slower, but noticeably stronger for English dictation and cleanup.",
+        highAccuracyEnglishSummary:
+          "Slower, but noticeably stronger for English dictation and cleanup.",
         highAccuracyMultilingualTitle: "High Accuracy Multilingual",
-        highAccuracyMultilingualSummary: "Strong multilingual quality for desktops without going to the largest models.",
+        highAccuracyMultilingualSummary:
+          "Strong multilingual quality for desktops without going to the largest models.",
         bestEnglishTitle: "Best English",
         bestEnglishSummary: "Highest English quality in this curated set, with heavier memory use.",
         bestMultilingualTitle: "Best Multilingual",
-        bestMultilingualSummary: "Highest general multilingual quality before the turbo-large tier.",
+        bestMultilingualSummary:
+          "Highest general multilingual quality before the turbo-large tier.",
         studioMultilingualTitle: "Studio Multilingual",
         studioMultilingualSummary: "Fast high-end desktop option with strong overall quality.",
         studioMultilingualMaxTitle: "Studio Multilingual Max",
-        studioMultilingualMaxSummary: "Largest curated option for the best results on powerful desktops.",
+        studioMultilingualMaxSummary:
+          "Largest curated option for the best results on powerful desktops.",
       },
       mic: {
-        permissionDenied: "Microphone permission denied. Allow microphone access for Lettuce and try again.",
+        permissionDenied:
+          "Microphone permission denied. Allow microphone access for Lettuce and try again.",
         noMicrophoneFound: "No microphone was found on this device.",
       },
       filter: {
@@ -8832,7 +9187,8 @@ export const enMessages = {
       },
       promptPreview: {
         title: "Initial prompt preview",
-        description: "Built from your vocabulary. Length is bounded, so high-priority terms appear first.",
+        description:
+          "Built from your vocabulary. Length is bounded, so high-priority terms appear first.",
         show: "Show",
         hide: "Hide",
         empty: "No vocabulary terms yet. Add some below to influence Whisper.",
@@ -8851,14 +9207,19 @@ export const enMessages = {
       },
       library: {
         title: "Library",
-        description: "Three layers shape Whisper output: the prompt prefix, post-processing corrections, and labelled audio examples.",
+        description:
+          "Three layers shape Whisper output: the prompt prefix, post-processing corrections, and labelled audio examples.",
       },
       picker: {
         title: "Choose a Whisper model",
-        needDownloadMobile: "You need to download a Whisper model before you can use speech recognition. Pick one from the list below. We recommend the mobile options.",
-        needDownloadDesktop: "You need to download a Whisper model before you can use speech recognition. Pick one from the list below. We recommend the desktop options.",
-        showingMobile: "Showing models recommended for mobile. Tap one to use it; if it isn't downloaded yet, it'll queue and activate automatically when ready.",
-        showingDesktop: "Showing models recommended for desktop. Tap one to use it; if it isn't downloaded yet, it'll queue and activate automatically when ready.",
+        needDownloadMobile:
+          "You need to download a Whisper model before you can use speech recognition. Pick one from the list below. We recommend the mobile options.",
+        needDownloadDesktop:
+          "You need to download a Whisper model before you can use speech recognition. Pick one from the list below. We recommend the desktop options.",
+        showingMobile:
+          "Showing models recommended for mobile. Tap one to use it; if it isn't downloaded yet, it'll queue and activate automatically when ready.",
+        showingDesktop:
+          "Showing models recommended for desktop. Tap one to use it; if it isn't downloaded yet, it'll queue and activate automatically when ready.",
         searchPlaceholder: "Search models",
         modelCount: "{{count}} model",
         modelCountPlural: "{{count}} models",
@@ -8918,19 +9279,24 @@ export const enMessages = {
       },
       runtime: {
         title: "Runtime",
-        description: "Control how Whisper loads the active model and where library data lives on disk.",
+        description:
+          "Control how Whisper loads the active model and where library data lives on disk.",
         useGpu: "Use GPU",
-        useGpuDescription: "Use CUDA, Vulkan, ROCm, or Metal acceleration when this build supports it. Off forces CPU.",
+        useGpuDescription:
+          "Use CUDA, Vulkan, ROCm, or Metal acceleration when this build supports it. Off forces CPU.",
         keepModelLoaded: "Keep model loaded",
-        keepModelLoadedDescription: "Reuse the loaded Whisper context between transcriptions for lower latency.",
+        keepModelLoadedDescription:
+          "Reuse the loaded Whisper context between transcriptions for lower latency.",
         contextCache: "Whisper context cache",
-        contextCacheReady: "Preload the active model now, or clear the cache to force a cold reload later.",
+        contextCacheReady:
+          "Preload the active model now, or clear the cache to force a cold reload later.",
         contextCacheEmpty: "Pick a model above to preload it into the Whisper runtime cache.",
         preload: "Preload",
         clear: "Clear",
         modelsFolder: "Models folder",
         libraryData: "Library data",
-        libraryDataDescription: "Back up vocabulary, corrections, and voice examples as JSON, or restore from a previous export.",
+        libraryDataDescription:
+          "Back up vocabulary, corrections, and voice examples as JSON, or restore from a previous export.",
       },
       micInput: {
         title: "Microphone",
@@ -8944,7 +9310,8 @@ export const enMessages = {
         title: "Custom vocabulary",
         addTerm: "Add term",
         emptyTitle: "No custom vocabulary",
-        emptyDescription: "Add names, jargon, or product terms so Whisper has a chance to recognise them.",
+        emptyDescription:
+          "Add names, jargon, or product terms so Whisper has a chance to recognise them.",
         addFirstTerm: "Add first term",
       },
       correctionsSection: {
@@ -8953,7 +9320,8 @@ export const enMessages = {
         approvedOnly: "Approved only",
         approvedOnlyDescription: "Hide auto-suggested entries that have not been reviewed.",
         emptyTitle: "No corrections yet",
-        emptyDescription: "A correction rewrites Whisper output. Add a wrong, right pair to clean up consistent mistakes.",
+        emptyDescription:
+          "A correction rewrites Whisper output. Add a wrong, right pair to clean up consistent mistakes.",
         addFirstCorrection: "Add first correction",
       },
       voiceExamplesSection: {
@@ -8961,7 +9329,8 @@ export const enMessages = {
         addExample: "Add example",
         heard: "heard: ",
         emptyTitle: "No voice examples",
-        emptyDescription: "Pair an audio clip with the text it should produce. Useful for tuning corrections from real recordings.",
+        emptyDescription:
+          "Pair an audio clip with the text it should produce. Useful for tuning corrections from real recordings.",
         addFirstExample: "Add first example",
       },
       chips: {
@@ -9020,7 +9389,8 @@ export const enMessages = {
         addTitle: "Add voice example",
         subtitle: "Pair an audio clip with the text it should produce.",
         audioPath: "Audio path",
-        audioPathHint: "Pick an existing audio file, or record a new clip and we'll save a WAV under the app's data directory.",
+        audioPathHint:
+          "Pick an existing audio file, or record a new clip and we'll save a WAV under the app's data directory.",
         audioPathPlaceholder: "/path/to/clip.wav",
         recording: "Recording {{duration}}",
         discard: "Discard",
@@ -9031,7 +9401,8 @@ export const enMessages = {
         expectedText: "Expected text",
         expectedTextHint: "What the recording should transcribe to.",
         whisperOutput: "Whisper output",
-        whisperOutputHint: "Optional. Paste the raw transcription, or run Whisper on the file above.",
+        whisperOutputHint:
+          "Optional. Paste the raw transcription, or run Whisper on the file above.",
         transcribing: "Transcribing...",
         transcribeWithActiveModel: "Transcribe with active model",
         pickActiveModelFirst: "Pick an active Whisper model first",
@@ -9041,7 +9412,8 @@ export const enMessages = {
         scope: "Scope",
         scopePlaceholder: "global",
         suggestCorrection: "Suggest correction",
-        suggestCorrectionDescription: "Diffs Whisper output against expected text and proposes a correction pair.",
+        suggestCorrectionDescription:
+          "Diffs Whisper output against expected text and proposes a correction pair.",
         preview: "Preview",
         confShort: "conf {{value}}",
         saveAsApproved: "Save as approved",
@@ -9155,7 +9527,8 @@ export const enMessages = {
     play: "Play",
   },
   kokoroBlend: {
-    defaultPreviewText: "Hello! This is how I sound when speaking. I can read longer passages with warmth, clarity, and emotion.",
+    defaultPreviewText:
+      "Hello! This is how I sound when speaking. I can read longer passages with warmth, clarity, and emotion.",
     providerNotFound: "Provider not found",
     back: "Back",
     installVoiceFirst: "Install at least one voice first",
@@ -9332,7 +9705,7 @@ export const enMessages = {
       sentenceWhenAndNot: "This entry is active when {{include}} and not ({{exclude}}).",
     },
     warnings: {
-      requiresAndExcludes: "This entry both requires and excludes \"{{label}}\".",
+      requiresAndExcludes: 'This entry both requires and excludes "{{label}}".',
       mutuallyExclusive: "This entry requires mutually exclusive conditions: {{values}}.",
       fixContradictory: "Fix contradictory rules before saving.",
     },
@@ -9406,7 +9779,8 @@ export const enMessages = {
     conditionsPanel: {
       includeRules: "Include Rules",
       addRule: "Add Rule",
-      groupingHint: "Adjacent rules with the same join are grouped together. Those groups are then evaluated from top to bottom.",
+      groupingHint:
+        "Adjacent rules with the same join are grouped together. Those groups are then evaluated from top to bottom.",
       activeForAll: "Entry is active for all messages.",
       exclusions: "Exclusions",
       addExclusion: "Add Exclusion",
@@ -9420,11 +9794,13 @@ export const enMessages = {
       controlsInjection: "Controls whether this entry can be injected.",
       attachmentNote: "Attachment Note",
       promptContent: "Prompt Content",
-      imageContentHint: "Optional text sent alongside the attached image slot. Leave blank if the image alone is enough.",
+      imageContentHint:
+        "Optional text sent alongside the attached image slot. Leave blank if the image alone is enough.",
       textContentHint: "Write the prompt entry exactly as it should be sent.",
       imageContentPlaceholder: "Optional note for this image attachment...",
       textContentPlaceholder: "Write the prompt entry...",
-      legacyTokenDetected: "Legacy token detected. It is no longer required once this entry has an image attachment.",
+      legacyTokenDetected:
+        "Legacy token detected. It is no longer required once this entry has an image attachment.",
       basic: "Basic",
       entryName: "Entry Name",
       entryNamePlaceholder: "Entry name",
@@ -9433,12 +9809,14 @@ export const enMessages = {
       kindText: "Text",
       kindImage: "Image attachment",
       kindImageHint: "Attach a runtime image slot instead of relying on raw {{image[...]}} tokens.",
-      kindTextHintImageAllowed: "Standard text content. Switch to image attachment for reference-image entries.",
+      kindTextHintImageAllowed:
+        "Standard text content. Switch to image attachment for reference-image entries.",
       kindTextHint: "Standard text content for this prompt type.",
       attachmentSlot: "Attachment Slot",
       attachmentSlotHint: "Picks which runtime image source this entry attaches.",
       attachmentBehavior: "Attachment Behavior",
-      attachmentBehaviorHint: "Sends the selected image slot as user content. Any note below is sent with it.",
+      attachmentBehaviorHint:
+        "Sends the selected image slot as user content. Any note below is sent with it.",
       injection: "Injection",
       role: "Role",
       roleImageHint: "Image attachment entries are always sent as user content.",
@@ -9464,7 +9842,8 @@ export const enMessages = {
       templateName: "Template Name",
       templateNamePlaceholder: "e.g., Creative Roleplay",
       promptType: "Prompt Type",
-      promptTypeVariablesSummary: "{{required}} required variables, {{available}} available variables.",
+      promptTypeVariablesSummary:
+        "{{required}} required variables, {{available}} available variables.",
       promptTypeFallback: "Prompt types control allowed variables and required variables.",
       entries: "Entries",
       structure: "Structure",
@@ -9559,7 +9938,8 @@ export const enMessages = {
       fallbackFormat: "Fallback Format",
     },
     page: {
-      intro: "Configure the model and prompt that draft Companion Soul profiles. Tool calling is attempted first; if unsupported, the writer falls back to {{format}} structured output.",
+      intro:
+        "Configure the model and prompt that draft Companion Soul profiles. Tool calling is attempted first; if unsupported, the writer falls back to {{format}} structured output.",
       generation: "Generation",
       generationModel: "Generation Model",
       generationModelAria: "Generation model",
@@ -9570,8 +9950,10 @@ export const enMessages = {
       promptTemplate: "Prompt Template",
       soulWriterPrompt: "Soul Writer Prompt",
       useBuiltInDefault: "Use built-in default",
-      promptHint: "Override the default companion soul writer prompt. Manage templates in Settings, then Prompts.",
-      footnote: "Open a Companion-mode character's editor and use {{action}} in the Soul tab to launch the writer with these defaults.",
+      promptHint:
+        "Override the default companion soul writer prompt. Manage templates in Settings, then Prompts.",
+      footnote:
+        "Open a Companion-mode character's editor and use {{action}} in the Soul tab to launch the writer with these defaults.",
       footnoteAction: "Generate from character",
       useAppDefault: "Use App Default",
       useAppDefaultWith: "Use App Default ({{name}})",
@@ -9706,7 +10088,8 @@ export const enMessages = {
   performance: {
     title: "Local LLM Performance",
     subtitle: "Decode speed and context usage across your local generations",
-    empty: "No local generations recorded yet. Run a local model in chat to see performance graphs.",
+    empty:
+      "No local generations recorded yet. Run a local model in chat to see performance graphs.",
     refresh: "Refresh",
     clear: "Clear history",
     clearConfirmTitle: "Clear performance history?",
