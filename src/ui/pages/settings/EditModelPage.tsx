@@ -4341,6 +4341,10 @@ export function EditModelPage() {
                                               nextEnabled === true
                                                 ? null
                                                 : modelAdvancedDraft.llamaSingleGpuDeviceId,
+                                            llamaGpuLayers:
+                                              nextEnabled === true
+                                                ? null
+                                                : modelAdvancedDraft.llamaGpuLayers,
                                           });
                                         }}
                                         disabled={isCpuOnlyLlamaBackend || !multiGpuAvailable}
@@ -4362,6 +4366,40 @@ export function EditModelPage() {
                                         </option>
                                       </select>
                                     </div>
+
+                                    {modelAdvancedDraft.llamaMultiGpuEnabled === true &&
+                                      multiGpuAvailable &&
+                                      modelAdvancedDraft.llamaGpuLayers != null && (
+                                        <div className="rounded-lg border border-amber-400/20 bg-amber-500/5 px-3 py-2.5">
+                                          <div className="flex items-start gap-2">
+                                            <AlertTriangle
+                                              size={13}
+                                              className="mt-0.5 shrink-0 text-amber-300"
+                                            />
+                                            <div className="min-w-0 flex-1 space-y-1.5">
+                                              <p className="text-[12px] leading-relaxed text-amber-300/90">
+                                                {t("editModel.layerPlacement.multiGpuFixedLayers", {
+                                                  layers: modelAdvancedDraft.llamaGpuLayers,
+                                                })}
+                                              </p>
+                                              <button
+                                                type="button"
+                                                onClick={() =>
+                                                  setModelAdvancedDraft({
+                                                    ...modelAdvancedDraft,
+                                                    llamaGpuLayers: null,
+                                                  })
+                                                }
+                                                className="rounded-md border border-amber-400/30 bg-amber-500/10 px-2.5 py-1 text-[11.5px] font-medium text-amber-200 transition hover:bg-amber-500/20"
+                                              >
+                                                {t(
+                                                  "editModel.layerPlacement.multiGpuFixedLayersReset",
+                                                )}
+                                              </button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      )}
 
                                     {modelAdvancedDraft.llamaMultiGpuEnabled === true &&
                                       multiGpuAvailable && (

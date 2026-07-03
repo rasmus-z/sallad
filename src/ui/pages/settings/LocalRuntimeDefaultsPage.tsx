@@ -26,6 +26,7 @@ import { BottomMenu, MenuButton, MenuButtonGroup, MenuDivider } from "../../comp
 import { Switch } from "../../components/Switch";
 
 import {
+  addOrUpdateModel,
   readSettings,
   saveAdvancedModelSettings,
   saveAdvancedSettings,
@@ -144,6 +145,9 @@ export function LocalRuntimeDefaultsPage() {
   const [pending, setPending] = useState<{ kind: ModelDirKind; dir: string } | null>(null);
   const [movingDir, setMovingDir] = useState(false);
   const [openMenu, setOpenMenu] = useState<"distribution" | "kvCache" | "pinnedGpu" | null>(null);
+  const [reconfigureKind, setReconfigureKind] = useState<"multi" | "single" | null>(null);
+  const [reconfigureCount, setReconfigureCount] = useState(0);
+  const [reconfiguring, setReconfiguring] = useState(false);
 
   const refreshModelsDir = useCallback(async () => {
     try {
@@ -402,6 +406,55 @@ export function LocalRuntimeDefaultsPage() {
   const pinnedGpuLabel = pinnedGpuDevice
     ? pinnedGpuDevice.description || pinnedGpuDevice.name || `GPU ${pinnedGpuDevice.index}`
     : "";
+  const reconfigureGpuDevice =
+    gpuDevices.find((device) => device.index === pinnedGpuIndex) ?? pinnedGpuDevice;
+  const reconfigureGpuLabel = reconfigureGpuDevice
+    ? reconfigureGpuDevice.description ||
+      reconfigureGpuDevice.name ||
+      `GPU ${reconfigureGpuDevice.index}`
+    : `GPU ${pinnedGpuIndex}`;
+
+  const openReconfigureMenu = async (kind: "multi" | "single") => {
+    try {
+      const settings = await readSettings();
+      const count = settings.models.filter((model) => model.providerId === "llamacpp").length;
+      if (count === 0) return;
+      setReconfigureCount(count);
+      setReconfigureKind(kind);
+    } catch {}
+  };
+
+  const runReconfigure = async () => {
+    if (!reconfigureKind || reconfiguring) return;
+    setReconfiguring(true);
+    try {
+      const settings = await readSettings();
+      const localModels = settings.models.filter((model) => model.providerId === "llamacpp");
+      for (const model of localModels) {
+        await addOrUpdateModel({
+          ...model,
+          advancedModelSettings: {
+            ...(model.advancedModelSettings ?? {}),
+            llamaGpuLayers: null,
+            llamaMultiGpuEnabled: null,
+            llamaSingleGpuDeviceId: reconfigureKind === "single" ? pinnedGpuIndex : null,
+          },
+        });
+      }
+      toast.success(
+        t("runtimeDefaults.reconfigureDone"),
+        t("runtimeDefaults.reconfigureDoneBody", { count: localModels.length }),
+      );
+      setReconfigureKind(null);
+    } catch (err) {
+      toast.error(
+        t("runtimeDefaults.saveFailed"),
+        err instanceof Error ? err.message : String(err),
+      );
+    } finally {
+      setReconfiguring(false);
+    }
+  };
   const toggleGpuDevice = (index: number) => {
     const nextIds = selectedGpuIds.includes(index)
       ? selectedGpuIds.filter((id) => id !== index)
@@ -486,12 +539,13 @@ export function LocalRuntimeDefaultsPage() {
               <Switch
                 checked={defaults.llamaMultiGpuEnabled === true && multiGpuAvailable}
                 disabled={!multiGpuAvailable}
-                onChange={(next) =>
+                onChange={(next) => {
                   void persistDefaults({
                     ...defaults,
                     llamaMultiGpuEnabled: next ? true : null,
-                  })
-                }
+                  });
+                  void openReconfigureMenu(next ? "multi" : "single");
+                }}
                 aria-label={t("runtimeDefaults.llamaMultiGpuTitle")}
               />
             </SettingRow>
@@ -793,6 +847,44 @@ export function LocalRuntimeDefaultsPage() {
             />
           ))}
         </MenuButtonGroup>
+      </BottomMenu>
+
+      <BottomMenu
+        isOpen={reconfigureKind !== null}
+        onClose={() => {
+          if (!reconfiguring) setReconfigureKind(null);
+        }}
+        title={t("runtimeDefaults.reconfigureTitle")}
+      >
+        <p className="mb-5 text-[12.5px] leading-relaxed text-fg/55">
+          {reconfigureKind === "single"
+            ? t("runtimeDefaults.reconfigureBodySingle", { gpu: reconfigureGpuLabel })
+            : t("runtimeDefaults.reconfigureBodyMulti")}
+        </p>
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={() => void runReconfigure()}
+            disabled={reconfiguring}
+            className={cn(
+              "flex w-full items-center justify-center gap-2 rounded-xl border border-accent/40 bg-accent/15 px-4 py-3 text-sm font-medium text-accent transition",
+              reconfiguring ? "cursor-not-allowed opacity-70" : "hover:bg-accent/25 active:scale-[0.99]",
+            )}
+          >
+            {reconfiguring && <Loader2 className="h-4 w-4 animate-spin" />}
+            {reconfiguring
+              ? t("runtimeDefaults.reconfigureRunning")
+              : t("runtimeDefaults.reconfigureConfirm", { count: reconfigureCount })}
+          </button>
+          <button
+            type="button"
+            onClick={() => setReconfigureKind(null)}
+            disabled={reconfiguring}
+            className="w-full rounded-xl border border-fg/10 bg-fg/4 px-4 py-3 text-sm font-medium text-fg/70 transition hover:border-fg/20 hover:text-fg disabled:opacity-50"
+          >
+            {t("runtimeDefaults.reconfigureSkip")}
+          </button>
+        </div>
       </BottomMenu>
     </div>
   );

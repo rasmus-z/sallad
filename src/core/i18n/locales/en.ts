@@ -4594,6 +4594,9 @@ export const enMessages = {
       gpuLayers: "GPU Layers",
       gpuLayersCpuOnly: "Disabled on CPU-only backends",
       gpuLayersDescription: "Offload layers to GPU (0 = CPU only)",
+      multiGpuFixedLayers:
+        "A fixed GPU layer count ({{layers}}) is saved on this model and overrides smart planning, so added VRAM will not be used. Reset it to size the split from current hardware.",
+      multiGpuFixedLayersReset: "Reset to Auto",
       threads: "Threads",
       threadsDescription: "Inference",
       batchThreads: "Batch Threads",
@@ -6190,6 +6193,16 @@ export const enMessages = {
       "Disabled by default. Enable only when you want llama.cpp to split a model across selected GPUs.",
     llamaMultiGpuEnabled: "Enabled",
     llamaMultiGpuDisabled: "Disabled",
+    reconfigureTitle: "Reconfigure all models?",
+    reconfigureBodyMulti:
+      "Multi-GPU is now on. Reset every local model's saved GPU layer count and single-GPU override so smart planning can spread each model across the selected GPUs.",
+    reconfigureBodySingle:
+      "Multi-GPU is now off. Point every local model at {{gpu}} and reset saved layer counts so planning sizes each model for that card.",
+    reconfigureConfirm: "Reconfigure {{count}} models",
+    reconfigureRunning: "Reconfiguring models...",
+    reconfigureSkip: "Keep current model settings",
+    reconfigureDone: "Models reconfigured",
+    reconfigureDoneBody: "{{count}} local models now follow the new GPU setup.",
     llamaGpuDevicesTitle: "GPU Devices",
     llamaGpuDevicesDescription:
       "Select two or more discrete GPU devices. Integrated and CPU devices are never shown here.",
