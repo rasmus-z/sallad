@@ -191,7 +191,13 @@ pub fn reload_database(app: &tauri::AppHandle) -> Result<(), String> {
 
     drop(conn);
 
-    let swappable = app.state::<SwappablePool>();
+    let swappable = app.try_state::<SwappablePool>().ok_or_else(|| {
+        crate::utils::err_msg(
+            module_path!(),
+            line!(),
+            "Database pool is not initialized yet",
+        )
+    })?;
     swappable.swap(new_pool)?;
 
     migrations::run_migrations(app)?;
@@ -266,7 +272,13 @@ pub fn init_pool(app: &tauri::AppHandle) -> Result<DbPool, String> {
 }
 
 pub fn open_db(app: &tauri::AppHandle) -> Result<DbConnection, String> {
-    let swappable = app.state::<SwappablePool>();
+    let swappable = app.try_state::<SwappablePool>().ok_or_else(|| {
+        crate::utils::err_msg(
+            module_path!(),
+            line!(),
+            "Database pool is not initialized yet",
+        )
+    })?;
     swappable.get_connection()
 }
 
@@ -1240,19 +1252,23 @@ pub fn init_db(_app: &tauri::AppHandle, conn: &Connection) -> Result<(), String>
     }
 
     if reset_sync_state {
-        conn.execute("DELETE FROM sync_changes", [])
-            .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
-        conn.execute("DELETE FROM sync_entity_heads", [])
-            .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
-        conn.execute("DELETE FROM sync_peer_cursors", [])
-            .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+        conn.execute_batch(&format!(
+            "BEGIN IMMEDIATE;
+             DELETE FROM sync_changes;
+             DELETE FROM sync_entity_heads;
+             DELETE FROM sync_peer_cursors;
+             INSERT OR REPLACE INTO sync_local_state (key, value) VALUES ('sync_state_schema_version', '{}');
+             COMMIT;",
+            LOCAL_SYNC_STATE_VERSION
+        ))
+        .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+    } else {
+        conn.execute(
+            "INSERT OR REPLACE INTO sync_local_state (key, value) VALUES ('sync_state_schema_version', ?1)",
+            params![LOCAL_SYNC_STATE_VERSION.to_string()],
+        )
+        .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
     }
-
-    conn.execute(
-        "INSERT OR REPLACE INTO sync_local_state (key, value) VALUES ('sync_state_schema_version', ?1)",
-        params![LOCAL_SYNC_STATE_VERSION.to_string()],
-    )
-    .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
 
     // Migrations: add reasoning_tokens and image_tokens to usage_records if missing
     let mut stmt = conn
