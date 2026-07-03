@@ -50,9 +50,9 @@ pub(crate) struct EstimatedPlacement {
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct LlamaGpuDeviceInfo {
-    index: usize,
-    name: String,
-    description: String,
+    pub(crate) index: usize,
+    pub(crate) name: String,
+    pub(crate) description: String,
     backend: String,
     memory_total: u64,
     memory_free: u64,

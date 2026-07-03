@@ -1626,6 +1626,27 @@ mod desktop {
                     } else {
                         Vec::new()
                     },
+                    device_labels: if multi_gpu_active {
+                        let known_devices = context::list_gpu_devices();
+                        llama_gpu_device_ids
+                            .iter()
+                            .map(|id| {
+                                known_devices
+                                    .iter()
+                                    .find(|device| device.index == *id)
+                                    .map(|device| {
+                                        if device.description.trim().is_empty() {
+                                            device.name.clone()
+                                        } else {
+                                            device.description.clone()
+                                        }
+                                    })
+                                    .unwrap_or_else(|| format!("GPU {id}"))
+                            })
+                            .collect()
+                    } else {
+                        Vec::new()
+                    },
                     tensor_split: if multi_gpu_active {
                         multi_gpu_tensor_split
                     } else {
@@ -1638,6 +1659,13 @@ mod desktop {
                     },
                     distribution_mode: if multi_gpu_active {
                         Some(distribution_mode.clone())
+                    } else {
+                        None
+                    },
+                    total_layer_count: if multi_gpu_active {
+                        offload::load_model_metadata(model_path)
+                            .ok()
+                            .map(|metadata| metadata.layer_count)
                     } else {
                         None
                     },

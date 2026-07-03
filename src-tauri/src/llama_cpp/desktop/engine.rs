@@ -5,7 +5,7 @@ use llama_cpp_sys_2::{
     ggml_backend_dev_count, ggml_backend_dev_get, ggml_backend_dev_type,
     GGML_BACKEND_DEVICE_TYPE_ACCEL, GGML_BACKEND_DEVICE_TYPE_GPU,
 };
-use serde_json::json;
+use serde_json::{json, Value};
 use std::ffi::{c_void, CString};
 use std::path::Path;
 use std::ptr::NonNull;
@@ -52,9 +52,11 @@ pub(super) struct LlamaState {
 pub(super) struct LlamaGpuConfig {
     pub(super) multi_gpu_enabled: bool,
     pub(super) device_ids: Vec<usize>,
+    pub(super) device_labels: Vec<String>,
     pub(super) tensor_split: Vec<f32>,
     pub(super) main_gpu: Option<i32>,
     pub(super) distribution_mode: Option<String>,
+    pub(super) total_layer_count: Option<u32>,
 }
 
 const LLAMA_MODEL_LOAD_PROGRESS_EVENT: &str = "llama-model-load-progress";
@@ -76,6 +78,62 @@ struct ModelLoadProgressContext {
     backend_path: String,
     stage: u8,
     last_percent: AtomicU8,
+    gpu_ranges: Vec<(String, f32, f32)>,
+}
+
+fn compute_gpu_progress_ranges(
+    labels: &[String],
+    tensor_split: &[f32],
+    n_gpu_layers: Option<u32>,
+    total_layer_count: Option<u32>,
+) -> Vec<(String, f32, f32)> {
+    let device_count = labels.len();
+    if device_count < 2 || tensor_split.len() < device_count {
+        return Vec::new();
+    }
+    let split_sum: f32 = tensor_split[..device_count].iter().sum();
+    if split_sum <= 0.0 {
+        return Vec::new();
+    }
+    let Some(total) = total_layer_count.filter(|value| *value > 0) else {
+        return Vec::new();
+    };
+    let n_all = total.saturating_add(1) as f32;
+    let act = n_gpu_layers
+        .map(|value| (value as f32).min(n_all))
+        .unwrap_or(n_all);
+    if act <= 0.0 {
+        return Vec::new();
+    }
+    let start_frac = (n_all - act) / n_all;
+    let gpu_frac = act / n_all;
+    let mut ranges = Vec::with_capacity(device_count);
+    let mut cumulative = 0.0f32;
+    for (index, label) in labels.iter().enumerate() {
+        let start = start_frac + gpu_frac * (cumulative / split_sum);
+        cumulative += tensor_split[index].max(0.0);
+        let end = start_frac + gpu_frac * (cumulative / split_sum);
+        ranges.push((label.clone(), start, end.max(start)));
+    }
+    ranges
+}
+
+fn gpu_progress_payload(gpu_ranges: &[(String, f32, f32)], raw_progress: f32) -> Option<Value> {
+    if gpu_ranges.is_empty() {
+        return None;
+    }
+    let entries: Vec<Value> = gpu_ranges
+        .iter()
+        .map(|(label, start, end)| {
+            let span = (end - start).max(f32::EPSILON);
+            let device_progress = ((raw_progress - start) / span).clamp(0.0, 1.0);
+            json!({
+                "label": label,
+                "percent": (device_progress * 100.0).round().clamp(0.0, 100.0) as u8,
+            })
+        })
+        .collect();
+    Some(Value::Array(entries))
 }
 
 fn model_display_name(model_path: &str) -> String {
@@ -95,21 +153,45 @@ fn emit_model_load_progress(
     status: u8,
     progress: f32,
 ) {
+    emit_model_load_progress_with_gpus(
+        app,
+        request_id,
+        model_path,
+        backend_path,
+        stage,
+        status,
+        progress,
+        None,
+    );
+}
+
+#[allow(clippy::too_many_arguments)]
+fn emit_model_load_progress_with_gpus(
+    app: &AppHandle,
+    request_id: Option<&str>,
+    model_path: &str,
+    backend_path: &str,
+    stage: u8,
+    status: u8,
+    progress: f32,
+    gpus: Option<Value>,
+) {
     let clamped = progress.clamp(0.0, 1.0);
     let percent = (clamped * 100.0).round().clamp(0.0, 100.0) as u8;
-    let _ = app.emit(
-        LLAMA_MODEL_LOAD_PROGRESS_EVENT,
-        json!({
-            "requestId": request_id,
-            "modelPath": model_path,
-            "modelName": model_display_name(model_path),
-            "backendPath": backend_path,
-            "stage": stage,
-            "status": status,
-            "progress": clamped,
-            "percent": percent,
-        }),
-    );
+    let mut payload = json!({
+        "requestId": request_id,
+        "modelPath": model_path,
+        "modelName": model_display_name(model_path),
+        "backendPath": backend_path,
+        "stage": stage,
+        "status": status,
+        "progress": clamped,
+        "percent": percent,
+    });
+    if let (Some(object), Some(gpus)) = (payload.as_object_mut(), gpus) {
+        object.insert("gpus".to_string(), gpus);
+    }
+    let _ = app.emit(LLAMA_MODEL_LOAD_PROGRESS_EVENT, payload);
 }
 
 fn stage_progress(progress: f32) -> f32 {
@@ -130,7 +212,7 @@ unsafe extern "C" fn model_load_progress_callback(progress: f32, user_data: *mut
     }
 
     ctx.last_percent.store(percent, Ordering::Relaxed);
-    emit_model_load_progress(
+    emit_model_load_progress_with_gpus(
         &ctx.app,
         ctx.request_id.as_deref(),
         &ctx.model_path,
@@ -138,6 +220,7 @@ unsafe extern "C" fn model_load_progress_callback(progress: f32, user_data: *mut
         ctx.stage,
         MODEL_LOAD_STATUS_LOADING,
         clamped,
+        gpu_progress_payload(&ctx.gpu_ranges, progress.clamp(0.0, 1.0)),
     );
     true
 }
@@ -297,6 +380,16 @@ fn load_model_with_progress(
         params.main_gpu = 0;
     }
 
+    let gpu_ranges = if gpu_config.multi_gpu_enabled {
+        compute_gpu_progress_ranges(
+            &gpu_config.device_labels,
+            &tensor_split_storage,
+            n_gpu_layers,
+            gpu_config.total_layer_count,
+        )
+    } else {
+        Vec::new()
+    };
     let progress_ctx = app.map(|app| {
         Box::new(ModelLoadProgressContext {
             app: app.clone(),
@@ -305,11 +398,12 @@ fn load_model_with_progress(
             backend_path: backend_path.to_string(),
             stage,
             last_percent: AtomicU8::new(0),
+            gpu_ranges,
         })
     });
 
     if let Some(ctx) = progress_ctx.as_ref() {
-        emit_model_load_progress(
+        emit_model_load_progress_with_gpus(
             &ctx.app,
             ctx.request_id.as_deref(),
             &ctx.model_path,
@@ -317,6 +411,7 @@ fn load_model_with_progress(
             ctx.stage,
             MODEL_LOAD_STATUS_LOADING,
             0.0,
+            gpu_progress_payload(&ctx.gpu_ranges, 0.0),
         );
         params.progress_callback = Some(model_load_progress_callback);
         params.progress_callback_user_data = ctx.as_ref() as *const _ as *mut c_void;
