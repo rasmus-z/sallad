@@ -100,6 +100,11 @@ export const changelog: ChangelogEntry[] = [
       {
         type: "bugfix",
         description:
+          "The zAI (GLM) provider works now: requests were sent to a nonexistent endpoint, so every call failed. Chat, the thinking toggle, and API key verification all target the real Z.AI API. Existing zAI providers with a regular API key need the base URL changed to https://api.z.ai/api/paas/v4 (coding-plan keys work as-is).",
+      },
+      {
+        type: "bugfix",
+        description:
           "Companion souls are written by the Soul Writer model again: the character's own model no longer silently overrides the model chosen in Settings, and the soul step shows the model that will actually write.",
       },
       {
