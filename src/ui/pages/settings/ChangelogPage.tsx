@@ -100,6 +100,11 @@ export const changelog: ChangelogEntry[] = [
       {
         type: "bugfix",
         description:
+          "Companion souls are written by the Soul Writer model again: the character's own model no longer silently overrides the model chosen in Settings, and the soul step shows the model that will actually write.",
+      },
+      {
+        type: "bugfix",
+        description:
           "Desktop back navigation no longer strands you on the settings root, the mobile settings back flow was corrected, and Sprout hardware reports are validated before scoring runnability.",
       },
     ],
