@@ -245,19 +245,6 @@ pub fn resolve_base_url(provider_id: &ProviderId, custom_base_url: Option<&str>)
 }
 
 #[allow(dead_code)]
-pub fn build_endpoint_url(provider_id: &ProviderId, custom_base_url: Option<&str>) -> String {
-    let base_url = resolve_base_url(provider_id, custom_base_url);
-    let trimmed = base_url.trim_end_matches('/');
-
-    // If base_url already contains /v1, don't add it again
-    if trimmed.ends_with("/v1") {
-        format!("{}/chat/completions", trimmed)
-    } else {
-        format!("{}/v1/chat/completions", trimmed)
-    }
-}
-
-#[allow(dead_code)]
 pub fn get_system_role(provider_id: &ProviderId) -> Cow<'static, str> {
     let cred = ProviderCredential {
         id: "temp".to_string(),
