@@ -1248,6 +1248,7 @@ fn fetch_conversation_messages_range(
                 attachments: Vec::new(),
                 reasoning: None,
                 model_id: None,
+                gemini_content: None,
             })
         })
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;

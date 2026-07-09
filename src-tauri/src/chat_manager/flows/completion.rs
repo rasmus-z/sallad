@@ -24,7 +24,8 @@ use crate::chat_manager::messages::{
 };
 use crate::chat_manager::prompts;
 use crate::chat_manager::request::{
-    extract_error_message, extract_reasoning, extract_text, extract_usage, new_assistant_variant,
+    extract_error_message, extract_gemini_content, extract_reasoning, extract_text, extract_usage,
+    new_assistant_variant,
 };
 use crate::chat_manager::service::{
     record_failed_usage, record_usage_if_available, require_api_key, ChatService, PreparedChatTurn,
@@ -167,6 +168,7 @@ impl CompletionFlow {
             attachments: persisted_attachments,
             reasoning: None,
             model_id: None,
+            gemini_content: None,
         };
         session.messages.push(user_msg.clone());
         session.updated_at = now;
@@ -701,6 +703,11 @@ impl CompletionFlow {
         let usage = extract_usage(api_response.data());
         let reasoning =
             extract_reasoning(api_response.data(), Some(&selected_credential.provider_id));
+        let gemini_content = crate::chat_manager::provider_adapter::is_gemini_format_provider(
+            &selected_credential.provider_id,
+        )
+        .then(|| extract_gemini_content(api_response.data()))
+        .flatten();
 
         if text.trim().is_empty() && images_from_sse.is_empty() {
             let has_reasoning = reasoning.as_ref().is_some_and(|r| !r.trim().is_empty());
@@ -818,6 +825,7 @@ impl CompletionFlow {
             attachments: persisted_assistant_attachments,
             reasoning,
             model_id: Some(selected_model.id.clone()),
+            gemini_content,
         };
 
         session.messages.push(assistant_message.clone());
