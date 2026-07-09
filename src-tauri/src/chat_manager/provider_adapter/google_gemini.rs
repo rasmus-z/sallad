@@ -30,6 +30,15 @@ pub fn gemini_thinking_mode(model_name: &str) -> GeminiThinkingMode {
     }
 }
 
+fn gemini_api_base(base_url: &str) -> String {
+    let base = base_url.trim_end_matches('/');
+    if let Some(prefix) = base.strip_suffix("/v1") {
+        format!("{prefix}/v1beta")
+    } else {
+        base.to_string()
+    }
+}
+
 #[derive(Serialize)]
 struct GeminiThinkingConfig {
     #[serde(rename = "includeThoughts")]
@@ -66,7 +75,7 @@ impl ProviderAdapter for GoogleGeminiAdapter {
         api_key: &str,
         should_stream: bool,
     ) -> String {
-        let base = base_url.trim_end_matches('/').replace("/v1", "/v1beta");
+        let base = gemini_api_base(base_url);
         if should_stream {
             format!(
                 "{}/models/{}:streamGenerateContent?alt=sse&key={}",
@@ -411,7 +420,7 @@ impl ProviderAdapter for GoogleGeminiAdapter {
     }
 
     fn list_models_endpoint(&self, base_url: &str) -> String {
-        let base = base_url.trim_end_matches('/').replace("/v1", "/v1beta");
+        let base = gemini_api_base(base_url);
         format!("{}/models", base)
     }
 

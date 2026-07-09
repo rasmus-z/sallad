@@ -261,6 +261,20 @@ fn preserves_function_name_for_raw_gemini_tool_call_results() {
 }
 
 #[test]
+fn keeps_a_v1beta_base_url_intact() {
+    let adapter = GoogleGeminiAdapter;
+    assert_eq!(
+        adapter.build_url(
+            "https://generativelanguage.googleapis.com/v1beta",
+            "gemini-3-flash-preview",
+            "key",
+            false,
+        ),
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=key"
+    );
+}
+
+#[test]
 fn gemini_25_uses_budget_based_thinking() {
     let adapter = GoogleGeminiAdapter;
     let body = adapter.body(
