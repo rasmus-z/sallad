@@ -2920,6 +2920,12 @@ export const deMessages: DeepPartialMessageTree<LocaleMessages> = {
     lorebook: {
       keywords: "SCHLÜSSELWÖRTER",
       caseSensitive: "Groß-/Kleinschreibung beachten",
+      regularExpressions: "Reguläre Ausdrücke",
+      regularExpressionsLabel: "REGULÄRE AUSDRÜCKE",
+      regularExpressionHint: "Gib rohe Muster wie apfel|banane ein. Muster nicht in / einschließen.",
+      regularExpressionPlaceholder: "z. B. apfel|banane",
+      matchType: "Übereinstimmungstyp",
+      literalText: "Wörtlicher Text",
       typeKeyword: "Schlüsselwort eingeben...",
       addButton: "Hinzufügen",
       untitledEntry: "Unbenannter Eintrag",

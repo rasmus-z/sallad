@@ -2920,6 +2920,12 @@ export const noMessages: DeepPartialMessageTree<LocaleMessages> = {
     lorebook: {
       keywords: "NØKKELORD",
       caseSensitive: "Skiller mellom store og små bokstaver",
+      regularExpressions: "Regulære uttrykk",
+      regularExpressionsLabel: "REGULÆRE UTTRYKK",
+      regularExpressionHint: "Angi rå mønstre som apple|banana. Ikke pakk mønstrene inn i /.",
+      regularExpressionPlaceholder: "f.eks. apple|banana",
+      matchType: "Samsvarstype",
+      literalText: "Bokstavelig tekst",
       typeKeyword: "Skriv et nøkkelord...",
       addButton: "Legg til",
       untitledEntry: "Uten tittel oppføring",

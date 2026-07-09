@@ -1265,6 +1265,7 @@ export async function saveLorebookEntry(
     alwaysActive: entry.alwaysActive ?? false,
     keywords: entry.keywords ?? [],
     caseSensitive: entry.caseSensitive ?? false,
+    keywordMatchMode: entry.keywordMatchMode ?? "literal",
     content: entry.content ?? "",
     priority: entry.priority ?? 0,
     displayOrder: entry.displayOrder ?? 0,

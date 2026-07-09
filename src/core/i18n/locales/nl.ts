@@ -2920,6 +2920,12 @@ export const nlMessages: DeepPartialMessageTree<LocaleMessages> = {
     lorebook: {
       keywords: "TREFWOORDEN",
       caseSensitive: "Hoofdlettergevoelig",
+      regularExpressions: "Reguliere expressies",
+      regularExpressionsLabel: "REGULIERE EXPRESSIES",
+      regularExpressionHint: "Voer onbewerkte patronen in, zoals appel|banaan. Zet patronen niet tussen /.",
+      regularExpressionPlaceholder: "bijv. appel|banaan",
+      matchType: "Overeenkomsttype",
+      literalText: "Letterlijke tekst",
       typeKeyword: "Typ een trefwoord...",
       addButton: "Toevoegen",
       untitledEntry: "Naamloze vermelding",

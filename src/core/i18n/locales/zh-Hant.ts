@@ -2920,6 +2920,12 @@ export const zhHantMessages: DeepPartialMessageTree<LocaleMessages> = {
     lorebook: {
       keywords: "關鍵字",
       caseSensitive: "區分大小寫",
+      regularExpressions: "正規表示式",
+      regularExpressionsLabel: "正規表示式",
+      regularExpressionHint: "請輸入原始模式，例如 apple|banana。請勿用 / 包住模式。",
+      regularExpressionPlaceholder: "例如 apple|banana",
+      matchType: "比對類型",
+      literalText: "純文字",
       typeKeyword: "輸入關鍵字...",
       addButton: "新增",
       untitledEntry: "未命名條目",

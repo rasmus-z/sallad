@@ -2920,6 +2920,12 @@ export const plMessages: DeepPartialMessageTree<LocaleMessages> = {
     lorebook: {
       keywords: "SŁOWA KLUCZOWE",
       caseSensitive: "Wielkość liter ma znaczenie",
+      regularExpressions: "Wyrażenia regularne",
+      regularExpressionsLabel: "WYRAŻENIA REGULARNE",
+      regularExpressionHint: "Wpisz surowe wzorce, np. jabłko|banan. Nie ujmuj wzorców w /.",
+      regularExpressionPlaceholder: "np. jabłko|banan",
+      matchType: "Typ dopasowania",
+      literalText: "Tekst dosłowny",
       typeKeyword: "Wpisz słowo kluczowe...",
       addButton: "Dodaj",
       untitledEntry: "Wpis bez tytułu",

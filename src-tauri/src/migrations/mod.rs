@@ -2321,6 +2321,7 @@ fn migrate_v19_to_v20(app: &AppHandle) -> Result<(), String> {
               always_active INTEGER NOT NULL DEFAULT 0,
               keywords TEXT NOT NULL DEFAULT '[]',
               case_sensitive INTEGER NOT NULL DEFAULT 0,
+              keyword_match_mode TEXT NOT NULL DEFAULT 'literal',
               content TEXT NOT NULL,
               priority INTEGER NOT NULL DEFAULT 0,
               display_order INTEGER NOT NULL DEFAULT 0,
@@ -2408,6 +2409,7 @@ fn migrate_v19_to_v20(app: &AppHandle) -> Result<(), String> {
           always_active INTEGER NOT NULL DEFAULT 0,
           keywords TEXT NOT NULL DEFAULT '[]',
           case_sensitive INTEGER NOT NULL DEFAULT 0,
+          keyword_match_mode TEXT NOT NULL DEFAULT 'literal',
           content TEXT NOT NULL,
           priority INTEGER NOT NULL DEFAULT 0,
           display_order INTEGER NOT NULL DEFAULT 0,
@@ -4089,10 +4091,7 @@ fn migrate_v75_to_v76(app: &AppHandle) -> Result<(), String> {
     let conn = crate::storage_manager::db::open_db(app)?;
 
     let _ = conn.execute("ALTER TABLE messages ADD COLUMN mtp_stats TEXT", []);
-    let _ = conn.execute(
-        "ALTER TABLE message_variants ADD COLUMN mtp_stats TEXT",
-        [],
-    );
+    let _ = conn.execute("ALTER TABLE message_variants ADD COLUMN mtp_stats TEXT", []);
     let _ = conn.execute("ALTER TABLE group_messages ADD COLUMN mtp_stats TEXT", []);
     let _ = conn.execute(
         "ALTER TABLE group_message_variants ADD COLUMN mtp_stats TEXT",

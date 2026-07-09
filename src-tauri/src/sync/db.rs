@@ -10,9 +10,9 @@ use crate::sync::models::{
     CompanionSharedMemory, CreationHelperSession, GroupMessage, GroupMessageVariant,
     GroupParticipation, GroupSession, Message, MessageVariant, MetaEntry, Model, Persona,
     PromptTemplate, ProviderCredential, Scene, SceneVariant, Secret, Session, Settings,
-    SyncAsrCorrection, SyncAsrIgnoredSuggestion, SyncAsrVocabularyTerm,
-    SyncCompanionScheduledNote, SyncCompanionTurnEffect, SyncLorebook, SyncLorebookEntry,
-    SyncMemoryEmbeddingRecord, SyncedMemoryEmbedding, UsageMetadata, UsageRecord, UserVoice,
+    SyncAsrCorrection, SyncAsrIgnoredSuggestion, SyncAsrVocabularyTerm, SyncCompanionScheduledNote,
+    SyncCompanionTurnEffect, SyncLorebook, SyncLorebookEntry, SyncMemoryEmbeddingRecord,
+    SyncedMemoryEmbedding, UsageMetadata, UsageRecord, UserVoice,
 };
 use crate::sync::protocol::{ChangeOp, ChangeRecord, CursorSet, DomainCursor, SyncDomain};
 use crate::utils::{log_error_global, log_info_global};
@@ -1973,8 +1973,7 @@ fn deserialize_memory_embedding_head(
     match bincode_decode_exact(&head.payload) {
         Ok(value) => Ok(value),
         Err(current_err) => {
-            if let Ok(value) =
-                bincode_decode_exact::<LegacySyncedMemoryEmbeddingV1>(&head.payload)
+            if let Ok(value) = bincode_decode_exact::<LegacySyncedMemoryEmbeddingV1>(&head.payload)
             {
                 log_info_global(
                     "sync_payload",
@@ -1985,8 +1984,7 @@ fn deserialize_memory_embedding_head(
                 );
                 return Ok(upgrade_legacy_memory_embedding_v1(value));
             }
-            if let Ok(value) =
-                bincode_decode_exact::<LegacySyncedMemoryEmbeddingV0>(&head.payload)
+            if let Ok(value) = bincode_decode_exact::<LegacySyncedMemoryEmbeddingV0>(&head.payload)
             {
                 log_info_global(
                     "sync_payload",
@@ -2687,8 +2685,8 @@ fn apply_lorebooks_snapshot(conn: &mut DbConnection, payload: &[u8]) -> Result<(
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
     for entry in snapshot.entries {
         tx.execute(
-            r#"INSERT OR REPLACE INTO lorebook_entries (id, lorebook_id, title, enabled, always_active, keywords, case_sensitive, content, priority, display_order, created_at, updated_at)
-               VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)"#,
+            r#"INSERT OR REPLACE INTO lorebook_entries (id, lorebook_id, title, enabled, always_active, keywords, case_sensitive, keyword_match_mode, content, priority, display_order, created_at, updated_at)
+               VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)"#,
             params![
                 entry.id,
                 entry.lorebook_id,
@@ -2697,6 +2695,7 @@ fn apply_lorebooks_snapshot(conn: &mut DbConnection, payload: &[u8]) -> Result<(
                 entry.always_active,
                 entry.keywords,
                 entry.case_sensitive,
+                entry.keyword_match_mode,
                 entry.content,
                 entry.priority,
                 entry.display_order,
@@ -3715,7 +3714,7 @@ fn fetch_lorebooks(conn: &DbConnection, ids: &[String]) -> Result<Vec<u8>, Strin
         .map(|r| r.unwrap())
         .collect();
 
-    let sql_ent = format!("SELECT id, lorebook_id, title, enabled, always_active, keywords, case_sensitive, content, priority, display_order, created_at, updated_at FROM lorebook_entries WHERE lorebook_id IN ({})", placeholders);
+    let sql_ent = format!("SELECT id, lorebook_id, title, enabled, always_active, keywords, case_sensitive, keyword_match_mode, content, priority, display_order, created_at, updated_at FROM lorebook_entries WHERE lorebook_id IN ({})", placeholders);
     let mut stmt = conn
         .prepare(&sql_ent)
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
@@ -3729,11 +3728,12 @@ fn fetch_lorebooks(conn: &DbConnection, ids: &[String]) -> Result<Vec<u8>, Strin
                 always_active: r.get(4)?,
                 keywords: r.get(5)?,
                 case_sensitive: r.get(6)?,
-                content: r.get(7)?,
-                priority: r.get(8)?,
-                display_order: r.get(9)?,
-                created_at: r.get(10)?,
-                updated_at: r.get(11)?,
+                keyword_match_mode: r.get(7)?,
+                content: r.get(8)?,
+                priority: r.get(9)?,
+                display_order: r.get(10)?,
+                created_at: r.get(11)?,
+                updated_at: r.get(12)?,
             })
         })
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?
@@ -4241,7 +4241,9 @@ pub(crate) fn asr_correction_entity_id(
     )
 }
 
-pub(crate) fn fetch_asr_vocabulary_terms(conn: &DbConnection) -> Result<Vec<SyncAsrVocabularyTerm>, String> {
+pub(crate) fn fetch_asr_vocabulary_terms(
+    conn: &DbConnection,
+) -> Result<Vec<SyncAsrVocabularyTerm>, String> {
     let mut stmt = conn
         .prepare(
             "SELECT term, normalized_term, language, category, scope, priority, use_count, created_at, updated_at
@@ -4715,7 +4717,10 @@ mod tests {
         assert_eq!(decoded.memory.id, "852275");
         assert_eq!(decoded.memory.created_at, 1776758542110);
         assert_eq!(decoded.memory.token_count, 20);
-        assert_eq!(decoded.memory.embedding_source_version.as_deref(), Some("v4"));
+        assert_eq!(
+            decoded.memory.embedding_source_version.as_deref(),
+            Some("v4")
+        );
         assert_eq!(decoded.memory.match_score, None);
         assert_eq!(decoded.memory.category.as_deref(), Some("character_trait"));
     }
@@ -4918,10 +4923,16 @@ mod tests {
         tx.commit().unwrap();
 
         let priority: i64 = conn
-            .query_row("SELECT priority FROM asr_vocabulary_terms LIMIT 1", [], |r| r.get(0))
+            .query_row(
+                "SELECT priority FROM asr_vocabulary_terms LIMIT 1",
+                [],
+                |r| r.get(0),
+            )
             .unwrap();
         let term_count: i64 = conn
-            .query_row("SELECT COUNT(*) FROM asr_vocabulary_terms", [], |r| r.get(0))
+            .query_row("SELECT COUNT(*) FROM asr_vocabulary_terms", [], |r| {
+                r.get(0)
+            })
             .unwrap();
         assert_eq!(priority, 90);
         assert_eq!(term_count, 1);
@@ -4934,7 +4945,9 @@ mod tests {
             )
             .unwrap();
         let new_term_id: i64 = conn
-            .query_row("SELECT id FROM asr_vocabulary_terms LIMIT 1", [], |r| r.get(0))
+            .query_row("SELECT id FROM asr_vocabulary_terms LIMIT 1", [], |r| {
+                r.get(0)
+            })
             .unwrap();
         let new_correction_id: i64 = conn
             .query_row("SELECT id FROM asr_corrections LIMIT 1", [], |r| r.get(0))
@@ -4962,7 +4975,9 @@ mod tests {
         tx.commit().unwrap();
 
         let term_id: Option<i64> = conn
-            .query_row("SELECT term_id FROM asr_voice_examples LIMIT 1", [], |r| r.get(0))
+            .query_row("SELECT term_id FROM asr_voice_examples LIMIT 1", [], |r| {
+                r.get(0)
+            })
             .unwrap();
         assert_eq!(term_id, None);
     }

@@ -564,6 +564,7 @@ pub fn init_db(_app: &tauri::AppHandle, conn: &Connection) -> Result<(), String>
           always_active INTEGER NOT NULL DEFAULT 0,
           keywords TEXT NOT NULL DEFAULT '[]',
           case_sensitive INTEGER NOT NULL DEFAULT 0,
+          keyword_match_mode TEXT NOT NULL DEFAULT 'literal',
           content TEXT NOT NULL,
           priority INTEGER NOT NULL DEFAULT 0,
           display_order INTEGER NOT NULL DEFAULT 0,
@@ -1899,6 +1900,7 @@ pub fn init_db(_app: &tauri::AppHandle, conn: &Connection) -> Result<(), String>
         .prepare("PRAGMA table_info(lorebook_entries)")
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
     let mut has_lorebook_entry_title = false;
+    let mut has_lorebook_entry_keyword_match_mode = false;
     let mut rows3 = stmt3
         .query([])
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
@@ -1909,14 +1911,21 @@ pub fn init_db(_app: &tauri::AppHandle, conn: &Connection) -> Result<(), String>
         let col_name: String = row
             .get(1)
             .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
-        if col_name == "title" {
-            has_lorebook_entry_title = true;
-            break;
+        match col_name.as_str() {
+            "title" => has_lorebook_entry_title = true,
+            "keyword_match_mode" => has_lorebook_entry_keyword_match_mode = true,
+            _ => {}
         }
     }
     if !has_lorebook_entry_title {
         let _ = conn.execute(
             "ALTER TABLE lorebook_entries ADD COLUMN title TEXT NOT NULL DEFAULT ''",
+            [],
+        );
+    }
+    if !has_lorebook_entry_keyword_match_mode {
+        let _ = conn.execute(
+            "ALTER TABLE lorebook_entries ADD COLUMN keyword_match_mode TEXT NOT NULL DEFAULT 'literal'",
             [],
         );
     }

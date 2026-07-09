@@ -2920,6 +2920,12 @@ export const hiMessages: DeepPartialMessageTree<LocaleMessages> = {
     lorebook: {
       keywords: "कीवर्ड",
       caseSensitive: "केस संवेदनशील",
+      regularExpressions: "रेगुलर एक्सप्रेशन",
+      regularExpressionsLabel: "रेगुलर एक्सप्रेशन",
+      regularExpressionHint: "apple|banana जैसे रॉ पैटर्न दर्ज करें। पैटर्न को / में न लपेटें।",
+      regularExpressionPlaceholder: "जैसे apple|banana",
+      matchType: "मिलान का प्रकार",
+      literalText: "शाब्दिक टेक्स्ट",
       typeKeyword: "एक कीवर्ड टाइप करें...",
       addButton: "जोड़ें",
       untitledEntry: "बिना शीर्षक प्रविष्टि",

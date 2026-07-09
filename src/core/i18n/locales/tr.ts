@@ -2920,6 +2920,12 @@ export const trMessages: DeepPartialMessageTree<LocaleMessages> = {
     lorebook: {
       keywords: "ANAHTAR KELİMELER",
       caseSensitive: "Büyük/küçük harf duyarlı",
+      regularExpressions: "Düzenli ifadeler",
+      regularExpressionsLabel: "DÜZENLİ İFADELER",
+      regularExpressionHint: "elma|muz gibi ham desenler girin. Desenleri / içine almayın.",
+      regularExpressionPlaceholder: "örn. elma|muz",
+      matchType: "Eşleşme türü",
+      literalText: "Düz metin",
       typeKeyword: "Anahtar kelime yaz...",
       addButton: "Ekle",
       untitledEntry: "Başlıksız girdi",

@@ -2967,6 +2967,13 @@ export const enMessages = {
     lorebook: {
       keywords: "KEYWORDS",
       caseSensitive: "Case sensitive",
+      regularExpression: "Use regular expressions",
+      regularExpressions: "Regular expressions",
+      regularExpressionsLabel: "REGULAR EXPRESSIONS",
+      regularExpressionHint: "Enter raw patterns such as apple|banana. Do not wrap patterns in /.",
+      regularExpressionPlaceholder: "e.g. apple|banana",
+      matchType: "Match type",
+      literalText: "Literal text",
       typeKeyword: "Type a keyword...",
       addButton: "Add",
       untitledEntry: "Untitled Entry",

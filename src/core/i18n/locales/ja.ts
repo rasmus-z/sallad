@@ -2920,6 +2920,12 @@ export const jaMessages: DeepPartialMessageTree<LocaleMessages> = {
     lorebook: {
       keywords: "キーワード",
       caseSensitive: "大文字小文字を区別",
+      regularExpressions: "正規表現",
+      regularExpressionsLabel: "正規表現",
+      regularExpressionHint: "apple|banana のような生のパターンを入力してください。パターンを / で囲まないでください。",
+      regularExpressionPlaceholder: "例: apple|banana",
+      matchType: "一致タイプ",
+      literalText: "リテラルテキスト",
       typeKeyword: "キーワードを入力...",
       addButton: "追加",
       untitledEntry: "無題のエントリ",

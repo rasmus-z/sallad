@@ -2920,6 +2920,12 @@ export const ruMessages: DeepPartialMessageTree<LocaleMessages> = {
     lorebook: {
       keywords: "КЛЮЧЕВЫЕ СЛОВА",
       caseSensitive: "Учитывать регистр",
+      regularExpressions: "Регулярные выражения",
+      regularExpressionsLabel: "РЕГУЛЯРНЫЕ ВЫРАЖЕНИЯ",
+      regularExpressionHint: "Введите шаблоны без разделителей, например apple|banana. Не обрамляйте шаблоны символами /.",
+      regularExpressionPlaceholder: "например, apple|banana",
+      matchType: "Тип совпадения",
+      literalText: "Буквальный текст",
       typeKeyword: "Введите ключевое слово...",
       addButton: "Добавить",
       untitledEntry: "Запись без названия",

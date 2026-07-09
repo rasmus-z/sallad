@@ -2920,6 +2920,12 @@ export const viMessages: DeepPartialMessageTree<LocaleMessages> = {
     lorebook: {
       keywords: "TỪ KHÓA",
       caseSensitive: "Phân biệt hoa thường",
+      regularExpressions: "Biểu thức chính quy",
+      regularExpressionsLabel: "BIỂU THỨC CHÍNH QUY",
+      regularExpressionHint: "Nhập mẫu thô như apple|banana. Không đặt mẫu trong dấu /.",
+      regularExpressionPlaceholder: "ví dụ: apple|banana",
+      matchType: "Kiểu khớp",
+      literalText: "Văn bản nguyên văn",
       typeKeyword: "Nhập từ khóa...",
       addButton: "Thêm",
       untitledEntry: "Mục chưa đặt tên",

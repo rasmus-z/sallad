@@ -2920,6 +2920,12 @@ export const itMessages: DeepPartialMessageTree<LocaleMessages> = {
     lorebook: {
       keywords: "PAROLE CHIAVE",
       caseSensitive: "Sensibile alle maiuscole",
+      regularExpressions: "Espressioni regolari",
+      regularExpressionsLabel: "ESPRESSIONI REGOLARI",
+      regularExpressionHint: "Inserisci pattern non delimitati come mela|banana. Non racchiudere i pattern tra /.",
+      regularExpressionPlaceholder: "es. mela|banana",
+      matchType: "Tipo di corrispondenza",
+      literalText: "Testo letterale",
       typeKeyword: "Digita una parola chiave...",
       addButton: "Aggiungi",
       untitledEntry: "Voce senza titolo",

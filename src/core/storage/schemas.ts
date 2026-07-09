@@ -3170,6 +3170,7 @@ export const LorebookEntrySchema = z.object({
   alwaysActive: z.boolean().default(false),
   keywords: z.array(z.string()).default([]),
   caseSensitive: z.boolean().default(false),
+  keywordMatchMode: z.enum(["literal", "regex"]).default("literal"),
   content: z.string(),
   priority: z.number().int().default(0),
   displayOrder: z.number().int().default(0),

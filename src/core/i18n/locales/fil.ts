@@ -2920,6 +2920,12 @@ export const filMessages: DeepPartialMessageTree<LocaleMessages> = {
     lorebook: {
       keywords: "MGA KEYWORD",
       caseSensitive: "Case sensitive",
+      regularExpressions: "Mga regular expression",
+      regularExpressionsLabel: "MGA REGULAR EXPRESSION",
+      regularExpressionHint: "Maglagay ng mga raw na pattern gaya ng apple|banana. Huwag balutin ang mga pattern ng /.",
+      regularExpressionPlaceholder: "hal. apple|banana",
+      matchType: "Uri ng pagtutugma",
+      literalText: "Literal na text",
       typeKeyword: "Mag-type ng keyword...",
       addButton: "Idagdag",
       untitledEntry: "Entry na Walang Pamagat",

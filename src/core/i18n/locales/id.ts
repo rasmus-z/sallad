@@ -2920,6 +2920,12 @@ export const idMessages: DeepPartialMessageTree<LocaleMessages> = {
     lorebook: {
       keywords: "KATA KUNCI",
       caseSensitive: "Peka huruf besar",
+      regularExpressions: "Ekspresi reguler",
+      regularExpressionsLabel: "EKSPRESI REGULER",
+      regularExpressionHint: "Masukkan pola mentah seperti apple|banana. Jangan apit pola dengan /.",
+      regularExpressionPlaceholder: "mis. apple|banana",
+      matchType: "Jenis pencocokan",
+      literalText: "Teks literal",
       typeKeyword: "Ketik kata kunci...",
       addButton: "Tambah",
       untitledEntry: "Entri Tanpa Judul",

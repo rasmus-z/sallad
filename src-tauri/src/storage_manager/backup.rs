@@ -1144,7 +1144,7 @@ fn export_lorebooks(app: &tauri::AppHandle) -> Result<Vec<JsonValue>, String> {
     let mut result = Vec::new();
     for (lorebook_id, mut lorebook_json) in lorebooks {
         let mut entries_stmt = conn
-            .prepare("SELECT id, title, enabled, always_active, keywords, case_sensitive, content, priority, display_order, created_at, updated_at FROM lorebook_entries WHERE lorebook_id = ? ORDER BY display_order ASC")
+            .prepare("SELECT id, title, enabled, always_active, keywords, case_sensitive, keyword_match_mode, content, priority, display_order, created_at, updated_at FROM lorebook_entries WHERE lorebook_id = ? ORDER BY display_order ASC")
             .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
 
         let entries: Vec<JsonValue> = entries_stmt
@@ -1156,11 +1156,12 @@ fn export_lorebooks(app: &tauri::AppHandle) -> Result<Vec<JsonValue>, String> {
                     "always_active": r.get::<_, i64>(3)? != 0,
                     "keywords": r.get::<_, String>(4)?,
                     "case_sensitive": r.get::<_, i64>(5)? != 0,
-                    "content": r.get::<_, String>(6)?,
-                    "priority": r.get::<_, i64>(7)?,
-                    "display_order": r.get::<_, i64>(8)?,
-                    "created_at": r.get::<_, i64>(9)?,
-                    "updated_at": r.get::<_, i64>(10)?,
+                    "keyword_match_mode": r.get::<_, String>(6)?,
+                    "content": r.get::<_, String>(7)?,
+                    "priority": r.get::<_, i64>(8)?,
+                    "display_order": r.get::<_, i64>(9)?,
+                    "created_at": r.get::<_, i64>(10)?,
+                    "updated_at": r.get::<_, i64>(11)?,
                 }))
             })
             .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?
@@ -3018,8 +3019,8 @@ fn import_lorebooks(app: &tauri::AppHandle, data: &JsonValue) -> Result<(), Stri
             if let Some(entries) = item.get("entries").and_then(|v| v.as_array()) {
                 for entry in entries {
                     conn.execute(
-                        "INSERT INTO lorebook_entries (id, lorebook_id, title, enabled, always_active, keywords, case_sensitive, content, priority, display_order, created_at, updated_at)
-                         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
+                        "INSERT INTO lorebook_entries (id, lorebook_id, title, enabled, always_active, keywords, case_sensitive, keyword_match_mode, content, priority, display_order, created_at, updated_at)
+                         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
                         params![
                             entry.get("id").and_then(|v| v.as_str()),
                             lorebook_id,
@@ -3030,6 +3031,7 @@ fn import_lorebooks(app: &tauri::AppHandle, data: &JsonValue) -> Result<(), Stri
                             entry.get("case_sensitive")
                                 .and_then(|v| v.as_bool())
                                 .unwrap_or(false) as i64,
+                            entry.get("keyword_match_mode").and_then(|v| v.as_str()).unwrap_or("literal"),
                             entry.get("content").and_then(|v| v.as_str()),
                             entry.get("priority").and_then(|v| v.as_i64()).unwrap_or(0),
                             entry.get("display_order").and_then(|v| v.as_i64()).unwrap_or(0),

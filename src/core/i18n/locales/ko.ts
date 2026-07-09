@@ -2920,6 +2920,12 @@ export const koMessages: DeepPartialMessageTree<LocaleMessages> = {
     lorebook: {
       keywords: "키워드",
       caseSensitive: "대소문자 구분",
+      regularExpressions: "정규 표현식",
+      regularExpressionsLabel: "정규 표현식",
+      regularExpressionHint: "apple|banana 같은 원시 패턴을 입력하세요. 패턴을 /로 감싸지 마세요.",
+      regularExpressionPlaceholder: "예: apple|banana",
+      matchType: "일치 유형",
+      literalText: "일반 텍스트",
       typeKeyword: "키워드를 입력하세요...",
       addButton: "추가",
       untitledEntry: "제목 없는 항목",

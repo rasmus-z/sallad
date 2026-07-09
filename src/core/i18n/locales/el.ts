@@ -2920,6 +2920,12 @@ export const elMessages: DeepPartialMessageTree<LocaleMessages> = {
     lorebook: {
       keywords: "ΛΕΞΕΙΣ-ΚΛΕΙΔΙΑ",
       caseSensitive: "Διάκριση πεζών-κεφαλαίων",
+      regularExpressions: "Κανονικές εκφράσεις",
+      regularExpressionsLabel: "ΚΑΝΟΝΙΚΕΣ ΕΚΦΡΑΣΕΙΣ",
+      regularExpressionHint: "Εισαγάγετε ακατέργαστα μοτίβα όπως apple|banana. Μην περικλείετε τα μοτίβα σε /.",
+      regularExpressionPlaceholder: "π.χ. apple|banana",
+      matchType: "Τύπος αντιστοίχισης",
+      literalText: "Κυριολεκτικό κείμενο",
       typeKeyword: "Πληκτρολογήστε λέξη-κλειδί...",
       addButton: "Προσθήκη",
       untitledEntry: "Καταχώρηση Χωρίς Τίτλο",

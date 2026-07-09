@@ -287,11 +287,17 @@ pub struct SyncLorebookEntry {
     pub always_active: i64,
     pub keywords: String,
     pub case_sensitive: i64,
+    #[serde(default = "default_keyword_match_mode")]
+    pub keyword_match_mode: String,
     pub content: String,
     pub priority: i32,
     pub display_order: i32,
     pub created_at: i64,
     pub updated_at: i64,
+}
+
+fn default_keyword_match_mode() -> String {
+    "literal".to_string()
 }
 
 #[derive(Debug, Serialize, Deserialize)]
