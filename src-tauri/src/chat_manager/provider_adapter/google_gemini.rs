@@ -146,6 +146,21 @@ impl ProviderAdapter for GoogleGeminiAdapter {
             if let Some(raw_content) = msg.get("gemini_content") {
                 if let Some(parts) = raw_content.get("parts").and_then(|v| v.as_array()) {
                     if !parts.is_empty() {
+                        for part in parts {
+                            let Some(function_call) = part
+                                .get("functionCall")
+                                .or_else(|| part.get("function_call"))
+                            else {
+                                continue;
+                            };
+                            let (Some(id), Some(name)) = (
+                                function_call.get("id").and_then(|v| v.as_str()),
+                                function_call.get("name").and_then(|v| v.as_str()),
+                            ) else {
+                                continue;
+                            };
+                            tool_call_name_by_id.insert(id.to_string(), name.to_string());
+                        }
                         contents.push(json!({
                             "role": raw_content
                                 .get("role")
