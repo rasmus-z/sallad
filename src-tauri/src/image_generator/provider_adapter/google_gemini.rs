@@ -143,15 +143,19 @@ impl ImageProviderAdapter for GoogleGeminiAdapter {
 
         if let Some(input_images) = &request.input_images {
             for image in input_images {
-                if let Some((mime_type, data)) = image
+                let Some((mime_type, data)) = image
                     .strip_prefix("data:")
                     .and_then(|rest| rest.split_once(";base64,"))
-                {
-                    parts.push(GeminiPart {
-                        text: None,
-                        inline_data: Some(GeminiInlineDataRequest { mime_type, data }),
-                    });
+                else {
+                    return Err("Gemini image editing requires each input image as a base64 data URL".to_string());
+                };
+                if mime_type.is_empty() || data.is_empty() {
+                    return Err("Gemini image editing received an empty image data URL".to_string());
                 }
+                parts.push(GeminiPart {
+                    text: None,
+                    inline_data: Some(GeminiInlineDataRequest { mime_type, data }),
+                });
             }
         }
 
