@@ -2017,7 +2017,6 @@ export const noMessages: DeepPartialMessageTree<LocaleMessages> = {
       title: "Gruppechathistorikk",
       subtitle: "Alle gruppesamtaler",
       subtitleForGroup: "Chatter med {{name}}",
-      showAllGroups: "Vis alle",
       searchPlaceholder: "Søk i gruppechatter...",
       active: "Aktive ({{count}})",
       archived: "Arkiverte ({{count}})",

@@ -2017,7 +2017,6 @@ export const idMessages: DeepPartialMessageTree<LocaleMessages> = {
       title: "Riwayat Obrolan Grup",
       subtitle: "Semua percakapan grup",
       subtitleForGroup: "Obrolan dengan {{name}}",
-      showAllGroups: "Tampilkan semua",
       searchPlaceholder: "Cari obrolan grup...",
       active: "Aktif ({{count}})",
       archived: "Diarsipkan ({{count}})",

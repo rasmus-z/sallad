@@ -2017,7 +2017,6 @@ export const deMessages: DeepPartialMessageTree<LocaleMessages> = {
       title: "Gruppenchat-Verlauf",
       subtitle: "Alle Gruppenunterhaltungen",
       subtitleForGroup: "Chats mit {{name}}",
-      showAllGroups: "Alle anzeigen",
       searchPlaceholder: "Gruppenchats suchen...",
       active: "Aktiv ({{count}})",
       archived: "Archiviert ({{count}})",

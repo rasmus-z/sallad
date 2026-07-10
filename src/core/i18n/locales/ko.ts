@@ -2017,7 +2017,6 @@ export const koMessages: DeepPartialMessageTree<LocaleMessages> = {
       title: "그룹 채팅 기록",
       subtitle: "모든 그룹 대화",
       subtitleForGroup: "{{name}}과(와)의 채팅",
-      showAllGroups: "모두 보기",
       searchPlaceholder: "그룹 채팅 검색...",
       active: "활성 ({{count}})",
       archived: "보관됨 ({{count}})",

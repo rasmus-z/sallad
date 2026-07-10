@@ -11,7 +11,7 @@ export function useGroupChatHistoryController(options?: {
   onOpenSession?: (sessionId: string) => void;
 }) {
   const { t } = useI18n();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const groupIdFilter = searchParams.get("groupId");
   const [filterGroup, setFilterGroup] = useState<Group | null>(null);
   const [sessions, setSessions] = useState<GroupSessionPreview[]>([]);
@@ -46,11 +46,6 @@ export function useGroupChatHistoryController(options?: {
     };
   }, [groupIdFilter]);
 
-  const clearGroupFilter = useCallback(() => {
-    const next = new URLSearchParams(window.location.search);
-    next.delete("groupId");
-    setSearchParams(next, { replace: true });
-  }, [setSearchParams]);
 
   useEffect(() => {
     if (query.trim()) sessionStorage.setItem("groupChatHistoryQuery", query);
@@ -220,7 +215,6 @@ export function useGroupChatHistoryController(options?: {
     sessions,
     scopedSessions,
     filterGroup,
-    groupIdFilter,
     characters,
     isLoading,
     error,
@@ -232,7 +226,6 @@ export function useGroupChatHistoryController(options?: {
     archivedSessions,
     setQuery,
     setDeleteTarget,
-    clearGroupFilter,
     handleDelete,
     handleRename,
     handleArchive,

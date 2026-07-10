@@ -2017,7 +2017,6 @@ export const frMessages: DeepPartialMessageTree<LocaleMessages> = {
       title: "Historique des discussions de groupe",
       subtitle: "Toutes les conversations de groupe",
       subtitleForGroup: "Discussions avec {{name}}",
-      showAllGroups: "Tout afficher",
       searchPlaceholder: "Rechercher des discussions de groupe...",
       active: "Actives ({{count}})",
       archived: "Archivées ({{count}})",

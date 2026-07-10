@@ -2017,7 +2017,6 @@ export const itMessages: DeepPartialMessageTree<LocaleMessages> = {
       title: "Cronologia chat di gruppo",
       subtitle: "Tutte le conversazioni di gruppo",
       subtitleForGroup: "Chat con {{name}}",
-      showAllGroups: "Mostra tutte",
       searchPlaceholder: "Cerca chat di gruppo...",
       active: "Attive ({{count}})",
       archived: "Archiviate ({{count}})",

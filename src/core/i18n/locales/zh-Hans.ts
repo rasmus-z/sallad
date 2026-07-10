@@ -2017,7 +2017,6 @@ export const zhHansMessages: DeepPartialMessageTree<LocaleMessages> = {
       title: "群聊历史",
       subtitle: "所有群聊",
       subtitleForGroup: "与 {{name}} 的聊天",
-      showAllGroups: "显示全部",
       searchPlaceholder: "搜索群聊...",
       active: "进行中（{{count}}）",
       archived: "已归档（{{count}}）",

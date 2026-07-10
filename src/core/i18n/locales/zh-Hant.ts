@@ -2017,7 +2017,6 @@ export const zhHantMessages: DeepPartialMessageTree<LocaleMessages> = {
       title: "群組對話歷史",
       subtitle: "所有群組對話",
       subtitleForGroup: "與 {{name}} 的對話",
-      showAllGroups: "顯示全部",
       searchPlaceholder: "搜尋群組對話...",
       active: "進行中（{{count}}）",
       archived: "已封存（{{count}}）",

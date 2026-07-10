@@ -2017,7 +2017,6 @@ export const viMessages: DeepPartialMessageTree<LocaleMessages> = {
       title: "Lịch sử nhóm trò chuyện",
       subtitle: "Tất cả cuộc trò chuyện nhóm",
       subtitleForGroup: "Cuộc trò chuyện với {{name}}",
-      showAllGroups: "Hiện tất cả",
       searchPlaceholder: "Tìm nhóm trò chuyện...",
       active: "Hoạt động ({{count}})",
       archived: "Lưu trữ ({{count}})",

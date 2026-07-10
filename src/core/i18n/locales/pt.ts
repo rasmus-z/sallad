@@ -2017,7 +2017,6 @@ export const ptMessages: DeepPartialMessageTree<LocaleMessages> = {
       title: "Histórico de Conversas em Grupo",
       subtitle: "Todas as conversas em grupo",
       subtitleForGroup: "Conversas com {{name}}",
-      showAllGroups: "Mostrar todas",
       searchPlaceholder: "Pesquisar conversas em grupo...",
       active: "Ativas ({{count}})",
       archived: "Arquivadas ({{count}})",

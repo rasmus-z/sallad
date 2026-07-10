@@ -2017,7 +2017,6 @@ export const trMessages: DeepPartialMessageTree<LocaleMessages> = {
       title: "Grup sohbet geçmişi",
       subtitle: "Tüm grup konuşmaları",
       subtitleForGroup: "{{name}} ile sohbetler",
-      showAllGroups: "Tümünü göster",
       searchPlaceholder: "Grup sohbetlerinde ara...",
       active: "Aktif ({{count}})",
       archived: "Arşivlenmiş ({{count}})",

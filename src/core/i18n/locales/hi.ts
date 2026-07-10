@@ -2017,7 +2017,6 @@ export const hiMessages: DeepPartialMessageTree<LocaleMessages> = {
       title: "ग्रुप चैट इतिहास",
       subtitle: "सभी ग्रुप बातचीत",
       subtitleForGroup: "{{name}} के साथ चैट",
-      showAllGroups: "सभी दिखाएँ",
       searchPlaceholder: "ग्रुप चैट खोजें...",
       active: "सक्रिय ({{count}})",
       archived: "संग्रहीत ({{count}})",

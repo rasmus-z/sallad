@@ -2017,7 +2017,6 @@ export const filMessages: DeepPartialMessageTree<LocaleMessages> = {
       title: "Kasaysayan ng Group Chat",
       subtitle: "Lahat ng group na usapan",
       subtitleForGroup: "Mga usapan kasama si {{name}}",
-      showAllGroups: "Ipakita lahat",
       searchPlaceholder: "Maghanap ng mga group chat...",
       active: "Aktibo ({{count}})",
       archived: "Na-archive ({{count}})",

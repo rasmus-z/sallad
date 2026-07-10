@@ -16,7 +16,6 @@ export function GroupChatHistoryPage() {
   const {
     scopedSessions,
     filterGroup,
-    groupIdFilter,
     characters,
     isLoading,
     error,
@@ -28,7 +27,6 @@ export function GroupChatHistoryPage() {
     archivedSessions,
     setQuery,
     setDeleteTarget,
-    clearGroupFilter,
     handleDelete,
     handleRename,
     handleArchive,
@@ -59,10 +57,10 @@ export function GroupChatHistoryPage() {
           <div className="flex flex-1 items-center min-w-0">
             <button
               onClick={() => backOrReplace(Routes.groupChats)}
-              className="flex shrink-0 items-center justify-center -ml-2 text-fg transition hover:text-fg/80"
+              className="flex shrink-0 items-center justify-center px-[0.6em] py-[0.3em] -ml-2 text-fg transition hover:text-fg/80"
               aria-label={t("groupChats.historyPage.backAria")}
             >
-              <ArrowLeft size={14} strokeWidth={2.5} />
+              <ArrowLeft size={18} strokeWidth={2.5} />
             </button>
             <div className="min-w-0 flex-1 text-left">
               <p className="truncate text-xl font-bold text-fg/90">{t("groupChats.history.title")}</p>
@@ -72,30 +70,13 @@ export function GroupChatHistoryPage() {
                   : t("groupChats.history.subtitle")}
               </p>
             </div>
-            {groupIdFilter && (
-              <button
-                type="button"
-                onClick={clearGroupFilter}
-                className={cn(
-                  "flex shrink-0 items-center gap-1.5 px-3 py-1.5",
-                  radius.full,
-                  "border bg-fg/5 text-xs font-medium text-fg/70",
-                  colors.border.subtle,
-                  interactive.transition.fast,
-                  interactive.active.scale,
-                  "hover:bg-fg/10 hover:text-fg",
-                )}
-              >
-                <X size={12} />
-                {t("groupChats.history.showAllGroups")}
-              </button>
-            )}
           </div>
         </div>
       </header>
 
       {/* Content */}
       <main className="flex-1 overflow-y-auto px-3 pt-4">
+        <div className="mx-auto w-full max-w-5xl">
         {error && (
           <div
             className={cn("mb-4 p-4 border border-danger/30 bg-danger/10 text-center", radius.lg)}
@@ -260,6 +241,7 @@ export function GroupChatHistoryPage() {
             )}
           </div>
         )}
+        </div>
       </main>
 
       <BottomMenu

@@ -2017,7 +2017,6 @@ export const plMessages: DeepPartialMessageTree<LocaleMessages> = {
       title: "Historia czatu grupowego",
       subtitle: "Wszystkie rozmowy grupowe",
       subtitleForGroup: "Czaty z {{name}}",
-      showAllGroups: "Pokaż wszystkie",
       searchPlaceholder: "Szukaj czatów grupowych...",
       active: "Aktywne ({{count}})",
       archived: "Zarchiwizowane ({{count}})",

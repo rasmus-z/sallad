@@ -2066,7 +2066,6 @@ export const enMessages = {
       title: "Group Chat History",
       subtitle: "All group conversations",
       subtitleForGroup: "Chats with {{name}}",
-      showAllGroups: "Show all",
       searchPlaceholder: "Search group chats...",
       active: "Active ({{count}})",
       archived: "Archived ({{count}})",

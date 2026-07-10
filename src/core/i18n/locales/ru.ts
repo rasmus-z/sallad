@@ -2017,7 +2017,6 @@ export const ruMessages: DeepPartialMessageTree<LocaleMessages> = {
       title: "История групповых чатов",
       subtitle: "Все групповые разговоры",
       subtitleForGroup: "Чаты с {{name}}",
-      showAllGroups: "Показать все",
       searchPlaceholder: "Поиск групповых чатов...",
       active: "Активные ({{count}})",
       archived: "Архивные ({{count}})",

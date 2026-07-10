@@ -2017,7 +2017,6 @@ export const elMessages: DeepPartialMessageTree<LocaleMessages> = {
       title: "Ιστορικό Ομαδικών Συνομιλιών",
       subtitle: "Όλες οι ομαδικές συνομιλίες",
       subtitleForGroup: "Συνομιλίες με {{name}}",
-      showAllGroups: "Εμφάνιση όλων",
       searchPlaceholder: "Αναζήτηση ομαδικών συνομιλιών...",
       active: "Ενεργές ({{count}})",
       archived: "Αρχειοθετημένες ({{count}})",

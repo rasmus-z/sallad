@@ -2017,7 +2017,6 @@ export const nlMessages: DeepPartialMessageTree<LocaleMessages> = {
       title: "Groepschatgeschiedenis",
       subtitle: "Alle groepsgesprekken",
       subtitleForGroup: "Chats met {{name}}",
-      showAllGroups: "Alles tonen",
       searchPlaceholder: "Groepschats zoeken...",
       active: "Actief ({{count}})",
       archived: "Gearchiveerd ({{count}})",

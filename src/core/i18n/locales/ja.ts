@@ -2017,7 +2017,6 @@ export const jaMessages: DeepPartialMessageTree<LocaleMessages> = {
       title: "グループチャット履歴",
       subtitle: "すべてのグループ会話",
       subtitleForGroup: "{{name}}とのチャット",
-      showAllGroups: "すべて表示",
       searchPlaceholder: "グループチャットを検索...",
       active: "アクティブ（{{count}}）",
       archived: "アーカイブ済み（{{count}}）",
