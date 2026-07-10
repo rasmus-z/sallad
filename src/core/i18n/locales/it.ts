@@ -2666,6 +2666,8 @@ export const itMessages: DeepPartialMessageTree<LocaleMessages> = {
       selectCharacterForRegeneration: "Seleziona quale personaggio dovrebbe rispondere:",
       ttftTitle: "Tempo al primo token",
       tokenSpeedTitle: "Velocità token di completamento",
+      branchToCharacter: "Dirama in chat individuale da qui",
+      selectCharacterForBranch: "Continua da questo punto in una chat privata con questo personaggio",
     },
     timeAgo: {
       justNow: "Adesso",

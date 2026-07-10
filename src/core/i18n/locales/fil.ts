@@ -2561,6 +2561,8 @@ export const filMessages: DeepPartialMessageTree<LocaleMessages> = {
       selectCharacterForRegeneration: "Piliin kung aling karakter ang dapat sumagot sa halip:",
       ttftTitle: "Oras hanggang sa unang token",
       tokenSpeedTitle: "Bilis ng completion token",
+      branchToCharacter: "Mag-branch sa 1-on-1 chat mula rito",
+      selectCharacterForBranch: "Magpatuloy mula sa puntong ito sa isang pribadong chat kasama ang character na ito",
     },
     timeAgo: {
       justNow: "Ngayon lang",

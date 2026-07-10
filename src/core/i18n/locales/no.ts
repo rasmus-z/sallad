@@ -2485,6 +2485,8 @@ export const noMessages: DeepPartialMessageTree<LocaleMessages> = {
       selectCharacterForRegeneration: "Velg hvilken karakter som skal svare i stedet:",
       ttftTitle: "Tid til første token",
       tokenSpeedTitle: "Fullføringstoken-hastighet",
+      branchToCharacter: "Forgren til 1-til-1-chat herfra",
+      selectCharacterForBranch: "Fortsett fra dette punktet i en privat chat med denne karakteren",
     },
     timeAgo: {
       justNow: "Akkurat nå",

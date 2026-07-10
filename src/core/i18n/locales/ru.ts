@@ -2485,6 +2485,8 @@ export const ruMessages: DeepPartialMessageTree<LocaleMessages> = {
       selectCharacterForRegeneration: "Выберите, какой персонаж должен ответить вместо этого:",
       ttftTitle: "Время до первого токена",
       tokenSpeedTitle: "Скорость токенов завершения",
+      branchToCharacter: "Ответвить в личный чат отсюда",
+      selectCharacterForBranch: "Продолжить с этого места в личном чате с этим персонажем",
     },
     timeAgo: {
       justNow: "Только сейчас",

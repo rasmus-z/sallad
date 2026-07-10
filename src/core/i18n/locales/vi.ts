@@ -2485,6 +2485,8 @@ export const viMessages: DeepPartialMessageTree<LocaleMessages> = {
       selectCharacterForRegeneration: "Select which character should respond instead:",
       ttftTitle: "Thời gian đến token đầu tiên",
       tokenSpeedTitle: "Tốc độ token hoàn thành",
+      branchToCharacter: "Tách thành trò chuyện riêng từ đây",
+      selectCharacterForBranch: "Tiếp tục từ điểm này trong cuộc trò chuyện riêng với nhân vật này",
     },
     timeAgo: {
       justNow: "Just now",

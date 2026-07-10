@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Copy, Trash2, RotateCcw, Edit3, Users, Pin, PinOff, BookOpen, Brain, Paintbrush } from "lucide-react";
+import { Copy, Trash2, RotateCcw, Edit3, Users, Pin, PinOff, BookOpen, Brain, Paintbrush, GitBranch } from "lucide-react";
 
 import type { Character, Settings, Model } from "../../../../core/storage/schemas";
 import { useAvatar } from "../../../hooks/useAvatar";
@@ -68,6 +68,7 @@ export function GroupChatMessageActionsBottomSheet({
   handleCopyMessage,
   setMessageAction,
   onRegenerate,
+  onBranchToCharacter,
   onOpenChatAppearance,
   characters,
 }: {
@@ -87,11 +88,17 @@ export function GroupChatMessageActionsBottomSheet({
   handleCopyMessage: () => Promise<void>;
   setMessageAction: (value: MessageActionState | null) => void;
   onRegenerate: (characterId?: string) => void;
+  onBranchToCharacter?: (characterId: string) => void;
   onOpenChatAppearance?: () => void;
   characters: Character[];
 }) {
   const { t } = useI18n();
-  const [showCharacterPicker, setShowCharacterPicker] = useState(false);
+  const [characterPickerMode, setCharacterPickerMode] = useState<"regenerate" | "branch" | null>(
+    null,
+  );
+  const showCharacterPicker = characterPickerMode !== null;
+  const setShowCharacterPicker = (open: boolean) =>
+    setCharacterPickerMode(open ? "regenerate" : null);
   const [settings, setSettings] = useState<Settings | null>(null);
   const [modelName, setModelName] = useState<string | null>(null);
   const usedLorebookEntries = messageAction?.message.usedLorebookEntries ?? [];
@@ -283,7 +290,17 @@ export function GroupChatMessageActionsBottomSheet({
                     icon={Users}
                     label={t("groupChats.messageActionsExtra.regenerateWithDifferent")}
                     iconBg="bg-accent/20"
-                    onClick={() => setShowCharacterPicker(true)}
+                    onClick={() => setCharacterPickerMode("regenerate")}
+                  />
+                )}
+
+                {onBranchToCharacter && !messageAction.message.id.startsWith("temp-") && (
+                  <ActionRow
+                    icon={GitBranch}
+                    label={t("groupChats.messageActionsExtra.branchToCharacter")}
+                    iconBg="bg-secondary/20"
+                    onClick={() => setCharacterPickerMode("branch")}
+                    disabled={actionBusy}
                   />
                 )}
 
@@ -396,14 +413,23 @@ export function GroupChatMessageActionsBottomSheet({
         title={t("groupChats.messageActionsExtra.chooseCharacter")}
       >
         <div className="space-y-2">
-          <p className="text-sm text-fg/50 mb-3">{t("groupChats.messageActionsExtra.selectCharacterForRegeneration")}</p>
+          <p className="text-sm text-fg/50 mb-3">
+            {characterPickerMode === "branch"
+              ? t("groupChats.messageActionsExtra.selectCharacterForBranch")
+              : t("groupChats.messageActionsExtra.selectCharacterForRegeneration")}
+          </p>
           {characters.map((char) => (
             <CharacterPickerItem
               key={char.id}
               character={char}
               onClick={() => {
-                setShowCharacterPicker(false);
-                onRegenerate(char.id);
+                const mode = characterPickerMode;
+                setCharacterPickerMode(null);
+                if (mode === "branch") {
+                  onBranchToCharacter?.(char.id);
+                } else {
+                  onRegenerate(char.id);
+                }
               }}
             />
           ))}

@@ -2545,6 +2545,8 @@ export const enMessages = {
       selectCharacterForRegeneration: "Select which character should respond instead:",
       ttftTitle: "Time to first token",
       tokenSpeedTitle: "Completion token speed",
+      branchToCharacter: "Branch to 1-on-1 from here",
+      selectCharacterForBranch: "Continue from this point in a private chat with this character",
     },
     timeAgo: {
       justNow: "Just now",

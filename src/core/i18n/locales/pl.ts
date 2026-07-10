@@ -2485,6 +2485,8 @@ export const plMessages: DeepPartialMessageTree<LocaleMessages> = {
       selectCharacterForRegeneration: "Wybierz, która postać powinna odpowiedzieć:",
       ttftTitle: "Czas do pierwszego tokenu",
       tokenSpeedTitle: "Szybkość tokenów uzupełnienia",
+      branchToCharacter: "Rozgałęź do czatu 1 na 1 od tego miejsca",
+      selectCharacterForBranch: "Kontynuuj od tego momentu w prywatnym czacie z tą postacią",
     },
     timeAgo: {
       justNow: "przed chwilą",

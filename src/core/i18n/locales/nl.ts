@@ -2485,6 +2485,8 @@ export const nlMessages: DeepPartialMessageTree<LocaleMessages> = {
       selectCharacterForRegeneration: "Selecteer welk karakter in plaats daarvan moet reageren:",
       ttftTitle: "Tijd tot eerste token",
       tokenSpeedTitle: "Voltooiingstokensnelheid",
+      branchToCharacter: "Vertak vanaf hier naar 1-op-1-chat",
+      selectCharacterForBranch: "Ga vanaf dit punt verder in een privéchat met dit personage",
     },
     timeAgo: {
       justNow: "Zojuist",

@@ -8,7 +8,9 @@ import { type as getPlatform } from "@tauri-apps/plugin-os";
 
 import { storageBridge } from "../../../core/storage/files";
 import {
+  createBranchedSessionFromGroupMessage,
   generateGroupChatUserReply,
+  listAllGroupMessages,
   readSettings,
   SETTINGS_UPDATED_EVENT,
   toggleGroupMessagePin,
@@ -1283,6 +1285,32 @@ export function GroupChatPage() {
     }
   }, [closeMessageActions, groupSessionId, messageAction, messages]);
 
+  const handleBranchToCharacter = useCallback(
+    async (characterId: string) => {
+      if (!messageAction || !session) return;
+
+      setActionBusy(true);
+      setActionError(null);
+      setActionStatus(null);
+      try {
+        const allMessages = await listAllGroupMessages(session.id);
+        const branched = await createBranchedSessionFromGroupMessage(
+          session,
+          allMessages,
+          messageAction.message.id,
+          characterId,
+        );
+        closeMessageActions();
+        navigate(Routes.chatSession(branched.characterId, branched.id));
+      } catch (err) {
+        setActionError(err instanceof Error ? err.message : String(err));
+      } finally {
+        setActionBusy(false);
+      }
+    },
+    [messageAction, session, closeMessageActions, navigate],
+  );
+
   const handleSaveEdit = useCallback(async () => {
     if (!messageAction || !groupSessionId || !editDraft.trim()) return;
 
@@ -2451,6 +2479,7 @@ export function GroupChatPage() {
             handleRegenerate(messageAction.message.id, charId);
           }
         }}
+        onBranchToCharacter={(charId) => void handleBranchToCharacter(charId)}
         onOpenChatAppearance={handleOpenAppearance}
         characters={groupCharacters}
       />

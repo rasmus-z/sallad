@@ -2485,6 +2485,8 @@ export const idMessages: DeepPartialMessageTree<LocaleMessages> = {
       selectCharacterForRegeneration: "Pilih karakter mana yang harus merespons:",
       ttftTitle: "Waktu ke token pertama",
       tokenSpeedTitle: "Kecepatan token penyelesaian",
+      branchToCharacter: "Cabangkan ke obrolan pribadi dari sini",
+      selectCharacterForBranch: "Lanjutkan dari titik ini dalam obrolan pribadi dengan karakter ini",
     },
     timeAgo: {
       justNow: "Baru saja",

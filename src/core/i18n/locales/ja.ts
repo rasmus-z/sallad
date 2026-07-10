@@ -2485,6 +2485,8 @@ export const jaMessages: DeepPartialMessageTree<LocaleMessages> = {
       selectCharacterForRegeneration: "代わりに応答するキャラクターを選択してください:",
       ttftTitle: "最初のトークンまでの時間",
       tokenSpeedTitle: "完了トークンの速度",
+      branchToCharacter: "ここから1対1チャットに分岐",
+      selectCharacterForBranch: "この時点からこのキャラクターとのプライベートチャットで続ける",
     },
     timeAgo: {
       justNow: "たった今",

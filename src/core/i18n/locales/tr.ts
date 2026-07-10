@@ -2485,6 +2485,8 @@ export const trMessages: DeepPartialMessageTree<LocaleMessages> = {
       selectCharacterForRegeneration: "Bunun yerine hangi karakterin yanıt vermesi gerektiğini seçin:",
       ttftTitle: "İlk token süresi",
       tokenSpeedTitle: "Tamamlama token hızı",
+      branchToCharacter: "Buradan bire bir sohbete dallan",
+      selectCharacterForBranch: "Bu noktadan itibaren bu karakterle özel sohbette devam et",
     },
     timeAgo: {
       justNow: "Az önce",

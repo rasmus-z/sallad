@@ -1612,11 +1612,8 @@ pub fn group_session_branch_to_character(
 
         let mut processed_content = content.clone();
         for char_name in character_names.values() {
-            let placeholder = format!("{{{{@\"{}\"}}+}}", char_name);
-            processed_content = processed_content.replace(&placeholder, &character_name);
-
-            let placeholder_alt = format!("{{{{@\"{}\"}}}}", char_name);
-            processed_content = processed_content.replace(&placeholder_alt, &character_name);
+            let placeholder = format!("{{{{@\"{}\"}}}}", char_name);
+            processed_content = processed_content.replace(&placeholder, char_name);
         }
 
         conn.execute(

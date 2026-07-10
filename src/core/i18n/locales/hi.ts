@@ -2485,6 +2485,8 @@ export const hiMessages: DeepPartialMessageTree<LocaleMessages> = {
       selectCharacterForRegeneration: "चुनें कि कौन सा कैरेक्टर इसके बजाय जवाब दे:",
       ttftTitle: "पहले टोकन का समय (TTFT)",
       tokenSpeedTitle: "कम्प्लीशन टोकन स्पीड",
+      branchToCharacter: "यहाँ से 1-on-1 चैट में ब्रांच करें",
+      selectCharacterForBranch: "इस बिंदु से इस पात्र के साथ निजी चैट में जारी रखें",
     },
     timeAgo: {
       justNow: "अभी",

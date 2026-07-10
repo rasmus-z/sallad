@@ -2485,6 +2485,8 @@ export const elMessages: DeepPartialMessageTree<LocaleMessages> = {
       selectCharacterForRegeneration: "Επιλέξτε ποιος χαρακτήρας θα απαντήσει:",
       ttftTitle: "Χρόνος μέχρι το πρώτο token",
       tokenSpeedTitle: "Ταχύτητα token ολοκλήρωσης",
+      branchToCharacter: "Διακλάδωση σε ατομική συνομιλία από εδώ",
+      selectCharacterForBranch: "Συνεχίστε από αυτό το σημείο σε ιδιωτική συνομιλία με αυτόν τον χαρακτήρα",
     },
     timeAgo: {
       justNow: "Μόλις τώρα",

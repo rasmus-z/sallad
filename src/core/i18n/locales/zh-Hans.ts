@@ -2485,6 +2485,8 @@ export const zhHansMessages: DeepPartialMessageTree<LocaleMessages> = {
       selectCharacterForRegeneration: "选择应改由哪个角色回复:",
       ttftTitle: "首字响应时间 (TTFT)",
       tokenSpeedTitle: "生成速度 (Token/s)",
+      branchToCharacter: "从此处分支为单人聊天",
+      selectCharacterForBranch: "从这一点开始与该角色进行私人聊天",
     },
     timeAgo: {
       justNow: "刚刚",

@@ -2485,6 +2485,8 @@ export const koMessages: DeepPartialMessageTree<LocaleMessages> = {
       selectCharacterForRegeneration: "대신 응답할 캐릭터를 선택하세요:",
       ttftTitle: "첫 토큰까지 시간",
       tokenSpeedTitle: "완성 토큰 속도",
+      branchToCharacter: "여기서 1:1 채팅으로 분기",
+      selectCharacterForBranch: "이 지점부터 이 캐릭터와의 개인 채팅으로 계속하기",
     },
     timeAgo: {
       justNow: "방금",
