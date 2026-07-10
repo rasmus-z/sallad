@@ -1933,6 +1933,7 @@ export const jaMessages: DeepPartialMessageTree<LocaleMessages> = {
       chatHistory: "チャット履歴",
       noChatsYet: "チャットはまだありません",
       emptyChatPreview: "メッセージはまだありません",
+      startFirstChatHint: "タップして最初のチャットを開始",
       startingChat: "チャットを開始中...",
       startChatFailed: "新しいチャットを開始できませんでした。もう一度お試しください。",
       deleteGroupFailed: "グループを削除できませんでした。もう一度お試しください。",

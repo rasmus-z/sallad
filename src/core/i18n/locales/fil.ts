@@ -1933,6 +1933,7 @@ export const filMessages: DeepPartialMessageTree<LocaleMessages> = {
       chatHistory: "Kasaysayan ng Chat",
       noChatsYet: "Wala pang mga usapan",
       emptyChatPreview: "Wala pang mensahe",
+      startFirstChatHint: "I-tap para simulan ang unang chat",
       startingChat: "Sinisimulan ang usapan...",
       startChatFailed: "Hindi makapagsimula ng bagong usapan. Pakisubukang muli.",
       deleteGroupFailed: "Hindi matanggal ang grupo. Pakisubukang muli.",

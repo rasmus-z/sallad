@@ -1933,6 +1933,7 @@ export const idMessages: DeepPartialMessageTree<LocaleMessages> = {
       chatHistory: "Riwayat Chat",
       noChatsYet: "Belum ada obrolan",
       emptyChatPreview: "Belum ada pesan",
+      startFirstChatHint: "Ketuk untuk memulai obrolan pertama",
       startingChat: "Memulai obrolan...",
       startChatFailed: "Tidak dapat memulai obrolan baru. Silakan coba lagi.",
       deleteGroupFailed: "Tidak dapat menghapus grup. Silakan coba lagi.",

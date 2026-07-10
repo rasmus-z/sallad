@@ -1933,6 +1933,7 @@ export const trMessages: DeepPartialMessageTree<LocaleMessages> = {
       chatHistory: "Sohbet geçmişi",
       noChatsYet: "Henüz sohbet yok",
       emptyChatPreview: "Henüz mesaj yok",
+      startFirstChatHint: "İlk sohbeti başlatmak için dokun",
       startingChat: "Sohbet başlatılıyor...",
       startChatFailed: "Yeni sohbet başlatılamadı. Lütfen tekrar dene.",
       deleteGroupFailed: "Grup silinemedi. Lütfen tekrar dene.",

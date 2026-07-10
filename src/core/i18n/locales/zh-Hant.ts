@@ -1933,6 +1933,7 @@ export const zhHantMessages: DeepPartialMessageTree<LocaleMessages> = {
       chatHistory: "對話歷史",
       noChatsYet: "尚無對話",
       emptyChatPreview: "尚無訊息",
+      startFirstChatHint: "點按開始第一個對話",
       startingChat: "正在開始對話...",
       startChatFailed: "無法開始新對話。請再試一次。",
       deleteGroupFailed: "無法刪除群組。請再試一次。",

@@ -1933,6 +1933,7 @@ export const koMessages: DeepPartialMessageTree<LocaleMessages> = {
       chatHistory: "채팅 기록",
       noChatsYet: "아직 채팅이 없습니다",
       emptyChatPreview: "아직 메시지가 없습니다",
+      startFirstChatHint: "탭하여 첫 채팅 시작",
       startingChat: "채팅 시작 중...",
       startChatFailed: "새 채팅을 시작할 수 없습니다. 다시 시도하세요.",
       deleteGroupFailed: "그룹을 삭제할 수 없습니다. 다시 시도하세요.",

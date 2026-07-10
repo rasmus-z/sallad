@@ -1933,6 +1933,7 @@ export const ruMessages: DeepPartialMessageTree<LocaleMessages> = {
       chatHistory: "История чатов",
       noChatsYet: "Чатов пока нет",
       emptyChatPreview: "Сообщений пока нет",
+      startFirstChatHint: "Нажмите, чтобы начать первый чат",
       startingChat: "Запуск чата...",
       startChatFailed: "Не удалось начать новый чат. Попробуйте ещё раз.",
       deleteGroupFailed: "Не удалось удалить группу. Попробуйте ещё раз.",

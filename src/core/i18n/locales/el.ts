@@ -1933,6 +1933,7 @@ export const elMessages: DeepPartialMessageTree<LocaleMessages> = {
       chatHistory: "Ιστορικό συνομιλιών",
       noChatsYet: "Δεν υπάρχουν συνομιλίες ακόμα",
       emptyChatPreview: "Δεν υπάρχουν μηνύματα ακόμα",
+      startFirstChatHint: "Πατήστε για να ξεκινήσετε την πρώτη συνομιλία",
       startingChat: "Έναρξη συνομιλίας...",
       startChatFailed: "Δεν ήταν δυνατή η έναρξη νέας συνομιλίας. Δοκιμάστε ξανά.",
       deleteGroupFailed: "Δεν ήταν δυνατή η διαγραφή της ομάδας. Δοκιμάστε ξανά.",

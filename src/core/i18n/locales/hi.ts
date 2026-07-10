@@ -1933,6 +1933,7 @@ export const hiMessages: DeepPartialMessageTree<LocaleMessages> = {
       chatHistory: "चैट इतिहास",
       noChatsYet: "अभी तक कोई चैट नहीं",
       emptyChatPreview: "अभी तक कोई संदेश नहीं",
+      startFirstChatHint: "पहली चैट शुरू करने के लिए टैप करें",
       startingChat: "चैट शुरू हो रही है...",
       startChatFailed: "नई चैट शुरू नहीं हो सकी। कृपया फिर से प्रयास करें।",
       deleteGroupFailed: "ग्रुप हटाया नहीं जा सका। कृपया फिर से प्रयास करें।",

@@ -1933,6 +1933,7 @@ export const deMessages: DeepPartialMessageTree<LocaleMessages> = {
       chatHistory: "Chat-Verlauf",
       noChatsYet: "Noch keine Chats",
       emptyChatPreview: "Noch keine Nachrichten",
+      startFirstChatHint: "Tippe, um den ersten Chat zu starten",
       startingChat: "Chat wird gestartet...",
       startChatFailed: "Es konnte kein neuer Chat gestartet werden. Bitte versuche es erneut.",
       deleteGroupFailed: "Die Gruppe konnte nicht gelöscht werden. Bitte versuche es erneut.",

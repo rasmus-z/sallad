@@ -1933,6 +1933,7 @@ export const noMessages: DeepPartialMessageTree<LocaleMessages> = {
       chatHistory: "Chathistorikk",
       noChatsYet: "Ingen chatter ennå",
       emptyChatPreview: "Ingen meldinger ennå",
+      startFirstChatHint: "Trykk for å starte den første chatten",
       startingChat: "Starter chat...",
       startChatFailed: "Kunne ikke starte en ny chat. Prøv igjen.",
       deleteGroupFailed: "Kunne ikke slette gruppen. Prøv igjen.",

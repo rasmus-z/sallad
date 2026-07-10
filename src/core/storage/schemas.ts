@@ -2804,6 +2804,9 @@ export type CustomColorPreset = z.infer<typeof CustomColorPresetSchema>;
 export const ChatsViewModeSchema = z.enum(["hero", "gallery", "list"]);
 export type ChatsViewMode = z.infer<typeof ChatsViewModeSchema>;
 
+export const GroupChatsViewModeSchema = z.enum(["classic", "detailed"]);
+export type GroupChatsViewMode = z.infer<typeof GroupChatsViewModeSchema>;
+
 export const TrustedCertificateSchema = z.object({
   id: z.uuid(),
   name: z.string().min(1),
@@ -2828,6 +2831,7 @@ export const AppStateSchema = z.object({
   customColors: CustomColorsSchema.optional(),
   customColorPresets: z.array(CustomColorPresetSchema).default([]),
   chatsViewMode: ChatsViewModeSchema.default("hero"),
+  groupChatsViewMode: GroupChatsViewModeSchema.default("classic"),
   trustedCertificates: z.array(TrustedCertificateSchema).default([]),
   lastSeenAppVersion: z.string().optional(),
 });
@@ -3061,6 +3065,7 @@ export function createDefaultAppState(): AppState {
     settingsCardOpacity: 5,
     customColorPresets: [],
     chatsViewMode: "hero",
+    groupChatsViewMode: "classic",
     trustedCertificates: [],
   };
 }

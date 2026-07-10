@@ -1933,6 +1933,7 @@ export const viMessages: DeepPartialMessageTree<LocaleMessages> = {
       chatHistory: "Lịch sử trò chuyện",
       noChatsYet: "Chưa có cuộc trò chuyện nào",
       emptyChatPreview: "Chưa có tin nhắn nào",
+      startFirstChatHint: "Nhấn để bắt đầu cuộc trò chuyện đầu tiên",
       startingChat: "Đang bắt đầu trò chuyện...",
       startChatFailed: "Không thể bắt đầu cuộc trò chuyện mới. Vui lòng thử lại.",
       deleteGroupFailed: "Không thể xóa nhóm. Vui lòng thử lại.",

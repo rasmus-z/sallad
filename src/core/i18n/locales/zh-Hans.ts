@@ -1933,6 +1933,7 @@ export const zhHansMessages: DeepPartialMessageTree<LocaleMessages> = {
       chatHistory: "聊天历史",
       noChatsYet: "还没有聊天",
       emptyChatPreview: "还没有消息",
+      startFirstChatHint: "点按开始第一个聊天",
       startingChat: "正在开始聊天...",
       startChatFailed: "无法开始新聊天。请重试。",
       deleteGroupFailed: "无法删除群组。请重试。",

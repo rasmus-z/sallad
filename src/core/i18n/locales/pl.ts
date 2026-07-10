@@ -1933,6 +1933,7 @@ export const plMessages: DeepPartialMessageTree<LocaleMessages> = {
       chatHistory: "Historia czatów",
       noChatsYet: "Brak czatów",
       emptyChatPreview: "Brak wiadomości",
+      startFirstChatHint: "Dotknij, aby rozpocząć pierwszy czat",
       startingChat: "Rozpoczynanie czatu...",
       startChatFailed: "Nie udało się rozpocząć nowego czatu. Spróbuj ponownie.",
       deleteGroupFailed: "Nie udało się usunąć grupy. Spróbuj ponownie.",

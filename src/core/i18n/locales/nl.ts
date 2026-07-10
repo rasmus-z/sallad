@@ -1933,6 +1933,7 @@ export const nlMessages: DeepPartialMessageTree<LocaleMessages> = {
       chatHistory: "Chatgeschiedenis",
       noChatsYet: "Nog geen chats",
       emptyChatPreview: "Nog geen berichten",
+      startFirstChatHint: "Tik om de eerste chat te starten",
       startingChat: "Chat starten...",
       startChatFailed: "Kan geen nieuwe chat starten. Probeer het opnieuw.",
       deleteGroupFailed: "Kan de groep niet verwijderen. Probeer het opnieuw.",

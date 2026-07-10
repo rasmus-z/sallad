@@ -1,7 +1,14 @@
+import { useEffect, useState } from "react";
 import { History, Plus, Settings, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { useI18n } from "../../../core/i18n/context";
+import {
+  getGroupChatsViewMode,
+  getGroupChatsViewModeCached,
+  setGroupChatsViewMode,
+} from "../../../core/storage/appState";
+import type { GroupChatsViewMode } from "../../../core/storage/schemas";
 import { BottomMenu } from "../../components";
 import { Routes } from "../../navigation";
 import { useGroupChatsListController } from "./hooks/useGroupChatsListController";
@@ -10,6 +17,32 @@ import { GroupList, GroupListSkeleton, EmptyState } from "./components/list/Grou
 export function GroupChatsListPage() {
   const { t } = useI18n();
   const navigate = useNavigate();
+  const [viewMode, setViewMode] = useState<GroupChatsViewMode>(
+    () => getGroupChatsViewModeCached() ?? "classic",
+  );
+
+  useEffect(() => {
+    getGroupChatsViewMode()
+      .then((mode) => setViewMode(mode))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    (window as any).__groupChatsViewMode = viewMode;
+    window.dispatchEvent(new CustomEvent("groupChats:viewModeChanged"));
+  }, [viewMode]);
+
+  useEffect(() => {
+    const handler = () => {
+      setViewMode((prev) => {
+        const next: GroupChatsViewMode = prev === "classic" ? "detailed" : "classic";
+        setGroupChatsViewMode(next).catch(() => {});
+        return next;
+      });
+    };
+    window.addEventListener("groupChats:cycleViewMode", handler);
+    return () => window.removeEventListener("groupChats:cycleViewMode", handler);
+  }, []);
   const {
     groups,
     characters,
@@ -39,6 +72,7 @@ export function GroupChatsListPage() {
           <GroupList
             groups={groups}
             characters={characters}
+            viewMode={viewMode}
             openingGroupId={openingGroupId}
             onOpenGroup={(group) => {
               void handleOpenGroup(group).then((sessionId) => {

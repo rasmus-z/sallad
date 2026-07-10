@@ -1933,6 +1933,7 @@ export const ptMessages: DeepPartialMessageTree<LocaleMessages> = {
       chatHistory: "Histórico de conversas",
       noChatsYet: "Nenhuma conversa ainda",
       emptyChatPreview: "Nenhuma mensagem ainda",
+      startFirstChatHint: "Toque para iniciar a primeira conversa",
       startingChat: "Iniciando conversa...",
       startChatFailed: "Não foi possível iniciar uma nova conversa. Tente novamente.",
       deleteGroupFailed: "Não foi possível excluir o grupo. Tente novamente.",

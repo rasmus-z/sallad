@@ -1982,6 +1982,7 @@ export const enMessages = {
       chatHistory: "Chat History",
       noChatsYet: "No chats yet",
       emptyChatPreview: "No messages yet",
+      startFirstChatHint: "Tap to start the first chat",
       startingChat: "Starting chat...",
       startChatFailed: "Couldn't start a new chat. Please try again.",
       deleteGroupFailed: "Couldn't delete the group. Please try again.",

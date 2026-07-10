@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState, memo } from "react";
 import { BookOpen, ChevronRight, Loader2, Rocket, Users } from "lucide-react";
-import { motion } from "framer-motion";
 
 import { useI18n } from "../../../../../core/i18n/context";
-import type { GroupPreview, Character } from "../../../../../core/storage/schemas";
+import type {
+  GroupPreview,
+  GroupChatsViewMode,
+  Character,
+} from "../../../../../core/storage/schemas";
 import { typography, radius, spacing, interactive, cn } from "../../../../design-tokens";
 import { useAvatar } from "../../../../hooks/useAvatar";
 import { useRocketEasterEgg } from "../../../../hooks/useRocketEasterEgg";
@@ -15,12 +18,14 @@ import { openDocs } from "../../../../../core/utils/docs";
 export function GroupList({
   groups,
   characters,
+  viewMode,
   openingGroupId,
   onOpenGroup,
   onLongPress,
 }: {
   groups: GroupPreview[];
   characters: Character[];
+  viewMode: GroupChatsViewMode;
   openingGroupId: string | null;
   onOpenGroup: (group: GroupPreview) => void;
   onLongPress: (group: GroupPreview) => void;
@@ -47,6 +52,7 @@ export function GroupList({
           key={group.id}
           group={group}
           characters={characters}
+          viewMode={viewMode}
           isOpening={openingGroupId === group.id}
           disabled={openingGroupId !== null}
           onOpen={onOpenGroup}
@@ -140,10 +146,59 @@ const CharacterMiniAvatar = memo(({ character }: { character: Character }) => {
 
 CharacterMiniAvatar.displayName = "CharacterMiniAvatar";
 
+function AvatarStack({
+  group,
+  characters,
+  size,
+}: {
+  group: GroupPreview;
+  characters: Character[];
+  size: "md" | "lg";
+}) {
+  const avatarCharacters = group.characterIds
+    .slice(0, 3)
+    .map((id) => characters.find((c) => c.id === id))
+    .filter(Boolean) as Character[];
+  const sizeClass = size === "lg" ? "h-10 w-10" : "h-8 w-8";
+  const ringClass =
+    size === "lg" ? "border border-fg/10" : "ring-2 ring-surface";
+
+  return (
+    <div className={cn("flex shrink-0 -space-x-2", size === "md" && "pt-0.5")}>
+      {avatarCharacters.map((character) => (
+        <div
+          key={character.id}
+          className={cn(
+            "flex items-center justify-center overflow-hidden rounded-full",
+            sizeClass,
+            ringClass,
+            "bg-linear-to-br from-fg/8 to-fg/4",
+          )}
+        >
+          <CharacterMiniAvatar character={character} />
+        </div>
+      ))}
+      {group.characterIds.length > 3 && (
+        <div
+          className={cn(
+            "flex items-center justify-center rounded-full",
+            sizeClass,
+            ringClass,
+            "bg-fg/10 text-[10px] font-semibold text-fg/60",
+          )}
+        >
+          +{group.characterIds.length - 3}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const GroupCard = memo(
   ({
     group,
     characters,
+    viewMode,
     isOpening,
     disabled,
     onOpen,
@@ -151,6 +206,7 @@ const GroupCard = memo(
   }: {
     group: GroupPreview;
     characters: Character[];
+    viewMode: GroupChatsViewMode;
     isOpening: boolean;
     disabled: boolean;
     onOpen: (group: GroupPreview) => void;
@@ -199,94 +255,145 @@ const GroupCard = memo(
       onLongPress(group);
     };
 
-    const avatarCharacters = group.characterIds
-      .slice(0, 3)
-      .map((id) => characters.find((c) => c.id === id))
-      .filter(Boolean) as Character[];
+    const pressHandlers = {
+      onClick: handleClick,
+      onContextMenu: handleContextMenu,
+      onPointerDown: handlePointerDown,
+      onPointerUp: handlePointerUp,
+      onPointerLeave: handlePointerLeave,
+    };
+
+    const previewNode = isOpening ? (
+      <span className={cn(typography.caption.size, "truncate text-fg/50")}>
+        {t("groupChats.list.startingChat")}
+      </span>
+    ) : preview ? (
+      <span className={cn(typography.caption.size, "truncate text-fg/50")}>{preview}</span>
+    ) : (
+      <span className={cn(typography.caption.size, "truncate text-fg/32")}>
+        {hasSession ? t("groupChats.list.emptyChatPreview") : t("groupChats.list.noChatsYet")}
+      </span>
+    );
+
+    if (viewMode === "detailed") {
+      const castNames = group.characterIds
+        .slice(0, 3)
+        .map((id) => characters.find((c) => c.id === id)?.name)
+        .filter(Boolean)
+        .join(", ");
+      const castExtra = group.characterIds.length > 3 ? ` +${group.characterIds.length - 3}` : "";
+
+      return (
+        <button
+          {...pressHandlers}
+          disabled={disabled && !isOpening}
+          aria-busy={isOpening}
+          className={cn(
+            "group w-full overflow-hidden p-0 text-left",
+            radius.lg,
+            "border transition-colors",
+            "border-fg/8 bg-fg/3 hover:border-fg/12 hover:bg-fg/4",
+            disabled && !isOpening && "opacity-60",
+          )}
+        >
+          <span className="flex items-start gap-3 px-4 py-3">
+            <AvatarStack group={group} characters={characters} size="md" />
+            <span className="min-w-0 flex-1">
+              <span
+                className={cn(
+                  typography.bodySmall.size,
+                  "block truncate font-semibold text-fg/92",
+                )}
+              >
+                {group.name}
+              </span>
+              {isOpening ? (
+                <span className={cn(typography.bodySmall.size, "mt-1 block text-fg/58")}>
+                  {t("groupChats.list.startingChat")}
+                </span>
+              ) : preview ? (
+                <span
+                  className={cn(
+                    typography.bodySmall.size,
+                    "mt-1 line-clamp-2 leading-relaxed text-fg/58",
+                  )}
+                >
+                  {preview}
+                </span>
+              ) : (
+                <span className={cn(typography.bodySmall.size, "mt-1 block text-fg/32")}>
+                  {hasSession
+                    ? t("groupChats.list.emptyChatPreview")
+                    : t("groupChats.list.noChatsYet")}
+                </span>
+              )}
+            </span>
+            <span className="shrink-0 pt-0.5">
+              {isOpening ? (
+                <Loader2 className="h-4 w-4 animate-spin text-fg/40" />
+              ) : (
+                hasSession && (
+                  <span className={cn(typography.caption.size, "text-fg/35")}>
+                    {formatTimeAgo(recency)}
+                  </span>
+                )
+              )}
+            </span>
+          </span>
+          <span className="flex items-center justify-between gap-3 border-t border-fg/8 px-4 py-1.5">
+            <span className={cn(typography.caption.size, "truncate text-fg/38")}>
+              {hasSession
+                ? `${t("groupChats.list.sessionCount", { count: String(group.sessionCount) })} · ${t(
+                    "groupChats.session.messageCount",
+                    { count: String(group.latestSessionMessageCount) },
+                  )}`
+                : t("groupChats.list.startFirstChatHint")}
+            </span>
+            <span className={cn(typography.caption.size, "shrink-0 truncate text-fg/30")}>
+              {castNames}
+              {castExtra}
+            </span>
+          </span>
+        </button>
+      );
+    }
 
     return (
-      <motion.button
-        layoutId={`group-card-${group.id}`}
-        onClick={handleClick}
-        onContextMenu={handleContextMenu}
-        onPointerDown={handlePointerDown}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerLeave}
+      <button
+        {...pressHandlers}
         disabled={disabled && !isOpening}
         aria-busy={isOpening}
         className={cn(
-          "group relative flex w-full items-center gap-3.5 lg:gap-6 p-3.5 lg:p-6 text-left",
-          "rounded-2xl lg:rounded-3xl",
+          "group relative flex w-full items-center gap-3.5 lg:gap-5 p-3.5 lg:p-4 text-left",
+          "rounded-2xl",
           interactive.transition.default,
           interactive.active.scale,
           "border border-fg/10 bg-fg/5 hover:bg-fg/10",
           disabled && !isOpening && "opacity-60",
         )}
       >
-        <div className="flex -space-x-2">
-          {avatarCharacters.map((character) => (
-            <div
-              key={character.id}
-              className={cn(
-                "flex h-10 w-10 items-center justify-center overflow-hidden rounded-full",
-                "border border-fg/10 bg-linear-to-br from-fg/8 to-fg/4",
-              )}
-            >
-              <CharacterMiniAvatar character={character} />
-            </div>
-          ))}
-          {group.characterIds.length > 3 && (
-            <div
-              className={cn(
-                "flex h-10 w-10 items-center justify-center rounded-full",
-                "border border-fg/10 bg-fg/10",
-                "text-xs font-semibold text-fg/60",
-              )}
-            >
-              +{group.characterIds.length - 3}
-            </div>
-          )}
-        </div>
+        <AvatarStack group={group} characters={characters} size="lg" />
 
-        <div className="min-w-0 flex-1">
-          <div className="flex items-baseline justify-between gap-2">
-            <h3 className={cn(typography.body.size, typography.h3.weight, "text-fg truncate")}>
+        <span className="min-w-0 flex-1">
+          <span className="flex items-baseline justify-between gap-2">
+            <span className={cn(typography.body.size, typography.h3.weight, "truncate text-fg")}>
               {group.name}
-            </h3>
-            {hasSession && (
+            </span>
+            {hasSession && !isOpening && (
               <span className={cn(typography.caption.size, "shrink-0 text-fg/40")}>
                 {formatTimeAgo(recency)}
               </span>
             )}
-          </div>
-          <div className="mt-1 flex items-center justify-between gap-2">
-            {isOpening ? (
-              <span className={cn(typography.caption.size, "truncate text-fg/50")}>
-                {t("groupChats.list.startingChat")}
-              </span>
-            ) : preview ? (
-              <p className={cn(typography.caption.size, "truncate text-fg/50")}>{preview}</p>
-            ) : (
-              <p className={cn(typography.caption.size, "truncate italic text-fg/40")}>
-                {hasSession
-                  ? t("groupChats.list.emptyChatPreview")
-                  : t("groupChats.list.noChatsYet")}
-              </p>
-            )}
-            {group.sessionCount > 1 && (
-              <span className={cn(typography.caption.size, "shrink-0 text-fg/35")}>
-                {t("groupChats.list.sessionCount", { count: String(group.sessionCount) })}
-              </span>
-            )}
-          </div>
-        </div>
+          </span>
+          <span className="mt-1 flex min-w-0 items-center">{previewNode}</span>
+        </span>
 
         {isOpening ? (
           <Loader2 className="h-4 w-4 shrink-0 animate-spin text-fg/40" />
         ) : (
           <ChevronRight className="h-4 w-4 shrink-0 text-fg/30" />
         )}
-      </motion.button>
+      </button>
     );
   },
 );
