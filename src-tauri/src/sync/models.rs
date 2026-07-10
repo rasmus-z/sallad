@@ -268,6 +268,10 @@ pub struct GroupCharacter {
     pub memory_type: String,
 }
 
+fn default_group_config_overrides_json() -> String {
+    "{\"version\":1}".to_string()
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SyncLorebook {
     pub id: String,
@@ -721,6 +725,8 @@ pub struct GroupSession {
     pub speaker_selection_method: String,
     #[serde(default = "default_memory_type")]
     pub memory_type: String,
+    #[serde(default = "default_group_config_overrides_json")]
+    pub config_overrides: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -761,6 +767,10 @@ pub struct GroupMessage {
     pub reasoning: Option<String>,
     pub selection_reasoning: Option<String>,
     pub model_id: Option<String>,
+    #[serde(default)]
+    pub gemini_content: Option<String>,
+    #[serde(default)]
+    pub usage_json: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -782,4 +792,14 @@ pub struct GroupMessageVariant {
     pub reasoning: Option<String>,
     pub selection_reasoning: Option<String>,
     pub model_id: Option<String>,
+    #[serde(default = "default_json_array")]
+    pub attachments: String,
+    #[serde(default)]
+    pub gemini_content: Option<String>,
+    #[serde(default)]
+    pub usage_json: Option<String>,
+}
+
+fn default_json_array() -> String {
+    "[]".to_string()
 }

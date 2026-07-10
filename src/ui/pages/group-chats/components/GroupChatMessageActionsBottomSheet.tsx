@@ -105,21 +105,13 @@ export function GroupChatMessageActionsBottomSheet({
   }, []);
 
   useEffect(() => {
-    console.log("ModelId debug:", {
-      messageAction: messageAction?.message,
-      modelId: messageAction?.message.modelId,
-      settings: settings?.models.length,
-      isAssistant,
-    });
-
     if (messageAction?.message.modelId && settings) {
       const model = settings.models.find((m: Model) => m.id === messageAction.message.modelId);
-      console.log("Found model:", model);
       setModelName(model ? model.displayName : null);
     } else {
       setModelName(null);
     }
-  }, [messageAction?.message.modelId, settings, isAssistant]);
+  }, [messageAction?.message.modelId, settings]);
 
   return (
     <>

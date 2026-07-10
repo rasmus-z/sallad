@@ -926,6 +926,7 @@ pub fn init_db(_app: &tauri::AppHandle, conn: &Connection) -> Result<(), String>
           memory_error TEXT,
           memory_progress_step INTEGER,
           speaker_selection_method TEXT NOT NULL DEFAULT 'llm',
+          config_overrides TEXT NOT NULL DEFAULT '{"version":1}',
           FOREIGN KEY(persona_id) REFERENCES personas(id) ON DELETE SET NULL,
           FOREIGN KEY(group_character_id) REFERENCES group_characters(id) ON DELETE SET NULL
         );
@@ -964,6 +965,8 @@ pub fn init_db(_app: &tauri::AppHandle, conn: &Connection) -> Result<(), String>
           reasoning TEXT,
           selection_reasoning TEXT,
           model_id TEXT,
+          gemini_content TEXT,
+          usage_json TEXT,
           FOREIGN KEY(session_id) REFERENCES group_sessions(id) ON DELETE CASCADE
         );
 
@@ -983,6 +986,9 @@ pub fn init_db(_app: &tauri::AppHandle, conn: &Connection) -> Result<(), String>
           reasoning TEXT,
           selection_reasoning TEXT,
           model_id TEXT,
+          attachments TEXT NOT NULL DEFAULT '[]',
+          gemini_content TEXT,
+          usage_json TEXT,
           FOREIGN KEY(message_id) REFERENCES group_messages(id) ON DELETE CASCADE
         );
 

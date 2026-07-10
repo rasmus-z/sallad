@@ -875,7 +875,7 @@ fn export_group_sessions(app: &tauri::AppHandle) -> Result<Vec<JsonValue>, Strin
             "SELECT id, group_character_id, name, character_ids, muted_character_ids, persona_id, created_at, updated_at, archived,
                     chat_type, starting_scene, background_image_path,
                     lorebook_ids, disable_character_lorebooks, author_note, memories, memory_embeddings, memory_summary, memory_summary_token_count, memory_tool_events,
-                    memory_status, memory_error, memory_progress_step, speaker_selection_method, memory_type
+                    memory_status, memory_error, memory_progress_step, speaker_selection_method, memory_type, config_overrides
              FROM group_sessions",
         )
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
@@ -909,6 +909,7 @@ fn export_group_sessions(app: &tauri::AppHandle) -> Result<Vec<JsonValue>, Strin
                 "memory_progress_step": r.get::<_, Option<i64>>(22)?,
                 "speaker_selection_method": r.get::<_, Option<String>>(23)?,
                 "memory_type": r.get::<_, Option<String>>(24)?,
+                "config_overrides": r.get::<_, Option<String>>(25)?.unwrap_or_else(|| "{\"version\":1}".to_string()),
             });
             Ok((id, json))
         })
@@ -965,7 +966,7 @@ fn export_group_sessions(app: &tauri::AppHandle) -> Result<Vec<JsonValue>, Strin
             .prepare(
                 "SELECT id, role, content, speaker_character_id, turn_number, created_at,
                         prompt_tokens, completion_tokens, total_tokens, first_token_ms, tokens_per_second, mtp_stats, selected_variant_id,
-                        is_pinned, attachments, used_lorebook_entries, memory_refs, reasoning, selection_reasoning, model_id
+                        is_pinned, attachments, used_lorebook_entries, memory_refs, reasoning, selection_reasoning, model_id, gemini_content, usage_json
                  FROM group_messages WHERE session_id = ? ORDER BY created_at ASC",
             )
             .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
@@ -994,6 +995,8 @@ fn export_group_sessions(app: &tauri::AppHandle) -> Result<Vec<JsonValue>, Strin
                     "reasoning": r.get::<_, Option<String>>(17)?,
                     "selection_reasoning": r.get::<_, Option<String>>(18)?,
                     "model_id": r.get::<_, Option<String>>(19)?,
+                    "gemini_content": r.get::<_, Option<String>>(20)?,
+                    "usage_json": r.get::<_, Option<String>>(21)?,
                 });
                 Ok((msg_id, json))
             })
@@ -1006,7 +1009,7 @@ fn export_group_sessions(app: &tauri::AppHandle) -> Result<Vec<JsonValue>, Strin
             let mut variants_stmt = conn
                 .prepare(
                     "SELECT id, content, speaker_character_id, created_at, prompt_tokens, completion_tokens,
-                            total_tokens, first_token_ms, tokens_per_second, mtp_stats, reasoning, selection_reasoning, model_id
+                            total_tokens, first_token_ms, tokens_per_second, mtp_stats, reasoning, selection_reasoning, model_id, attachments, gemini_content, usage_json
                      FROM group_message_variants WHERE message_id = ?",
                 )
                 .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
@@ -1027,6 +1030,9 @@ fn export_group_sessions(app: &tauri::AppHandle) -> Result<Vec<JsonValue>, Strin
                         "reasoning": r.get::<_, Option<String>>(10)?,
                         "selection_reasoning": r.get::<_, Option<String>>(11)?,
                         "model_id": r.get::<_, Option<String>>(12)?,
+                        "attachments": r.get::<_, Option<String>>(13)?.unwrap_or_else(|| "[]".to_string()),
+                        "gemini_content": r.get::<_, Option<String>>(14)?,
+                        "usage_json": r.get::<_, Option<String>>(15)?,
                     }))
                 })
                 .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?
@@ -2770,15 +2776,43 @@ fn import_group_sessions(app: &tauri::AppHandle, data: &JsonValue) -> Result<(),
 
         for item in arr {
             let session_id = item.get("id").and_then(|v| v.as_str()).unwrap_or("");
+            let group_character_id = if let Some(group_id) =
+                item.get("group_character_id").and_then(|v| v.as_str())
+            {
+                group_id.to_string()
+            } else {
+                let group_id = uuid::Uuid::new_v4().to_string();
+                conn.execute(
+                    "INSERT INTO group_characters (id, name, character_ids, muted_character_ids, persona_id, created_at, updated_at, archived, chat_type, starting_scene, background_image_path, lorebook_ids, disable_character_lorebooks, speaker_selection_method, memory_type) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 0, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
+                    params![
+                        group_id,
+                        item.get("name").and_then(|v| v.as_str()).unwrap_or("Imported Group"),
+                        item.get("character_ids").and_then(|v| v.as_str()).unwrap_or("[]"),
+                        item.get("muted_character_ids").and_then(|v| v.as_str()).unwrap_or("[]"),
+                        item.get("persona_id").and_then(|v| v.as_str()),
+                        item.get("created_at").and_then(|v| v.as_i64()).unwrap_or(0),
+                        item.get("updated_at").and_then(|v| v.as_i64()).unwrap_or(0),
+                        item.get("chat_type").and_then(|v| v.as_str()).unwrap_or("conversation"),
+                        item.get("starting_scene").and_then(|v| v.as_str()),
+                        item.get("background_image_path").and_then(|v| v.as_str()),
+                        item.get("lorebook_ids").and_then(|v| v.as_str()).unwrap_or("[]"),
+                        item.get("disable_character_lorebooks").and_then(|v| v.as_bool()).unwrap_or(false) as i64,
+                        item.get("speaker_selection_method").and_then(|v| v.as_str()).unwrap_or("llm"),
+                        item.get("memory_type").and_then(|v| v.as_str()).unwrap_or("manual"),
+                    ],
+                )
+                .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))?;
+                group_id
+            };
 
             conn.execute(
                 "INSERT INTO group_sessions (id, group_character_id, name, character_ids, muted_character_ids, persona_id, created_at, updated_at, archived,
                  chat_type, starting_scene, background_image_path, lorebook_ids, disable_character_lorebooks,
-                 author_note, memories, memory_embeddings, memory_summary, memory_summary_token_count, memory_tool_events, memory_status, memory_error, memory_progress_step, speaker_selection_method, memory_type)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25)",
+                 author_note, memories, memory_embeddings, memory_summary, memory_summary_token_count, memory_tool_events, memory_status, memory_error, memory_progress_step, speaker_selection_method, memory_type, config_overrides)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25, ?26)",
                 params![
                     session_id,
-                    item.get("group_character_id").and_then(|v| v.as_str()),
+                    group_character_id,
                     item.get("name").and_then(|v| v.as_str()).unwrap_or("Group Chat"),
                     item.get("character_ids").and_then(|v| v.as_str()).unwrap_or("[]"),
                     item.get("muted_character_ids")
@@ -2810,6 +2844,9 @@ fn import_group_sessions(app: &tauri::AppHandle, data: &JsonValue) -> Result<(),
                     item.get("memory_type")
                         .and_then(|v| v.as_str())
                         .unwrap_or("manual"),
+                    item.get("config_overrides")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("{\"version\":1}"),
                 ],
             )
             .map_err(|e| crate::utils::err_msg(module_path!(), line!(), format!("Failed to insert group session {}: {}", session_id, e)))?;
@@ -2846,8 +2883,8 @@ fn import_group_sessions(app: &tauri::AppHandle, data: &JsonValue) -> Result<(),
 
                     conn.execute(
                         "INSERT INTO group_messages (id, session_id, role, content, speaker_character_id, turn_number, created_at,
-                         prompt_tokens, completion_tokens, total_tokens, first_token_ms, tokens_per_second, mtp_stats, selected_variant_id, is_pinned, attachments, used_lorebook_entries, memory_refs, reasoning, selection_reasoning, model_id)
-                         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21)",
+                         prompt_tokens, completion_tokens, total_tokens, first_token_ms, tokens_per_second, mtp_stats, selected_variant_id, is_pinned, attachments, used_lorebook_entries, memory_refs, reasoning, selection_reasoning, model_id, gemini_content, usage_json)
+                         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23)",
                         params![
                             msg_id,
                             session_id,
@@ -2870,6 +2907,8 @@ fn import_group_sessions(app: &tauri::AppHandle, data: &JsonValue) -> Result<(),
                             msg.get("reasoning").and_then(|v| v.as_str()),
                             msg.get("selection_reasoning").and_then(|v| v.as_str()),
                             msg.get("model_id").and_then(|v| v.as_str()),
+                            msg.get("gemini_content").and_then(|v| v.as_str()),
+                            msg.get("usage_json").and_then(|v| v.as_str()),
                         ],
                     )
                     .map_err(|e| crate::utils::err_msg(module_path!(), line!(), format!("Failed to insert group message in session {}: {}", session_id, e)))?;
@@ -2879,8 +2918,8 @@ fn import_group_sessions(app: &tauri::AppHandle, data: &JsonValue) -> Result<(),
                         for variant in variants {
                             conn.execute(
                                 "INSERT INTO group_message_variants (id, message_id, content, speaker_character_id, created_at,
-                                 prompt_tokens, completion_tokens, total_tokens, first_token_ms, tokens_per_second, mtp_stats, reasoning, selection_reasoning, model_id)
-                                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
+                                 prompt_tokens, completion_tokens, total_tokens, first_token_ms, tokens_per_second, mtp_stats, reasoning, selection_reasoning, model_id, attachments, gemini_content, usage_json)
+                                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17)",
                                 params![
                                     variant.get("id").and_then(|v| v.as_str()),
                                     msg_id,
@@ -2896,6 +2935,9 @@ fn import_group_sessions(app: &tauri::AppHandle, data: &JsonValue) -> Result<(),
                                     variant.get("reasoning").and_then(|v| v.as_str()),
                                     variant.get("selection_reasoning").and_then(|v| v.as_str()),
                                     variant.get("model_id").and_then(|v| v.as_str()),
+                                    variant.get("attachments").and_then(|v| v.as_str()).unwrap_or("[]"),
+                                    variant.get("gemini_content").and_then(|v| v.as_str()),
+                                    variant.get("usage_json").and_then(|v| v.as_str()),
                                 ],
                             )
                             .map_err(|e| crate::utils::err_msg(module_path!(), line!(), format!("Failed to insert group message variant: {}", e)))?;

@@ -1,5 +1,5 @@
 import { memo, useState } from "react";
-import { Archive, ArchiveRestore, Edit3, Plus, Trash2 } from "lucide-react";
+import { Archive, ArchiveRestore, Copy, Download, Edit3, Trash2 } from "lucide-react";
 
 import { useI18n } from "../../../../../core/i18n/context";
 import type { GroupSessionPreview, Character } from "../../../../../core/storage/schemas";
@@ -36,6 +36,7 @@ export function SessionCard({
   onArchive,
   onUnarchive,
   onDuplicate,
+  onExport,
   isBusy,
   isArchived = false,
 }: {
@@ -47,6 +48,7 @@ export function SessionCard({
   onArchive?: () => void;
   onUnarchive?: () => void;
   onDuplicate: () => void;
+  onExport?: () => void;
   isBusy: boolean;
   isArchived?: boolean;
 }) {
@@ -219,9 +221,24 @@ export function SessionCard({
               "active:scale-95 active:bg-accent/10 active:text-accent/80 active:border-accent/40 disabled:opacity-50 transition-all",
             )}
           >
-            <Plus size={14} />
-            {t("groupChats.session.newChat")}
+            <Copy size={14} />
+            {t("groupChats.session.duplicate")}
           </button>
+          {onExport && (
+            <button
+              onClick={onExport}
+              disabled={isBusy}
+              className={cn(
+                "flex items-center gap-2 px-3 py-2 border border-fg/10 bg-fg/5 text-fg/60",
+                radius.md,
+                typography.bodySmall.size,
+                "active:scale-95 active:bg-info/10 active:text-info active:border-info/40 disabled:opacity-50 transition-all",
+              )}
+            >
+              <Download size={14} />
+              {t("groupChats.session.export")}
+            </button>
+          )}
           <button
             onClick={() => setIsRenaming(true)}
             disabled={isBusy}
