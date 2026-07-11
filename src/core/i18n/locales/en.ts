@@ -1028,6 +1028,7 @@ export const enMessages = {
       cycleModeAskFirst: "Ask First",
       cycleModeManual: "Manual",
       conversationMessageCount: "{{count}} conversation messages",
+      branchConversationMessageCount: "{{count}} messages in this branch",
       lastCycleStatus: "Last cycle: {{status}}",
       cycleStatusComplete: "complete",
       cycleStatusError: "failed",
