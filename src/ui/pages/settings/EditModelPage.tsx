@@ -200,6 +200,7 @@ type LlamaCppContextInfo = {
   availableVramBytes?: number | null;
   modelSizeBytes?: number | null;
   layerCount?: number | null;
+  maxGpuLayers?: number | null;
   supportsGpuOffload?: boolean | null;
   selectedGpuDeviceIds?: number[] | null;
   perDeviceVram?: { index: number; memoryFree: number; memoryTotal: number }[] | null;
@@ -1563,7 +1564,7 @@ export function EditModelPage() {
   const contextLimit = llamaContextInfo?.maxContextLength ?? ADVANCED_CONTEXT_LENGTH_RANGE.max;
   const recommendedContextLength = llamaContextInfo?.recommendedContextLength ?? null;
   const llamaLayerPlacementSummary = useMemo(() => {
-    const totalLayers = llamaContextInfo?.layerCount;
+    const totalLayers = llamaContextInfo?.maxGpuLayers ?? llamaContextInfo?.layerCount;
     if (!totalLayers || totalLayers <= 0) {
       return null;
     }
@@ -1582,7 +1583,11 @@ export function EditModelPage() {
       totalLayers,
       detail: `${gpuLayers.toLocaleString()} to GPU • ${cpuLayers.toLocaleString()} on CPU • ${totalLayers.toLocaleString()} total`,
     };
-  }, [llamaContextInfo?.layerCount, modelAdvancedDraft.llamaGpuLayers]);
+  }, [
+    llamaContextInfo?.layerCount,
+    llamaContextInfo?.maxGpuLayers,
+    modelAdvancedDraft.llamaGpuLayers,
+  ]);
   const selectedContextLength = modelAdvancedDraft.contextLength ?? null;
   const showContextWarning =
     isLocalModel &&
@@ -1780,7 +1785,8 @@ export function EditModelPage() {
     0,
   );
   const manualCpuLayers = modelAdvancedDraft.llamaCpuLayers ?? 0;
-  const totalModelLayers = llamaContextInfo?.layerCount ?? null;
+  const totalModelLayers =
+    llamaContextInfo?.maxGpuLayers ?? llamaContextInfo?.layerCount ?? null;
   const manualLayerSumValid =
     totalModelLayers === null || manualGpuLayerTotal + manualCpuLayers === totalModelLayers;
   const generationSummary = isFixedImageProvider

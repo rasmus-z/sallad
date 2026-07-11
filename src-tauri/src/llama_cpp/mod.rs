@@ -1258,6 +1258,24 @@ mod desktop {
                     .flatten();
 
             let backend_supports_gpu_offload = shared_backend()?.supports_gpu_offload();
+            if backend_supports_gpu_offload && !manual_distribution {
+                if let Some(requested) = llama_gpu_layers {
+                    if let Ok(metadata) = offload::load_model_metadata(model_path) {
+                        let normalized = metadata.normalize_requested_gpu_layers(requested);
+                        if normalized != requested {
+                            log_info(
+                                &app,
+                                "llama_cpp",
+                                format!(
+                                    "normalized requested GPU layers from {} to {} to include the output layer",
+                                    requested, normalized
+                                ),
+                            );
+                        }
+                        effective_gpu_layers = Some(normalized);
+                    }
+                }
+            }
             let llama_mtp_bundled = llama_mtp_enabled && mtp::model_has_mtp(model_path);
             let llama_mtp_external_path = if llama_mtp_enabled && !llama_mtp_bundled {
                 llama_mtp_model_path
@@ -1295,6 +1313,10 @@ mod desktop {
 
             if manual_distribution && backend_supports_gpu_offload {
                 // Manual mode: fixed per-GPU layer counts, no smart backoff ladder.
+                let manual_total_layers = offload::load_model_metadata(model_path)
+                    .ok()
+                    .map(|metadata| metadata.offload_layer_count())
+                    .unwrap_or_else(|| manual_layers_aligned.iter().copied().sum());
                 log_info(
                     &app,
                     "llama_cpp",
@@ -1314,7 +1336,7 @@ mod desktop {
                     let gib = 1024.0 * 1024.0 * 1024.0;
                     let bytes_per_layer = metadata
                         .model_size_bytes
-                        .checked_div(u64::from(metadata.layer_count.max(1)))
+                        .checked_div(u64::from(metadata.model_layer_count()))
                         .unwrap_or(0);
                     for (position, layers) in manual_layers_aligned.iter().enumerate() {
                         let projected = bytes_per_layer.saturating_mul(u64::from(*layers));
@@ -1343,7 +1365,7 @@ mod desktop {
                 let dist = offload::plan_multi_gpu_distribution(
                     "manual",
                     &device_free_aligned,
-                    u32::MAX,
+                    manual_total_layers,
                     0,
                     0,
                     0,
@@ -1411,6 +1433,12 @@ mod desktop {
                             .and_then(|v| v.as_str());
                         let planning_config_matches =
                             cached_planning_config == Some(smart_offload_planning_config.as_str());
+                        let cached_total_layers = report
+                            .get("smartOffloadTotalLayers")
+                            .and_then(|value| value.as_u64())
+                            .and_then(|value| u32::try_from(value).ok());
+                        let total_layers_match =
+                            cached_total_layers == Some(smart_offload_plan.total_layers);
                         // A run that fell back to RAM KV proves its layer count
                         // does NOT fit with GPU KV; reusing it would repeat the
                         // fallback forever.
@@ -1426,13 +1454,18 @@ mod desktop {
                             }
                             _ => true,
                         };
-                        if !planning_config_matches || cached_kqv_fallback || !vram_budget_matches {
+                        if !planning_config_matches
+                            || !total_layers_match
+                            || cached_kqv_fallback
+                            || !vram_budget_matches
+                        {
                             log_info(
                                 &app,
                                 "llama_cpp",
                                 format!(
-                                    "smart gpu offload cache invalidated: config_match={} kqv_fallback={} vram_budget_match={}",
+                                    "smart gpu offload cache invalidated: config_match={} total_layers_match={} kqv_fallback={} vram_budget_match={}",
                                     planning_config_matches,
+                                    total_layers_match,
                                     cached_kqv_fallback,
                                     vram_budget_matches
                                 ),
@@ -1442,6 +1475,7 @@ mod desktop {
                             && cached_backend_path == Some("gpu_offload")
                             && bucket == current_context_bucket
                             && planning_config_matches
+                            && total_layers_match
                             && !cached_kqv_fallback
                             && vram_budget_matches
                         {
@@ -1492,6 +1526,11 @@ mod desktop {
                         llama_priority_vram_limit_bytes,
                     ));
                 }
+                update_runtime_report_field(
+                    &mut runtime_report,
+                    "smartOffloadTotalLayers",
+                    json!(smart_offload_plan.total_layers),
+                );
                 update_runtime_report_field(
                     &mut runtime_report,
                     "smartOffloadPlannedContext",
@@ -1571,10 +1610,14 @@ mod desktop {
             if multi_gpu_active && multi_gpu_distribution.is_none() {
                 // Smart planning did not run (explicit layers / strict / no offload):
                 // still honor the chosen strategy with whatever total we have.
+                let max_gpu_layers = offload::load_model_metadata(model_path)
+                    .ok()
+                    .map(|metadata| metadata.offload_layer_count())
+                    .unwrap_or(u32::MAX);
                 multi_gpu_distribution = Some(offload::plan_multi_gpu_distribution(
                     &distribution_mode,
                     &device_free_aligned,
-                    u32::MAX,
+                    max_gpu_layers,
                     0,
                     0,
                     effective_gpu_layers.unwrap_or(0),
@@ -1666,7 +1709,7 @@ mod desktop {
                     total_layer_count: if multi_gpu_active {
                         offload::load_model_metadata(model_path)
                             .ok()
-                            .map(|metadata| metadata.layer_count)
+                            .map(|metadata| metadata.model_layer_count())
                     } else {
                         None
                     },
