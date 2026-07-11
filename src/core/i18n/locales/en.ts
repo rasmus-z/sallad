@@ -1358,6 +1358,8 @@ export const enMessages = {
       stability: "Stability",
       interactions: "Interactions",
       vsDefaults: "vs. character defaults",
+      pointsAboveDefault: "{{count}} points above character default",
+      pointsBelowDefault: "{{count}} points below character default",
       updatedAt: "Updated {{time}}",
       emotionalEngine: "Emotional engine",
       felt: "Felt",

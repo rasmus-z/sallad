@@ -166,15 +166,15 @@ impl CompletionFlow {
         session.messages.push(user_msg.clone());
         session.updated_at = now;
 
-        if companion::update_state_for_user_message(
+        let companion_effect_seed = companion::update_state_for_user_message(
             &app,
             &mut session,
             &character,
             &user_message,
             now,
         )
-        .await
-        {
+        .await;
+        if companion_effect_seed.is_some() {
             log_info(
                 &app,
                 "companion",
@@ -906,7 +906,7 @@ impl CompletionFlow {
                 session.id.clone(),
                 Some(user_msg.id.clone()),
                 assistant_message.id.clone(),
-                companion_mode_enabled.then(Default::default),
+                companion_effect_seed,
             );
         }
 
