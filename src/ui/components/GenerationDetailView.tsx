@@ -120,10 +120,24 @@ export function DetailStats({ detail }: { detail: LlmMetricDetail }) {
       : null,
   );
   push(
+    t("performance.detail.nativePromptSpeed"),
+    typeof detail.nativePromptEvalTokensPerSecond === "number"
+      ? `${round(detail.nativePromptEvalTokensPerSecond, 1)} tok/s`
+      : null,
+  );
+  push(
+    t("performance.detail.nativeGenerationSpeed"),
+    typeof detail.nativeGenerationTokensPerSecond === "number"
+      ? `${round(detail.nativeGenerationTokensPerSecond, 1)} tok/s`
+      : null,
+  );
+  push(
     t("performance.detail.firstToken"),
     typeof detail.ttftMs === "number" ? `${round(detail.ttftMs)} ms` : null,
   );
   push(t("performance.detail.elapsed"), formatElapsed(detail.generationElapsedMs));
+  push(t("performance.detail.nativeGenerationTime"), formatElapsed(detail.nativeGenerationComputeMs));
+  push(t("performance.detail.appOverhead"), formatElapsed(detail.appGenerationOverheadMs));
   push(t("performance.detail.promptTokens"), detail.promptTokens);
   push(t("performance.detail.outputTokens"), detail.completionTokens);
   push(t("performance.detail.totalTokens"), detail.totalTokens);

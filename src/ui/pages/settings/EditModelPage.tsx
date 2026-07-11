@@ -755,6 +755,32 @@ export function EditModelPage() {
           : null,
       ],
       [t("editModel.runtimeFacts.throughput"), formatRuntimeRate(llamaRuntimeReport.tokensPerSecond)],
+      [
+        t("editModel.runtimeFacts.nativePromptSpeed"),
+        formatRuntimeRate(llamaRuntimeReport.nativePromptEvalTokensPerSecond),
+      ],
+      [
+        t("editModel.runtimeFacts.nativeGenerationSpeed"),
+        formatRuntimeRate(llamaRuntimeReport.nativeGenerationTokensPerSecond),
+      ],
+      [
+        t("editModel.runtimeFacts.nativePromptTime"),
+        llamaRuntimeReport.nativePromptEvalMs == null
+          ? null
+          : `${formatRuntimeNumber(Math.round(llamaRuntimeReport.nativePromptEvalMs))} ms`,
+      ],
+      [
+        t("editModel.runtimeFacts.nativeGenerationTime"),
+        llamaRuntimeReport.nativeGenerationComputeMs == null
+          ? null
+          : `${formatRuntimeNumber(Math.round(llamaRuntimeReport.nativeGenerationComputeMs))} ms`,
+      ],
+      [
+        t("editModel.runtimeFacts.appGenerationOverhead"),
+        llamaRuntimeReport.appGenerationOverheadMs == null
+          ? null
+          : `${formatRuntimeNumber(Math.round(llamaRuntimeReport.appGenerationOverheadMs))} ms`,
+      ],
       [t("editModel.runtimeFacts.promptTemplate"), llamaRuntimeReport.promptTemplateSource ?? null],
     ] as const;
     return fields.filter(([, value]) => value).map(([label, value]) => ({ label, value: value! }));

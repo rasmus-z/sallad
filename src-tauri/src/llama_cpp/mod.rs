@@ -1250,6 +1250,13 @@ mod desktop {
         let mut first_token_ms: Option<u64> = None;
         let mut generation_elapsed_ms: Option<u64> = None;
         let mut generation_elapsed_seconds: Option<f64> = None;
+        let mut native_prompt_eval_ms: Option<f64> = None;
+        let mut native_prompt_eval_tokens: Option<u64> = None;
+        let mut native_prompt_eval_tps: Option<f64> = None;
+        let mut native_draft_prompt_eval_ms: Option<f64> = None;
+        let mut native_generation_compute_ms: Option<f64> = None;
+        let mut native_generation_tps: Option<f64> = None;
+        let mut app_generation_overhead_ms: Option<f64> = None;
         let mut metric_samples: Vec<Value> = Vec::new();
         let mut finish_reason = "stop";
         let mut stream_emitted_len = 0usize;
@@ -1270,6 +1277,13 @@ mod desktop {
             check_abort_signal(abort_rx.as_mut())?;
             failure_stage = "load_engine";
             cached_prompt_tokens = 0;
+            native_prompt_eval_ms = None;
+            native_prompt_eval_tokens = None;
+            native_prompt_eval_tps = None;
+            native_draft_prompt_eval_ms = None;
+            native_generation_compute_ms = None;
+            native_generation_tps = None;
+            app_generation_overhead_ms = None;
             if forced_smart_gpu_layers.is_some() {
                 for field in [
                     "actualGpuLayersUsed",
@@ -2949,6 +2963,10 @@ mod desktop {
 
             failure_stage = "prompt_evaluation";
             check_abort_signal(abort_rx.as_mut())?;
+            ctx.reset_timings();
+            if let Some(runtime) = mtp_runtime.as_mut() {
+                runtime.draft.reset_timings();
+            }
             let batch_size = n_batch as usize;
             let mut batch = LlamaBatch::new(batch_size, 1);
             let mut global_pos: i32 = 0;
@@ -3147,6 +3165,27 @@ mod desktop {
                 "promptPositions",
                 json!(u64::try_from(global_pos).ok()),
             );
+
+            let prompt_timings = ctx.timings();
+            let prompt_eval_ms = prompt_timings.t_p_eval_ms() + prompt_timings.t_eval_ms();
+            let prompt_eval_tokens = i64::from(prompt_timings.n_p_eval())
+                .saturating_add(i64::from(prompt_timings.n_eval()))
+                .max(0) as u64;
+            native_prompt_eval_ms = Some(prompt_eval_ms.max(0.0));
+            native_prompt_eval_tokens = Some(prompt_eval_tokens);
+            native_prompt_eval_tps = if prompt_eval_ms > 0.0 && prompt_eval_tokens > 0 {
+                Some(prompt_eval_tokens as f64 * 1_000.0 / prompt_eval_ms)
+            } else {
+                None
+            };
+            native_draft_prompt_eval_ms = mtp_runtime.as_mut().map(|runtime| {
+                let timings = runtime.draft.timings();
+                (timings.t_p_eval_ms() + timings.t_eval_ms()).max(0.0)
+            });
+            ctx.reset_timings();
+            if let Some(runtime) = mtp_runtime.as_mut() {
+                runtime.draft.reset_timings();
+            }
 
             let prompt_len = global_pos;
             let mut n_cur = prompt_len;
@@ -3522,6 +3561,25 @@ mod desktop {
             let generation_elapsed = generation_started_at.elapsed();
             generation_elapsed_ms = Some(generation_elapsed.as_millis() as u64);
             generation_elapsed_seconds = Some(generation_elapsed.as_secs_f64());
+            let target_generation_timings = ctx.timings();
+            let target_compute_ms =
+                target_generation_timings.t_p_eval_ms() + target_generation_timings.t_eval_ms();
+            let draft_compute_ms = mtp_runtime
+                .as_mut()
+                .map(|runtime| {
+                    let timings = runtime.draft.timings();
+                    timings.t_p_eval_ms() + timings.t_eval_ms()
+                })
+                .unwrap_or(0.0);
+            let compute_ms = (target_compute_ms + draft_compute_ms).max(0.0);
+            native_generation_compute_ms = Some(compute_ms);
+            native_generation_tps = if compute_ms > 0.0 && completion_tokens > 0 {
+                Some(completion_tokens as f64 * 1_000.0 / compute_ms)
+            } else {
+                None
+            };
+            app_generation_overhead_ms =
+                Some((generation_elapsed.as_secs_f64() * 1_000.0 - compute_ms).max(0.0));
 
             if let Some(runtime) = mtp_runtime.as_ref() {
                 let tokens_per_round = if runtime.rounds > 0 {
@@ -3917,6 +3975,41 @@ mod desktop {
             "tokensPerSecond",
             json!(tokens_per_second),
         );
+        update_runtime_report_field(
+            &mut runtime_report,
+            "nativePromptEvalMs",
+            json!(native_prompt_eval_ms),
+        );
+        update_runtime_report_field(
+            &mut runtime_report,
+            "nativePromptEvalTokens",
+            json!(native_prompt_eval_tokens),
+        );
+        update_runtime_report_field(
+            &mut runtime_report,
+            "nativePromptEvalTokensPerSecond",
+            json!(native_prompt_eval_tps),
+        );
+        update_runtime_report_field(
+            &mut runtime_report,
+            "nativeDraftPromptEvalMs",
+            json!(native_draft_prompt_eval_ms),
+        );
+        update_runtime_report_field(
+            &mut runtime_report,
+            "nativeGenerationComputeMs",
+            json!(native_generation_compute_ms),
+        );
+        update_runtime_report_field(
+            &mut runtime_report,
+            "nativeGenerationTokensPerSecond",
+            json!(native_generation_tps),
+        );
+        update_runtime_report_field(
+            &mut runtime_report,
+            "appGenerationOverheadMs",
+            json!(app_generation_overhead_ms),
+        );
         let fallback_succeeded = runtime_report
             .get("gpuLoadFallbackActivated")
             .and_then(|value| value.as_bool())
@@ -3970,6 +4063,13 @@ mod desktop {
                 "ttftMs": first_token_ms,
                 "decodeTokensPerSecond": tokens_per_second,
                 "generationElapsedMs": generation_elapsed_ms,
+                "nativePromptEvalMs": native_prompt_eval_ms,
+                "nativePromptEvalTokens": native_prompt_eval_tokens,
+                "nativePromptEvalTokensPerSecond": native_prompt_eval_tps,
+                "nativeDraftPromptEvalMs": native_draft_prompt_eval_ms,
+                "nativeGenerationComputeMs": native_generation_compute_ms,
+                "nativeGenerationTokensPerSecond": native_generation_tps,
+                "appGenerationOverheadMs": app_generation_overhead_ms,
                 "finishReason": finish_reason,
                 "mtpStats": rr("mtpStats"),
             });
