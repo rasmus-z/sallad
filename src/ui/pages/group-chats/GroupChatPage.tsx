@@ -1245,13 +1245,17 @@ export function GroupChatPage() {
       setMessages(updatedMessages);
       const stats = await storageBridge.groupParticipationStats(groupSessionId);
       setParticipationStats(stats);
+      const refreshedSession = await storageBridge.groupSessionGet(groupSessionId);
+      if (refreshedSession) {
+        updateSession(refreshedSession);
+      }
       closeMessageActions();
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to rewind");
     } finally {
       setActionBusy(false);
     }
-  }, [messageAction, groupSessionId, closeMessageActions, messages]);
+  }, [messageAction, groupSessionId, closeMessageActions, messages, updateSession]);
 
   const handleTogglePin = useCallback(async () => {
     if (!messageAction || !groupSessionId) return;
