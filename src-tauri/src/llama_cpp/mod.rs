@@ -57,7 +57,7 @@ mod desktop {
     use std::num::NonZeroU32;
     use std::path::Path;
     use std::sync::{mpsc, Arc, OnceLock};
-    use std::time::{Instant, SystemTime, UNIX_EPOCH};
+    use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
     use tokio::sync::oneshot::error::TryRecvError;
 
     use context::{
@@ -640,17 +640,15 @@ mod desktop {
         fn parse_value(value: &Value) -> Vec<String> {
             match value {
                 Value::String(text) => {
-                    let trimmed = text.trim();
-                    if trimmed.is_empty() {
+                    if text.is_empty() {
                         Vec::new()
                     } else {
-                        vec![trimmed.to_string()]
+                        vec![text.clone()]
                     }
                 }
                 Value::Array(values) => values
                     .iter()
                     .filter_map(|value| value.as_str())
-                    .map(str::trim)
                     .filter(|value| !value.is_empty())
                     .map(ToOwned::to_owned)
                     .collect(),
@@ -666,14 +664,56 @@ mod desktop {
         )
     }
 
-    fn earliest_stop_match<'a>(
-        text: &str,
+    struct IncrementalStopMatcher<'a> {
         stop_sequences: &'a [String],
-    ) -> Option<(usize, &'a str)> {
-        stop_sequences
-            .iter()
-            .filter_map(|stop| text.find(stop).map(|index| (index, stop.as_str())))
-            .min_by_key(|(index, _)| *index)
+        max_len: usize,
+    }
+
+    impl<'a> IncrementalStopMatcher<'a> {
+        fn new(stop_sequences: &'a [String]) -> Self {
+            Self {
+                max_len: stop_sequences
+                    .iter()
+                    .map(|stop| stop.len())
+                    .max()
+                    .unwrap_or(0),
+                stop_sequences,
+            }
+        }
+
+        fn find(&self, text: &str, appended_from: usize) -> Option<usize> {
+            if self.max_len == 0 {
+                return None;
+            }
+            let search_start = clamp_to_char_boundary(
+                text,
+                appended_from.saturating_sub(self.max_len.saturating_sub(1)),
+            );
+            self.stop_sequences
+                .iter()
+                .filter_map(|stop| {
+                    text[search_start..]
+                        .find(stop)
+                        .map(|index| search_start + index)
+                })
+                .min()
+        }
+    }
+
+    const STREAM_EMIT_INTERVAL: Duration = Duration::from_millis(32);
+    const STREAM_EMIT_BYTES: usize = 256;
+
+    fn should_flush_stream(
+        pending_bytes: usize,
+        has_flushed: bool,
+        elapsed: Duration,
+        force: bool,
+    ) -> bool {
+        pending_bytes > 0
+            && (force
+                || !has_flushed
+                || pending_bytes >= STREAM_EMIT_BYTES
+                || elapsed >= STREAM_EMIT_INTERVAL)
     }
 
     fn clamp_to_char_boundary(text: &str, index: usize) -> usize {
@@ -2583,11 +2623,7 @@ mod desktop {
                     stop_sequences.push(stop.clone());
                 }
             }
-            let max_stop_sequence_len = stop_sequences
-                .iter()
-                .map(|stop| stop.len())
-                .max()
-                .unwrap_or(0);
+            let stop_matcher = IncrementalStopMatcher::new(&stop_sequences);
             if built_prompt.used_raw_completion_fallback {
                 log_warn(
                     &app,
@@ -3607,6 +3643,8 @@ mod desktop {
             let generation_started_at = Instant::now();
             let mut last_heartbeat_at = Instant::now();
             let mut heartbeat_emitted = false;
+            let mut last_stream_flush_at = Instant::now();
+            let mut stream_has_flushed = false;
             failure_stage = "generation";
             while n_cur < target_len {
                 check_abort_signal(abort_rx.as_mut())?;
@@ -3676,8 +3714,9 @@ mod desktop {
                 }
 
                 if !piece.is_empty() {
+                    let appended_from = output.len();
                     output.push_str(&piece);
-                    if let Some((stop_index, _)) = earliest_stop_match(&output, &stop_sequences) {
+                    if let Some(stop_index) = stop_matcher.find(&output, appended_from) {
                         output.truncate(stop_index);
                         reached_stop_sequence = true;
                     }
@@ -3686,17 +3725,23 @@ mod desktop {
                         if stream && stream_emitted_len < output.len() {
                             let safe_emit_end = if reached_stop_sequence {
                                 output.len()
-                            } else if max_stop_sequence_len > 0 {
+                            } else if stop_matcher.max_len > 0 {
                                 clamp_to_char_boundary(
                                     &output,
                                     output
                                         .len()
-                                        .saturating_sub(max_stop_sequence_len.saturating_sub(1)),
+                                        .saturating_sub(stop_matcher.max_len.saturating_sub(1)),
                                 )
                             } else {
                                 output.len()
                             };
-                            if safe_emit_end > stream_emitted_len {
+                            let pending_bytes = safe_emit_end.saturating_sub(stream_emitted_len);
+                            if should_flush_stream(
+                                pending_bytes,
+                                stream_has_flushed,
+                                last_stream_flush_at.elapsed(),
+                                reached_stop_sequence,
+                            ) {
                                 if let Some(ref id) = request_id {
                                     let split = streamed_thinking_parser
                                         .feed(&output[stream_emitted_len..safe_emit_end]);
@@ -3720,23 +3765,32 @@ mod desktop {
                                     }
                                 }
                                 stream_emitted_len = safe_emit_end;
+                                stream_has_flushed = true;
+                                last_stream_flush_at = Instant::now();
                             }
                         }
                     } else if stream {
                         if let Some(parser) = structured_parser.as_mut() {
                             let safe_parse_end = if reached_stop_sequence {
                                 output.len()
-                            } else if max_stop_sequence_len > 0 {
+                            } else if stop_matcher.max_len > 0 {
                                 clamp_to_char_boundary(
                                     &output,
                                     output
                                         .len()
-                                        .saturating_sub(max_stop_sequence_len.saturating_sub(1)),
+                                        .saturating_sub(stop_matcher.max_len.saturating_sub(1)),
                                 )
                             } else {
                                 output.len()
                             };
-                            if safe_parse_end > structured_parsed_len {
+                            let pending_bytes =
+                                safe_parse_end.saturating_sub(structured_parsed_len);
+                            if should_flush_stream(
+                                pending_bytes,
+                                stream_has_flushed,
+                                last_stream_flush_at.elapsed(),
+                                reached_stop_sequence,
+                            ) {
                                 let delta_input = &output[structured_parsed_len..safe_parse_end];
                                 let deltas = parser.update(delta_input, true).map_err(|e| {
                                     structured_output_failure(
@@ -3758,6 +3812,8 @@ mod desktop {
                                     &mut streamed_structured_text,
                                 )?;
                                 structured_parsed_len = safe_parse_end;
+                                stream_has_flushed = true;
+                                last_stream_flush_at = Instant::now();
                             }
                         }
                     }
@@ -3845,8 +3901,9 @@ mod desktop {
 
             if !pending_utf8.is_empty() {
                 let tail = String::from_utf8_lossy(&pending_utf8).to_string();
+                let appended_from = output.len();
                 output.push_str(&tail);
-                if let Some((stop_index, _)) = earliest_stop_match(&output, &stop_sequences) {
+                if let Some(stop_index) = stop_matcher.find(&output, appended_from) {
                     output.truncate(stop_index);
                     reached_stop_sequence = true;
                     finish_reason = "stop";
@@ -4507,9 +4564,11 @@ mod desktop {
     #[cfg(test)]
     mod tests {
         use super::{
-            cache_eviction_count, common_token_prefix, sample_generated_token, text_context_key,
-            GenerationSampler,
+            cache_eviction_count, common_token_prefix, sample_generated_token, should_flush_stream,
+            text_context_key, GenerationSampler, IncrementalStopMatcher, STREAM_EMIT_BYTES,
+            STREAM_EMIT_INTERVAL,
         };
+        use std::time::Duration;
 
         #[derive(Default)]
         struct FakeSampler {
@@ -4608,6 +4667,28 @@ mod desktop {
                 cache_eviction_count(500, 400, [250, 250], 1_000, Some(200)),
                 1
             );
+        }
+
+        #[test]
+        fn incremental_stop_matcher_finds_sequence_across_append_boundary() {
+            let stops = vec!["END".to_string(), "STOP".to_string()];
+            let matcher = IncrementalStopMatcher::new(&stops);
+
+            assert_eq!(matcher.find("hello END", "hello E".len()), Some(6));
+        }
+
+        #[test]
+        fn stream_coalescer_flushes_first_chunk_latency_and_size_thresholds() {
+            assert!(should_flush_stream(1, false, Duration::ZERO, false));
+            assert!(!should_flush_stream(1, true, Duration::ZERO, false));
+            assert!(should_flush_stream(1, true, STREAM_EMIT_INTERVAL, false));
+            assert!(should_flush_stream(
+                STREAM_EMIT_BYTES,
+                true,
+                Duration::ZERO,
+                false
+            ));
+            assert!(should_flush_stream(1, true, Duration::ZERO, true));
         }
     }
 }
