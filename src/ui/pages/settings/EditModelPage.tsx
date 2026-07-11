@@ -726,6 +726,28 @@ export function EditModelPage() {
       ],
       [t("editModel.runtimeFacts.nativeFitError"), llamaRuntimeReport.nativeFitError ?? null],
       [
+        t("editModel.runtimeFacts.promptCacheHit"),
+        llamaRuntimeReport.promptCacheHit == null
+          ? null
+          : llamaRuntimeReport.promptCacheHit
+            ? t("editModel.runtimeFacts.active")
+            : t("editModel.runtimeFacts.notNeeded"),
+      ],
+      [
+        t("editModel.runtimeFacts.promptCacheEntries"),
+        formatRuntimeNumber(llamaRuntimeReport.promptCacheEntries),
+      ],
+      [
+        t("editModel.runtimeFacts.promptCacheMemory"),
+        llamaRuntimeReport.promptCacheBytes == null
+          ? null
+          : `${formatBytes(llamaRuntimeReport.promptCacheBytes)} / ${formatBytes(llamaRuntimeReport.promptCacheCapacityBytes ?? 0)}`,
+      ],
+      [
+        t("editModel.runtimeFacts.promptCacheEvictions"),
+        formatRuntimeNumber(llamaRuntimeReport.promptCacheEvictions),
+      ],
+      [
         t("editModel.runtimeFacts.smartOffloadFallback"),
         llamaRuntimeReport.smartGpuLayerFallbackActivated == null
           ? null

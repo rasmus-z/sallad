@@ -496,6 +496,7 @@ impl ContinueFlow {
                     stream: Some(built.stream),
                     request_id: built.request_id.clone(),
                     provider_id: Some(attempt_credential.provider_id.clone()),
+                    cache_key: Some(session.id.clone()),
                 };
 
                 let api_response = match api_request(app.clone(), api_request_payload).await {

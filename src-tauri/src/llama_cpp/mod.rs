@@ -1,5 +1,5 @@
 #[cfg(not(mobile))]
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 #[cfg(not(mobile))]
 use std::io::Cursor;
 
@@ -90,12 +90,24 @@ mod desktop {
         model: Arc<LlamaModel>,
         draft_model: Arc<LlamaModel>,
         model_path: String,
+        cache_key: String,
         context_key: String,
         tokens: Vec<LlamaToken>,
+        allocated_bytes: usize,
     }
 
+    struct HotTextContextCache {
+        entries: VecDeque<HotTextContext>,
+        allocated_bytes: usize,
+    }
+
+    const HOT_CONTEXT_CACHE_MAX_BYTES: usize = NATIVE_FIT_MARGIN_BYTES;
+
     thread_local! {
-        static HOT_TEXT_CONTEXT: RefCell<Option<HotTextContext>> = const { RefCell::new(None) };
+        static HOT_TEXT_CONTEXTS: RefCell<HotTextContextCache> = const { RefCell::new(HotTextContextCache {
+            entries: VecDeque::new(),
+            allocated_bytes: 0,
+        }) };
     }
 
     enum LocalWorkerJob {
@@ -171,50 +183,115 @@ mod desktop {
     }
 
     pub(super) fn discard_hot_context() {
-        HOT_TEXT_CONTEXT.with(|slot| {
-            slot.borrow_mut().take();
+        HOT_TEXT_CONTEXTS.with(|slot| {
+            let mut cache = slot.borrow_mut();
+            cache.entries.clear();
+            cache.allocated_bytes = 0;
         });
     }
 
     fn discard_hot_context_if_model_differs(model_path: &str) {
-        HOT_TEXT_CONTEXT.with(|slot| {
-            let should_discard = slot
-                .borrow()
-                .as_ref()
-                .is_some_and(|cached| cached.model_path != model_path);
-            if should_discard {
-                slot.borrow_mut().take();
-            }
+        HOT_TEXT_CONTEXTS.with(|slot| {
+            let mut cache = slot.borrow_mut();
+            cache
+                .entries
+                .retain(|cached| cached.model_path == model_path);
+            cache.allocated_bytes = cache
+                .entries
+                .iter()
+                .map(|cached| cached.allocated_bytes)
+                .sum();
         });
     }
 
     fn hot_context_matches_model_path(model_path: &str) -> bool {
-        HOT_TEXT_CONTEXT.with(|slot| {
+        HOT_TEXT_CONTEXTS.with(|slot| {
             slot.borrow()
-                .as_ref()
-                .is_some_and(|cached| cached.model_path == model_path)
+                .entries
+                .iter()
+                .any(|cached| cached.model_path == model_path)
+        })
+    }
+
+    fn cache_eviction_count(
+        mut allocated_bytes: usize,
+        incoming_bytes: usize,
+        entry_bytes: impl IntoIterator<Item = usize>,
+        capacity_bytes: usize,
+        available_bytes: Option<usize>,
+    ) -> usize {
+        let mut evictions = 0;
+        let mut freed_bytes = 0usize;
+        for bytes in entry_bytes {
+            let within_capacity = allocated_bytes.saturating_add(incoming_bytes) <= capacity_bytes;
+            let within_headroom = available_bytes
+                .map(|available| incoming_bytes <= available.saturating_add(freed_bytes))
+                .unwrap_or(true);
+            if within_capacity && within_headroom {
+                break;
+            }
+            allocated_bytes = allocated_bytes.saturating_sub(bytes);
+            freed_bytes = freed_bytes.saturating_add(bytes);
+            evictions += 1;
+        }
+        evictions
+    }
+
+    fn prepare_hot_context_capacity(available_bytes: Option<usize>) -> usize {
+        HOT_TEXT_CONTEXTS.with(|slot| {
+            let mut cache = slot.borrow_mut();
+            let expected_bytes = cache
+                .entries
+                .iter()
+                .map(|cached| cached.allocated_bytes)
+                .max()
+                .unwrap_or(0);
+            let evicted = cache_eviction_count(
+                cache.allocated_bytes,
+                expected_bytes,
+                cache.entries.iter().map(|cached| cached.allocated_bytes),
+                HOT_CONTEXT_CACHE_MAX_BYTES,
+                available_bytes,
+            );
+            for _ in 0..evicted {
+                let cached = cache
+                    .entries
+                    .pop_front()
+                    .expect("eviction count cannot exceed cache entries");
+                cache.allocated_bytes =
+                    cache.allocated_bytes.saturating_sub(cached.allocated_bytes);
+            }
+            evicted
+        })
+    }
+
+    fn hot_context_cache_stats() -> (usize, usize) {
+        HOT_TEXT_CONTEXTS.with(|slot| {
+            let cache = slot.borrow();
+            (cache.entries.len(), cache.allocated_bytes)
         })
     }
 
     fn take_hot_context(
         model: &Arc<LlamaModel>,
         draft_model: &Arc<LlamaModel>,
+        cache_key: &str,
         context_key: &str,
     ) -> Option<(
         LlamaContext<'static>,
         Option<mtp::MtpRuntime<'static>>,
         Vec<LlamaToken>,
     )> {
-        HOT_TEXT_CONTEXT.with(|slot| {
-            let matches = slot.borrow().as_ref().is_some_and(|cached| {
-                cached.context_key == context_key
+        HOT_TEXT_CONTEXTS.with(|slot| {
+            let mut cache = slot.borrow_mut();
+            let index = cache.entries.iter().position(|cached| {
+                cached.cache_key == cache_key
+                    && cached.context_key == context_key
                     && Arc::ptr_eq(&cached.model, model)
                     && Arc::ptr_eq(&cached.draft_model, draft_model)
-            });
-            if !matches {
-                return None;
-            }
-            let mut cached = slot.borrow_mut().take()?;
+            })?;
+            let mut cached = cache.entries.remove(index)?;
+            cache.allocated_bytes = cache.allocated_bytes.saturating_sub(cached.allocated_bytes);
             let context = cached.context.take()?;
             let mtp_runtime = cached.mtp_runtime.take();
             Some((context, mtp_runtime, cached.tokens))
@@ -227,9 +304,23 @@ mod desktop {
         model: Arc<LlamaModel>,
         draft_model: Arc<LlamaModel>,
         model_path: &str,
+        cache_key: String,
         context_key: String,
         tokens: Vec<LlamaToken>,
-    ) {
+    ) -> usize {
+        let mut allocated_bytes = context.allocated_memory_size();
+        if let Some(runtime) = mtp_runtime.as_ref() {
+            allocated_bytes = allocated_bytes
+                .saturating_add(runtime.draft.allocated_memory_size())
+                .saturating_add(runtime.carry_hidden.capacity() * std::mem::size_of::<f32>())
+                .saturating_add(runtime.h_last.capacity() * std::mem::size_of::<f32>())
+                .saturating_add(runtime.pending.capacity() * std::mem::size_of::<LlamaToken>());
+        }
+        allocated_bytes =
+            allocated_bytes.saturating_add(tokens.capacity() * std::mem::size_of::<LlamaToken>());
+        if allocated_bytes == 0 || allocated_bytes > HOT_CONTEXT_CACHE_MAX_BYTES {
+            return 0;
+        }
         // The contexts only borrow the models stored beside them. The worker is
         // single-threaded, and field order drops both contexts before either Arc.
         let context =
@@ -237,17 +328,48 @@ mod desktop {
         let mtp_runtime = mtp_runtime.map(|runtime| unsafe {
             std::mem::transmute::<mtp::MtpRuntime<'_>, mtp::MtpRuntime<'static>>(runtime)
         });
-        HOT_TEXT_CONTEXT.with(|slot| {
-            *slot.borrow_mut() = Some(HotTextContext {
+        HOT_TEXT_CONTEXTS.with(|slot| {
+            let mut cache = slot.borrow_mut();
+            if let Some(index) = cache
+                .entries
+                .iter()
+                .position(|cached| cached.cache_key == cache_key)
+            {
+                if let Some(replaced) = cache.entries.remove(index) {
+                    cache.allocated_bytes = cache
+                        .allocated_bytes
+                        .saturating_sub(replaced.allocated_bytes);
+                }
+            }
+            let evicted = cache_eviction_count(
+                cache.allocated_bytes,
+                allocated_bytes,
+                cache.entries.iter().map(|cached| cached.allocated_bytes),
+                HOT_CONTEXT_CACHE_MAX_BYTES,
+                None,
+            );
+            for _ in 0..evicted {
+                let cached = cache
+                    .entries
+                    .pop_front()
+                    .expect("eviction count cannot exceed cache entries");
+                cache.allocated_bytes =
+                    cache.allocated_bytes.saturating_sub(cached.allocated_bytes);
+            }
+            cache.allocated_bytes = cache.allocated_bytes.saturating_add(allocated_bytes);
+            cache.entries.push_back(HotTextContext {
                 mtp_runtime,
                 context: Some(context),
                 model,
                 draft_model,
                 model_path: model_path.to_string(),
+                cache_key,
                 context_key,
                 tokens,
+                allocated_bytes,
             });
-        });
+            evicted
+        })
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -834,6 +956,12 @@ mod desktop {
     }
 
     fn handle_local_request_sync(app: AppHandle, req: ApiRequest) -> Result<ApiResponse, String> {
+        let prompt_cache_key = req
+            .cache_key
+            .as_deref()
+            .map(str::trim)
+            .filter(|key| !key.is_empty())
+            .map(ToOwned::to_owned);
         let body = req
             .body
             .as_ref()
@@ -1257,6 +1385,8 @@ mod desktop {
         let mut output = String::new();
         let mut prompt_tokens = 0u64;
         let mut cached_prompt_tokens = 0u64;
+        let mut prompt_cache_hit = false;
+        let mut prompt_cache_evictions = 0usize;
         let mut completion_tokens = 0u64;
         let request_started_at = Instant::now();
         let mut first_token_ms: Option<u64> = None;
@@ -1290,6 +1420,8 @@ mod desktop {
             check_abort_signal(abort_rx.as_mut())?;
             failure_stage = "load_engine";
             cached_prompt_tokens = 0;
+            prompt_cache_hit = false;
+            prompt_cache_evictions = 0;
             native_prompt_eval_ms = None;
             native_prompt_eval_tokens = None;
             native_prompt_eval_tps = None;
@@ -1850,9 +1982,8 @@ mod desktop {
                 );
             }
 
-            let native_fit_eligible = native_fit_request
-                && backend_supports_gpu_offload
-                && !hot_context_resident;
+            let native_fit_eligible =
+                native_fit_request && backend_supports_gpu_offload && !hot_context_resident;
             if native_fit_eligible {
                 if let Some(fit_context) = requested_context {
                     let fit_batch = fit_context.min(llama_batch_size).max(1);
@@ -1975,11 +2106,7 @@ mod desktop {
                         "nativeFitError",
                     ] {
                         if let Some(value) = report.get(field) {
-                            update_runtime_report_field(
-                                &mut runtime_report,
-                                field,
-                                value.clone(),
-                            );
+                            update_runtime_report_field(&mut runtime_report, field, value.clone());
                         }
                     }
                 }
@@ -2773,25 +2900,38 @@ mod desktop {
                         llama_mtp_draft_tokens,
                     );
                     if !use_vision {
-                        if let Some((cached_ctx, cached_mtp, cached_tokens)) =
-                            take_hot_context(&engine.model, &hot_draft_model, &attempt_context_key)
-                        {
-                            resolved_ctx_size = attempt_ctx;
-                            resolved_n_batch = attempt_batch;
-                            resolved_offload_kqv = attempt_offload_kqv;
-                            reused_mtp_runtime = cached_mtp;
-                            cached_context_tokens = Some(cached_tokens);
-                            active_context_key = Some(attempt_context_key);
-                            ctx = Some(cached_ctx);
-                            log_info(
-                                &app,
-                                "llama_cpp",
-                                "reusing hot llama.cpp context for prompt prefix cache",
-                            );
-                            break 'context_attempt_groups;
+                        if let Some(cache_key) = prompt_cache_key.as_deref() {
+                            if let Some((cached_ctx, cached_mtp, cached_tokens)) = take_hot_context(
+                                &engine.model,
+                                &hot_draft_model,
+                                cache_key,
+                                &attempt_context_key,
+                            ) {
+                                prompt_cache_hit = true;
+                                resolved_ctx_size = attempt_ctx;
+                                resolved_n_batch = attempt_batch;
+                                resolved_offload_kqv = attempt_offload_kqv;
+                                reused_mtp_runtime = cached_mtp;
+                                cached_context_tokens = Some(cached_tokens);
+                                active_context_key = Some(attempt_context_key);
+                                ctx = Some(cached_ctx);
+                                log_info(
+                                    &app,
+                                    "llama_cpp",
+                                    "reusing hot llama.cpp context for prompt prefix cache",
+                                );
+                                break 'context_attempt_groups;
+                            }
                         }
                     }
-                    discard_hot_context();
+                    let context_memory_headroom = if actual_gpu_layers_used.unwrap_or(0) > 0 {
+                        get_available_vram_bytes()
+                    } else {
+                        get_available_memory_bytes()
+                    }
+                    .and_then(|bytes| usize::try_from(bytes).ok());
+                    prompt_cache_evictions = prompt_cache_evictions
+                        .saturating_add(prepare_hot_context_capacity(context_memory_headroom));
 
                     match model.new_context(backend, ctx_params) {
                         Ok(created) => {
@@ -4008,15 +4148,19 @@ mod desktop {
                     true
                 };
                 if cache_ready {
-                    store_hot_context(
-                        ctx,
-                        mtp_runtime.take(),
-                        engine.model.clone(),
-                        hot_draft_model.clone(),
-                        model_path,
-                        context_key,
-                        tokens,
-                    );
+                    if let Some(cache_key) = prompt_cache_key.as_ref() {
+                        prompt_cache_evictions =
+                            prompt_cache_evictions.saturating_add(store_hot_context(
+                                ctx,
+                                mtp_runtime.take(),
+                                engine.model.clone(),
+                                hot_draft_model.clone(),
+                                model_path,
+                                cache_key.clone(),
+                                context_key,
+                                tokens,
+                            ));
+                    }
                 }
             }
 
@@ -4141,6 +4285,32 @@ mod desktop {
                 }
             })
             .filter(|v| v.is_finite() && *v >= 0.0);
+        let (prompt_cache_entries, prompt_cache_bytes) = hot_context_cache_stats();
+        update_runtime_report_field(
+            &mut runtime_report,
+            "promptCacheHit",
+            json!(prompt_cache_hit),
+        );
+        update_runtime_report_field(
+            &mut runtime_report,
+            "promptCacheEntries",
+            json!(prompt_cache_entries),
+        );
+        update_runtime_report_field(
+            &mut runtime_report,
+            "promptCacheBytes",
+            json!(prompt_cache_bytes),
+        );
+        update_runtime_report_field(
+            &mut runtime_report,
+            "promptCacheCapacityBytes",
+            json!(HOT_CONTEXT_CACHE_MAX_BYTES),
+        );
+        update_runtime_report_field(
+            &mut runtime_report,
+            "promptCacheEvictions",
+            json!(prompt_cache_evictions),
+        );
         update_runtime_report_field(
             &mut runtime_report,
             "updatedAt",
@@ -4337,7 +4507,8 @@ mod desktop {
     #[cfg(test)]
     mod tests {
         use super::{
-            common_token_prefix, sample_generated_token, text_context_key, GenerationSampler,
+            cache_eviction_count, common_token_prefix, sample_generated_token, text_context_key,
+            GenerationSampler,
         };
 
         #[derive(Default)]
@@ -4412,6 +4583,31 @@ mod desktop {
             };
 
             assert_ne!(key(512), key(256));
+        }
+
+        #[test]
+        fn prompt_cache_evicts_oldest_entries_until_incoming_context_fits() {
+            assert_eq!(
+                cache_eviction_count(900, 400, [300, 300, 300], 1_000, None),
+                1
+            );
+            assert_eq!(
+                cache_eviction_count(900, 700, [300, 300, 300], 1_000, None),
+                2
+            );
+        }
+
+        #[test]
+        fn prompt_cache_keeps_entries_when_incoming_context_fits() {
+            assert_eq!(cache_eviction_count(500, 400, [250, 250], 1_000, None), 0);
+        }
+
+        #[test]
+        fn prompt_cache_evicts_for_runtime_memory_headroom() {
+            assert_eq!(
+                cache_eviction_count(500, 400, [250, 250], 1_000, Some(200)),
+                1
+            );
         }
     }
 }

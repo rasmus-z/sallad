@@ -1928,6 +1928,7 @@ async fn send_dynamic_memory_request(
         stream: Some(false),
         request_id: built.request_id.clone(),
         provider_id: Some(provider_cred.provider_id.clone()),
+        cache_key: None,
     };
 
     let first_response = match api_request(app.clone(), api_request_payload).await {
@@ -1991,6 +1992,7 @@ async fn send_dynamic_memory_request(
                     stream: Some(false),
                     request_id: built.request_id.clone(),
                     provider_id: Some(provider_cred.provider_id.clone()),
+                    cache_key: None,
                 };
 
                 api_request(app.clone(), api_request_payload).await?
@@ -2066,6 +2068,7 @@ async fn send_dynamic_memory_request(
                     stream: Some(false),
                     request_id: built.request_id.clone(),
                     provider_id: Some(provider_cred.provider_id.clone()),
+                    cache_key: None,
                 };
 
                 return api_request(app.clone(), api_request_payload).await;
@@ -2118,6 +2121,7 @@ async fn send_dynamic_memory_request(
                     stream: Some(false),
                     request_id: built.request_id.clone(),
                     provider_id: Some(provider_cred.provider_id.clone()),
+                    cache_key: None,
                 };
 
                 return api_request(app.clone(), api_request_payload).await;
@@ -6314,6 +6318,7 @@ async fn select_speaker_via_llm_with_tracking(
         stream: Some(false),
         request_id: Some(request_id.to_string()),
         provider_id: Some(credential.provider_id.clone()),
+        cache_key: None,
     };
 
     let api_response = api_request(app.clone(), api_request_payload).await?;
@@ -6766,6 +6771,7 @@ async fn generate_character_response(
             stream: Some(true),
             request_id: Some(request_id.to_string()),
             provider_id: Some(credential.provider_id.clone()),
+            cache_key: Some(context.session.id.clone()),
         };
 
         log_info(
@@ -8204,6 +8210,7 @@ pub async fn group_chat_generate_user_reply(
         stream: Some(built.stream),
         request_id: built.request_id.clone(),
         provider_id: Some(provider_cred.provider_id.clone()),
+        cache_key: None,
     };
 
     let api_response = api_request(app.clone(), api_request_payload).await?;

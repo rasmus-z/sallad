@@ -3163,6 +3163,7 @@ async fn send_dynamic_memory_request(
         stream: Some(false),
         request_id: built.request_id.clone(),
         provider_id: Some(provider_cred.provider_id.clone()),
+        cache_key: None,
     };
 
     let first_response = match api_request(app.clone(), api_request_payload).await {
@@ -3226,6 +3227,7 @@ async fn send_dynamic_memory_request(
                     stream: Some(false),
                     request_id: built.request_id.clone(),
                     provider_id: Some(provider_cred.provider_id.clone()),
+                    cache_key: None,
                 };
 
                 api_request(app.clone(), api_request_payload).await?
@@ -3301,6 +3303,7 @@ async fn send_dynamic_memory_request(
                     stream: Some(false),
                     request_id: built.request_id.clone(),
                     provider_id: Some(provider_cred.provider_id.clone()),
+                    cache_key: None,
                 };
 
                 return api_request(app.clone(), api_request_payload).await;
@@ -3353,6 +3356,7 @@ async fn send_dynamic_memory_request(
                     stream: Some(false),
                     request_id: built.request_id.clone(),
                     provider_id: Some(provider_cred.provider_id.clone()),
+                    cache_key: None,
                 };
 
                 return api_request(app.clone(), api_request_payload).await;

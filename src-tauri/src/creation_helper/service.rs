@@ -1470,6 +1470,7 @@ pub(crate) async fn send_creation_api_request(
             stream: Some(built.stream),
             request_id: built.request_id.clone(),
             provider_id: Some(provider_id.to_string()),
+            cache_key: None,
         };
 
         let mut abort_rx = {
@@ -3327,6 +3328,7 @@ async fn process_assistant_turn_legacy(
             stream: Some(finalize_built.stream),
             request_id: finalize_built.request_id.clone(),
             provider_id: Some(provider_id.to_string()),
+            cache_key: None,
         };
 
         let mut abort_rx = {
