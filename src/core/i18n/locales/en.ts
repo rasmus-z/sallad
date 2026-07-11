@@ -4296,6 +4296,8 @@ export const enMessages = {
       nativeGenerationTime: "Native generation time",
       appGenerationOverhead: "App generation overhead",
       promptTemplate: "Prompt template",
+      thinkingMode: "Thinking mode",
+      thinkingDirective: "Thinking directive",
     },
     fields: {
       platform: "Platform",

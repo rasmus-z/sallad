@@ -541,10 +541,58 @@ mod desktop {
         }
     }
 
-    fn parse_local_enable_thinking(body: &Value, reasoning_format: Option<&str>) -> bool {
-        body.get("enable_thinking")
-            .and_then(|v| v.as_bool())
-            .unwrap_or_else(|| reasoning_format.is_some())
+    fn message_thinking_directive(messages: &[Value]) -> Option<bool> {
+        let message = messages
+            .iter()
+            .rev()
+            .find(|message| message.get("role").and_then(Value::as_str) == Some("user"))?;
+        let text = match message.get("content")? {
+            Value::String(text) => text.clone(),
+            Value::Array(parts) => parts
+                .iter()
+                .filter(|part| part.get("type").and_then(Value::as_str) == Some("text"))
+                .filter_map(|part| part.get("text").and_then(Value::as_str))
+                .collect::<Vec<_>>()
+                .join("\n"),
+            _ => return None,
+        };
+        match text
+            .split_whitespace()
+            .last()?
+            .to_ascii_lowercase()
+            .as_str()
+        {
+            "/think" => Some(true),
+            "/no_think" => Some(false),
+            _ => None,
+        }
+    }
+
+    fn parse_local_thinking_options(
+        body: &Value,
+        messages: &[Value],
+        reasoning_format: Option<&str>,
+    ) -> (bool, Option<String>) {
+        let explicit = body
+            .get("enable_thinking")
+            .and_then(Value::as_bool)
+            .or_else(|| {
+                body.get("chat_template_kwargs")
+                    .and_then(Value::as_object)
+                    .and_then(|kwargs| kwargs.get("enable_thinking"))
+                    .and_then(Value::as_bool)
+            });
+        let enable_thinking = message_thinking_directive(messages)
+            .or(explicit)
+            .unwrap_or_else(|| reasoning_format.is_some());
+        let mut kwargs = body
+            .get("chat_template_kwargs")
+            .and_then(Value::as_object)
+            .cloned()
+            .unwrap_or_default();
+        kwargs.insert("enable_thinking".to_string(), json!(enable_thinking));
+        let kwargs = serde_json::to_string(&kwargs).ok();
+        (enable_thinking, kwargs)
     }
 
     fn parse_local_parallel_tool_calls(body: &Value) -> bool {
@@ -1031,11 +1079,24 @@ mod desktop {
         });
         let tool_choice = body.get("tool_choice");
         let reasoning_format = parse_local_reasoning_format(body);
+        let thinking_directive = message_thinking_directive(messages);
+        let (enable_thinking, chat_template_kwargs) =
+            parse_local_thinking_options(body, messages, reasoning_format.as_deref());
         let openai_compat_options = OpenAICompatPromptOptions {
-            enable_thinking: parse_local_enable_thinking(body, reasoning_format.as_deref()),
+            enable_thinking,
+            chat_template_kwargs,
             parallel_tool_calls: parse_local_parallel_tool_calls(body),
             reasoning_format,
         };
+        if let Some(enabled) = thinking_directive {
+            log_info(
+                &app,
+                "llama_cpp",
+                format!(
+                    "local thinking mode overridden by trailing message directive: enable_thinking={enabled}"
+                ),
+            );
+        }
         let llama_mmproj_path = body
             .get("llamaMmprojPath")
             .or_else(|| body.get("llama_mmproj_path"))
@@ -1453,6 +1514,8 @@ mod desktop {
             "requestedUbatchLimit": requested_ubatch_limit,
             "requestedGpuLayers": llama_gpu_layers,
             "targetNewTokens": max_tokens,
+            "thinkingEnabled": openai_compat_options.enable_thinking,
+            "thinkingDirective": thinking_directive.map(|enabled| if enabled { "/think" } else { "/no_think" }),
         });
 
         const KV_LAYER_RETRY_PREFIX: &str = "__kv_layer_retry__:";
@@ -4569,10 +4632,12 @@ mod desktop {
     #[cfg(test)]
     mod tests {
         use super::{
-            cache_eviction_count, common_token_prefix, sample_generated_token, should_flush_stream,
+            cache_eviction_count, common_token_prefix, message_thinking_directive,
+            parse_local_thinking_options, sample_generated_token, should_flush_stream,
             text_context_key, GenerationSampler, IncrementalStopMatcher, STREAM_EMIT_BYTES,
             STREAM_EMIT_INTERVAL,
         };
+        use serde_json::{json, Value};
         use std::time::Duration;
 
         #[derive(Default)]
@@ -4694,6 +4759,35 @@ mod desktop {
                 false
             ));
             assert!(should_flush_stream(1, true, Duration::ZERO, true));
+        }
+
+        #[test]
+        fn trailing_no_think_directive_overrides_reasoning_mode() {
+            let messages = vec![json!({
+                "role": "user",
+                "content": "Answer directly. /no_think"
+            })];
+            let body = json!({
+                "reasoning": { "effort": "high" },
+                "chat_template_kwargs": { "custom": 7 }
+            });
+
+            assert_eq!(message_thinking_directive(&messages), Some(false));
+            let (enabled, kwargs) = parse_local_thinking_options(&body, &messages, Some("auto"));
+            assert!(!enabled);
+            let kwargs: Value = serde_json::from_str(&kwargs.expect("kwargs")).expect("json");
+            assert_eq!(kwargs["enable_thinking"], json!(false));
+            assert_eq!(kwargs["custom"], json!(7));
+        }
+
+        #[test]
+        fn trailing_think_directive_enables_thinking_for_one_turn() {
+            let messages = vec![json!({
+                "role": "user",
+                "content": [{ "type": "text", "text": "Work it out. /think" }]
+            })];
+
+            assert_eq!(message_thinking_directive(&messages), Some(true));
         }
     }
 }

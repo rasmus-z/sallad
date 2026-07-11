@@ -837,6 +837,18 @@ export function EditModelPage() {
           : `${formatRuntimeNumber(Math.round(llamaRuntimeReport.appGenerationOverheadMs))} ms`,
       ],
       [t("editModel.runtimeFacts.promptTemplate"), llamaRuntimeReport.promptTemplateSource ?? null],
+      [
+        t("editModel.runtimeFacts.thinkingMode"),
+        llamaRuntimeReport.thinkingEnabled == null
+          ? null
+          : llamaRuntimeReport.thinkingEnabled
+            ? t("editModel.runtimeFacts.active")
+            : t("editModel.runtimeFacts.notNeeded"),
+      ],
+      [
+        t("editModel.runtimeFacts.thinkingDirective"),
+        llamaRuntimeReport.thinkingDirective ?? null,
+      ],
     ] as const;
     return fields.filter(([, value]) => value).map(([label, value]) => ({ label, value: value! }));
   }, [llamaRuntimeReport]);

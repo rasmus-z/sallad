@@ -391,6 +391,8 @@ export const LlamaLastRuntimeReportSchema = z.object({
   nativeGenerationTokensPerSecond: z.number().nonnegative().nullable().optional(),
   appGenerationOverheadMs: z.number().nonnegative().nullable().optional(),
   promptTemplateSource: z.string().trim().min(1).nullable().optional(),
+  thinkingEnabled: z.boolean().nullable().optional(),
+  thinkingDirective: z.string().trim().min(1).nullable().optional(),
   mtpStats: MtpStatsSchema.nullable().optional(),
   suggestedSettings: LlamaRuntimeSuggestedSettingsSchema.nullish().optional(),
 });
