@@ -646,6 +646,7 @@ pub struct AdvancedModelSettings {
     pub llama_rope_freq_scale: Option<f64>,
     pub llama_offload_kqv: Option<bool>,
     pub llama_batch_size: Option<u32>,
+    pub llama_ubatch_size: Option<u32>,
     pub llama_kv_type: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub llama_flash_attention: Option<String>,
@@ -771,6 +772,7 @@ impl Default for AdvancedModelSettings {
             llama_rope_freq_scale: None,
             llama_offload_kqv: None,
             llama_batch_size: None,
+            llama_ubatch_size: None,
             llama_kv_type: None,
             llama_flash_attention: None,
             llama_swa_full: None,

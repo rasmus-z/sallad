@@ -142,6 +142,8 @@ export function DetailStats({ detail }: { detail: LlmMetricDetail }) {
   push(t("performance.detail.outputTokens"), detail.completionTokens);
   push(t("performance.detail.totalTokens"), detail.totalTokens);
   push(t("performance.detail.context"), detail.nCtx);
+  push(t("performance.detail.batch"), detail.nBatch);
+  push(t("performance.detail.microbatch"), detail.nUbatch);
   push(t("performance.detail.backend"), detail.backend);
   push(t("performance.detail.gpuLayers"), detail.gpuLayers);
   push(t("performance.detail.kvType"), detail.kvType);

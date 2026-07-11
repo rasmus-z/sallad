@@ -305,6 +305,7 @@ export type UsageSummary = z.infer<typeof UsageSummarySchema>;
 export const LlamaRuntimeSuggestedSettingsSchema = z.object({
   contextLength: z.number().int().min(1).nullable().optional(),
   llamaBatchSize: z.number().int().min(1).nullable().optional(),
+  llamaUbatchSize: z.number().int().min(1).nullable().optional(),
 });
 export type LlamaRuntimeSuggestedSettings = z.infer<typeof LlamaRuntimeSuggestedSettingsSchema>;
 
@@ -324,8 +325,10 @@ export const LlamaLastRuntimeReportSchema = z.object({
   requestedGpuLayers: z.number().int().min(0).nullable().optional(),
   actualGpuLayersUsed: z.number().int().min(0).nullable().optional(),
   requestedBatchLimit: z.number().int().min(1).nullable().optional(),
+  requestedUbatchLimit: z.number().int().min(1).nullable().optional(),
   initialBatchCandidate: z.number().int().min(1).nullable().optional(),
   actualBatchUsed: z.number().int().min(1).nullable().optional(),
+  actualUbatchUsed: z.number().int().min(1).nullable().optional(),
   smartGpuLayerFallbackActivated: z.boolean().nullable().optional(),
   kqvFallbackActivated: z.boolean().nullable().optional(),
   smartOffloadPlannedContext: z.number().int().min(1).nullable().optional(),
@@ -396,6 +399,7 @@ export const LlmMetricSummarySchema = z.object({
   gpuLayers: z.number().int().nonnegative().nullable().optional(),
   nCtx: z.number().int().nonnegative().nullable().optional(),
   nBatch: z.number().int().nonnegative().nullable().optional(),
+  nUbatch: z.number().int().nonnegative().nullable().optional(),
   kvType: z.string().nullable().optional(),
   modelSizeBytes: z.number().int().nonnegative().nullable().optional(),
   promptTokens: z.number().int().nonnegative().nullable().optional(),
@@ -464,6 +468,7 @@ export const AdvancedModelSettingsSchema = z.object({
   llamaRopeFreqScale: z.number().min(0).max(10).nullable().optional(),
   llamaOffloadKqv: z.boolean().nullable().optional(),
   llamaBatchSize: z.number().int().min(1).max(8192).nullable().optional(),
+  llamaUbatchSize: z.number().int().min(1).max(8192).nullable().optional(),
   llamaKvType: z
     .enum([
       "f32",

@@ -254,6 +254,8 @@ mod desktop {
     fn text_context_key(
         n_ctx: u32,
         n_batch: u32,
+        n_ubatch: Option<u32>,
+        n_outputs_max: u32,
         n_threads: Option<u32>,
         n_threads_batch: Option<u32>,
         offload_kqv: Option<bool>,
@@ -266,7 +268,7 @@ mod desktop {
         mtp_draft_tokens: u32,
     ) -> String {
         format!(
-            "ctx={n_ctx};batch={n_batch};threads={n_threads:?};threads_batch={n_threads_batch:?};kqv={offload_kqv:?};swa={swa_full:?};kv={};flash={};rope_base={rope_freq_base:?};rope_scale={rope_freq_scale:?};mtp={mtp_active};mtp_n={mtp_draft_tokens}",
+            "ctx={n_ctx};batch={n_batch};ubatch={n_ubatch:?};outputs={n_outputs_max};threads={n_threads:?};threads_batch={n_threads_batch:?};kqv={offload_kqv:?};swa={swa_full:?};kv={};flash={};rope_base={rope_freq_base:?};rope_scale={rope_freq_scale:?};mtp={mtp_active};mtp_n={mtp_draft_tokens}",
             kv_type.unwrap_or("f16"),
             flash_attention_policy_label(flash_attention),
         )
@@ -1123,6 +1125,15 @@ mod desktop {
             .and_then(|v| u32::try_from(v).ok())
             .filter(|v| *v > 0)
             .unwrap_or(512);
+        let llama_ubatch_size = body
+            .get("llamaUbatchSize")
+            .or_else(|| body.get("llama_ubatch_size"))
+            .and_then(|v| v.as_u64())
+            .and_then(|v| u32::try_from(v).ok())
+            .filter(|v| *v > 0);
+        let llama_compute_batch_size = llama_ubatch_size
+            .unwrap_or(llama_batch_size)
+            .min(llama_batch_size);
         let llama_seed = body
             .get("llamaSeed")
             .or_else(|| body.get("llama_seed"))
@@ -1223,6 +1234,7 @@ mod desktop {
             .and_then(|v| u32::try_from(v).ok())
             .filter(|v| *v > 0);
         let requested_batch_limit = llama_batch_size;
+        let requested_ubatch_limit = llama_ubatch_size;
 
         let request_id = req.request_id.clone();
         let stream = req.stream.unwrap_or(false);
@@ -1268,6 +1280,7 @@ mod desktop {
             "modelPath": model_path,
             "requestedContext": requested_context,
             "requestedBatchLimit": requested_batch_limit,
+            "requestedUbatchLimit": requested_ubatch_limit,
             "requestedGpuLayers": llama_gpu_layers,
             "targetNewTokens": max_tokens,
         });
@@ -1602,7 +1615,7 @@ mod desktop {
                     available_memory_bytes,
                     available_vram_bytes,
                     requested_context,
-                    llama_batch_size,
+                    llama_compute_batch_size,
                     resolved_offload_kqv,
                     llama_kv_type_raw.as_deref(),
                     resolved_flash_attention_policy,
@@ -2537,9 +2550,19 @@ mod desktop {
                 }
 
                 for (attempt_ctx, attempt_batch) in attempts {
+                    let attempt_ubatch = llama_ubatch_size.map(|value| value.min(attempt_batch));
+                    let n_outputs_max = if llama_mtp_active {
+                        llama_mtp_draft_tokens.saturating_add(1).min(attempt_batch)
+                    } else {
+                        1
+                    };
                     let mut ctx_params = LlamaContextParams::default()
                         .with_n_ctx(NonZeroU32::new(attempt_ctx))
-                        .with_n_batch(attempt_batch);
+                        .with_n_batch(attempt_batch)
+                        .with_n_outputs_max(n_outputs_max);
+                    if let Some(n_ubatch) = attempt_ubatch {
+                        ctx_params = ctx_params.with_n_ubatch(n_ubatch);
+                    }
                     if let Some(n_threads) = llama_threads {
                         ctx_params = ctx_params.with_n_threads(n_threads as i32);
                     }
@@ -2571,9 +2594,11 @@ mod desktop {
                         &app,
                         "llama_cpp",
                         format!(
-                            "creating context attempt: ctx={} batch={} gpu_layers={:?} offload_kqv={:?} flash_attention_policy={:?}",
+                            "creating context attempt: ctx={} batch={} ubatch={:?} outputs={} gpu_layers={:?} offload_kqv={:?} flash_attention_policy={:?}",
                             attempt_ctx,
                             attempt_batch,
+                            attempt_ubatch,
+                            n_outputs_max,
                             actual_gpu_layers_used,
                             attempt_offload_kqv,
                             resolved_flash_attention_policy
@@ -2583,6 +2608,8 @@ mod desktop {
                     let attempt_context_key = text_context_key(
                         attempt_ctx,
                         attempt_batch,
+                        attempt_ubatch,
+                        n_outputs_max,
                         llama_threads,
                         llama_threads_batch,
                         attempt_offload_kqv,
@@ -2696,6 +2723,7 @@ mod desktop {
             })?;
             ctx_size = resolved_ctx_size;
             let n_batch = resolved_n_batch;
+            let n_ubatch = ctx.n_ubatch();
             let context_fallback_activated =
                 (ctx_size, n_batch) != (requested_ctx_size, initial_batch);
 
@@ -2857,8 +2885,10 @@ mod desktop {
                     "initialContextCandidate": requested_ctx_size,
                     "actualContextUsed": ctx_size,
                     "requestedBatchLimit": llama_batch_size,
+                    "requestedUbatchLimit": llama_ubatch_size,
                     "initialBatchCandidate": initial_batch,
                     "actualNBatchUsed": n_batch,
+                    "actualNUbatchUsed": n_ubatch,
                     "requestedGpuLayers": llama_gpu_layers,
                     "actualGpuLayersUsed": actual_gpu_layers_used,
                     "actualKvTypeUsed": kv_type_label(llama_kv_type_raw.as_deref()),
@@ -2891,6 +2921,7 @@ mod desktop {
             });
             update_runtime_report_field(&mut runtime_report, "actualContextUsed", json!(ctx_size));
             update_runtime_report_field(&mut runtime_report, "actualBatchUsed", json!(n_batch));
+            update_runtime_report_field(&mut runtime_report, "actualUbatchUsed", json!(n_ubatch));
             update_runtime_report_field(
                 &mut runtime_report,
                 "actualKvTypeUsed",
@@ -2930,7 +2961,7 @@ mod desktop {
                 &app,
                 "llama_cpp",
                 format!(
-                    "llama runtime resolved: prompt_mode={} template_source={} fallback_prompt={} bos={} ctx={} n_batch={} gpu_layers={:?} kv_type={} offload_kqv={} backend_path={} flash_attention={} smart_gpu_fallback={} kqv_fallback={} context_fallback={}",
+                    "llama runtime resolved: prompt_mode={} template_source={} fallback_prompt={} bos={} ctx={} n_batch={} n_ubatch={} gpu_layers={:?} kv_type={} offload_kqv={} backend_path={} flash_attention={} smart_gpu_fallback={} kqv_fallback={} context_fallback={}",
                     prompt_mode_label(built_prompt.prompt_mode),
                     built_prompt
                         .applied_template_source
@@ -2940,6 +2971,7 @@ mod desktop {
                     add_bos_label(prompt_add_bos),
                     ctx_size,
                     n_batch,
+                    n_ubatch,
                     actual_gpu_layers_used,
                     kv_type_label(llama_kv_type_raw.as_deref()),
                     offload_kqv_mode_label(resolved_offload_kqv),
@@ -4027,6 +4059,10 @@ mod desktop {
                 .get("actualBatchUsed")
                 .cloned()
                 .unwrap_or(Value::Null);
+            let suggested_ubatch = runtime_report
+                .get("actualUbatchUsed")
+                .cloned()
+                .unwrap_or(Value::Null);
             update_runtime_report_field(
                 &mut runtime_report,
                 "status",
@@ -4038,6 +4074,7 @@ mod desktop {
                 json!({
                     "contextLength": suggested_context,
                     "llamaBatchSize": suggested_batch,
+                    "llamaUbatchSize": suggested_ubatch,
                 }),
             );
             persist_runtime_report(&app, model_path, Some(&runtime_report));
@@ -4054,6 +4091,7 @@ mod desktop {
                 "gpuLayers": rr("actualGpuLayersUsed"),
                 "nCtx": rr("actualContextUsed"),
                 "nBatch": rr("actualBatchUsed"),
+                "nUbatch": rr("actualUbatchUsed"),
                 "kvType": rr("actualKvTypeUsed"),
                 "modelSizeBytes": rr("modelSizeBytes"),
                 "promptTokens": prompt_tokens,
@@ -4147,7 +4185,9 @@ mod desktop {
 
     #[cfg(test)]
     mod tests {
-        use super::{common_token_prefix, sample_generated_token, GenerationSampler};
+        use super::{
+            common_token_prefix, sample_generated_token, text_context_key, GenerationSampler,
+        };
 
         #[derive(Default)]
         struct FakeSampler {
@@ -4197,6 +4237,30 @@ mod desktop {
             let next = [1, 2, 3, 9, 5].map(LlamaToken::new);
 
             assert_eq!(common_token_prefix(&cached, &next), 3);
+        }
+
+        #[test]
+        fn prompt_cache_context_key_tracks_microbatch_size() {
+            let key = |ubatch| {
+                text_context_key(
+                    8192,
+                    1024,
+                    Some(ubatch),
+                    1,
+                    None,
+                    None,
+                    Some(true),
+                    None,
+                    None,
+                    llama_cpp_sys_2::LLAMA_FLASH_ATTN_TYPE_AUTO,
+                    None,
+                    None,
+                    false,
+                    4,
+                )
+            };
+
+            assert_ne!(key(512), key(256));
         }
     }
 }

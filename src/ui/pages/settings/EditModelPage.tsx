@@ -23,6 +23,7 @@ import {
   ADVANCED_LLAMA_ROPE_FREQ_BASE_RANGE,
   ADVANCED_LLAMA_ROPE_FREQ_SCALE_RANGE,
   ADVANCED_LLAMA_BATCH_SIZE_RANGE,
+  ADVANCED_LLAMA_UBATCH_SIZE_RANGE,
   ADVANCED_LLAMA_DRY_MULTIPLIER_RANGE,
   ADVANCED_LLAMA_DRY_BASE_RANGE,
   ADVANCED_LLAMA_DRY_ALLOWED_LENGTH_RANGE,
@@ -556,6 +557,7 @@ export function EditModelPage() {
     handleLlamaRopeFreqScaleChange,
     handleLlamaOffloadKqvChange,
     handleLlamaBatchSizeChange,
+    handleLlamaUbatchSizeChange,
     handleLlamaKvTypeChange,
     handleLlamaFlashAttentionChange,
     handleLlamaSwaFullChange,
@@ -690,8 +692,10 @@ export function EditModelPage() {
       [t("editModel.runtimeFacts.requestedGpuLayers"), formatRuntimeNumber(llamaRuntimeReport.requestedGpuLayers)],
       [t("editModel.runtimeFacts.actualGpuLayers"), formatRuntimeNumber(llamaRuntimeReport.actualGpuLayersUsed)],
       [t("editModel.runtimeFacts.requestedBatch"), formatRuntimeNumber(llamaRuntimeReport.requestedBatchLimit)],
+      [t("editModel.runtimeFacts.requestedUbatch"), formatRuntimeNumber(llamaRuntimeReport.requestedUbatchLimit)],
       [t("editModel.runtimeFacts.initialBatch"), formatRuntimeNumber(llamaRuntimeReport.initialBatchCandidate)],
       [t("editModel.runtimeFacts.actualBatch"), formatRuntimeNumber(llamaRuntimeReport.actualBatchUsed)],
+      [t("editModel.runtimeFacts.actualUbatch"), formatRuntimeNumber(llamaRuntimeReport.actualUbatchUsed)],
       [
         t("editModel.runtimeFacts.smartOffloadFallback"),
         llamaRuntimeReport.smartGpuLayerFallbackActivated == null
@@ -1842,6 +1846,9 @@ export function EditModelPage() {
       modelAdvancedDraft.llamaBatchSize != null
         ? `Batch ${modelAdvancedDraft.llamaBatchSize}`
         : null,
+      modelAdvancedDraft.llamaUbatchSize != null
+        ? `Microbatch ${modelAdvancedDraft.llamaUbatchSize}`
+        : null,
       modelAdvancedDraft.llamaKvType ? `KV ${modelAdvancedDraft.llamaKvType}` : null,
       modelAdvancedDraft.llamaOffloadKqv === true
         ? t("editModel.runtimeSummary.kvCacheInVram")
@@ -1899,6 +1906,7 @@ export function EditModelPage() {
     setSelectedLlamaQuickPreset(preset);
     if (preset === "balanced") {
       handleLlamaBatchSizeChange(512);
+      handleLlamaUbatchSizeChange(512);
       handleLlamaKvTypeChange("q8_0");
       handleLlamaOffloadKqvChange(isCpuOnlyLlamaBackend ? false : true);
       handleLlamaFlashAttentionChange("auto");
@@ -1906,6 +1914,7 @@ export function EditModelPage() {
     }
     if (preset === "throughput") {
       handleLlamaBatchSizeChange(1024);
+      handleLlamaUbatchSizeChange(1024);
       handleLlamaKvTypeChange("f16");
       handleLlamaOffloadKqvChange(isCpuOnlyLlamaBackend ? false : true);
       handleLlamaFlashAttentionChange("enabled");
@@ -1913,12 +1922,14 @@ export function EditModelPage() {
     }
     if (preset === "vram") {
       handleLlamaBatchSizeChange(512);
+      handleLlamaUbatchSizeChange(256);
       handleLlamaKvTypeChange("q4_k");
       handleLlamaOffloadKqvChange(isCpuOnlyLlamaBackend ? false : true);
       handleLlamaFlashAttentionChange("enabled");
       return;
     }
     handleLlamaBatchSizeChange(256);
+    handleLlamaUbatchSizeChange(128);
     handleLlamaKvTypeChange("q8_0");
     handleLlamaOffloadKqvChange(false);
     handleLlamaFlashAttentionChange("auto");
@@ -4960,6 +4971,30 @@ export function EditModelPage() {
                                     <div className="space-y-4">
                                       <div className="space-y-0.5">
                                         <span className="block text-[13px] font-medium text-fg/70">
+                                          {t("editModel.layerPlacement.ubatchSize")}
+                                        </span>
+                                        <span className="block text-[13px] text-fg/40">
+                                          {t("editModel.layerPlacement.ubatchSizeDescription")}
+                                        </span>
+                                      </div>
+                                      <NumberInput
+                                        min={ADVANCED_LLAMA_UBATCH_SIZE_RANGE.min}
+                                        max={ADVANCED_LLAMA_UBATCH_SIZE_RANGE.max}
+                                        step={1}
+                                        value={modelAdvancedDraft.llamaUbatchSize ?? null}
+                                        onChange={(next) =>
+                                          handleLlamaUbatchSizeChange(
+                                            next === null || next <= 0 ? null : Math.trunc(next),
+                                          )
+                                        }
+                                        placeholder={t("common.labels.auto")}
+                                        className={numberInputClassName}
+                                      />
+                                    </div>
+
+                                    <div className="col-span-2 space-y-4">
+                                      <div className="space-y-0.5">
+                                        <span className="block text-[13px] font-medium text-fg/70">
                                           {t("editModel.layerPlacement.flashAttention")}
                                         </span>
                                         <span className="block text-[13px] text-fg/40">
@@ -6527,6 +6562,15 @@ export function EditModelPage() {
                             {formatRuntimeNumber(
                               llamaRuntimeReport.suggestedSettings.llamaBatchSize,
                             ) ?? t("editModel.runtime.na")}
+                            {llamaRuntimeReport.suggestedSettings.llamaUbatchSize != null && (
+                              <>
+                                {" • "}
+                                {t("editModel.runtime.microbatch")} {" "}
+                                {formatRuntimeNumber(
+                                  llamaRuntimeReport.suggestedSettings.llamaUbatchSize,
+                                )}
+                              </>
+                            )}
                           </p>
                         </div>
                         <button
