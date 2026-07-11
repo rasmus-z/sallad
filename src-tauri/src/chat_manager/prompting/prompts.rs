@@ -2446,12 +2446,11 @@ pub fn reset_all_protected_templates(app: &AppHandle) -> Result<Vec<SystemPrompt
     load_templates(app)
 }
 
-/// Get the Help Me Reply template from DB, falling back to default if not found
-pub fn get_help_me_reply_prompt(
+pub fn get_help_me_reply_entries(
     app: &AppHandle,
     style: &str,
     override_template_id: Option<&str>,
-) -> String {
+) -> Vec<SystemPromptEntry> {
     let template_id = override_template_id.unwrap_or_else(|| {
         if style == "conversational" {
             APP_HELP_ME_REPLY_CONVERSATIONAL_TEMPLATE_ID
@@ -2468,15 +2467,34 @@ pub fn get_help_me_reply_prompt(
 
     match get_template(app, template_id) {
         Ok(Some(template)) => {
-            let merged = template_entries_to_content(&template.entries);
-            if merged.is_empty() {
-                template.content
+            if template.entries.is_empty() {
+                single_entry_from_content(&template.content)
             } else {
-                merged
+                template
+                    .entries
+                    .into_iter()
+                    .filter(|entry| entry.enabled)
+                    .collect()
             }
         }
-        _ => get_base_prompt(prompt_type),
+        _ => {
+            let entries = get_base_prompt_entries(prompt_type);
+            if entries.is_empty() {
+                single_entry_from_content(&get_base_prompt(prompt_type))
+            } else {
+                entries
+            }
+        }
     }
+}
+
+/// Get the Help Me Reply template as legacy merged text.
+pub fn get_help_me_reply_prompt(
+    app: &AppHandle,
+    style: &str,
+    override_template_id: Option<&str>,
+) -> String {
+    template_entries_to_content(&get_help_me_reply_entries(app, style, override_template_id))
 }
 
 /// Get the Group Chat template from DB, falling back to default if not found

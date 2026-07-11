@@ -1,4 +1,4 @@
-use serde_json::{json, Value};
+use serde_json::Value;
 
 use crate::chat_manager::types::{
     Character, Persona, PromptEntryPosition, Settings, StoredMessage, SystemPromptEntry,
@@ -41,15 +41,6 @@ pub fn append_image_directive_instructions(
     }
 
     system_prompt_entries
-}
-
-fn prompt_entry_to_message(system_role: &str, entry: &SystemPromptEntry) -> Value {
-    let role = match entry.role {
-        crate::chat_manager::types::PromptEntryRole::System => system_role,
-        crate::chat_manager::types::PromptEntryRole::User => "user",
-        crate::chat_manager::types::PromptEntryRole::Assistant => "assistant",
-    };
-    json!({ "role": role, "content": entry.content })
 }
 
 pub fn partition_prompt_entries(
@@ -115,9 +106,28 @@ pub fn insert_in_chat_prompt_entries(
             continue;
         }
         let insert_at = pos.saturating_add(offset).min(messages.len());
-        messages.insert(insert_at, prompt_entry_to_message(system_role, entry));
+        if let Some(message) =
+            crate::chat_manager::messages::prompt_entry_message(system_role, entry)
+        {
+            messages.insert(insert_at, message);
+        }
         offset += 1;
     }
+}
+
+pub fn assemble_prompt_messages(
+    entries: Vec<SystemPromptEntry>,
+    mut conversation_messages: Vec<Value>,
+    system_role: &str,
+) -> Vec<Value> {
+    let (relative_entries, in_chat_entries) = partition_prompt_entries(entries);
+    let mut messages = Vec::new();
+    for entry in &relative_entries {
+        crate::chat_manager::messages::push_prompt_entry_message(&mut messages, system_role, entry);
+    }
+    insert_in_chat_prompt_entries(&mut conversation_messages, system_role, &in_chat_entries);
+    messages.extend(conversation_messages);
+    messages
 }
 
 pub fn manual_window_size(settings: &Settings) -> usize {
@@ -217,7 +227,8 @@ pub fn swapped_prompt_entities(
 
 #[cfg(test)]
 mod tests {
-    use super::insert_in_chat_prompt_entries;
+    use super::{assemble_prompt_messages, insert_in_chat_prompt_entries};
+    use crate::chat_manager::entries::{in_chat_system_entry, relative_system_entry};
     use crate::chat_manager::types::{PromptEntryPosition, PromptEntryRole, SystemPromptEntry};
     use serde_json::json;
 
@@ -254,5 +265,23 @@ mod tests {
         assert_eq!(messages[1]["content"], "Latest user message");
         assert_eq!(messages[2]["role"], "system");
         assert_eq!(messages[2]["content"], "Current lore and memory");
+    }
+
+    #[test]
+    fn assembler_keeps_stable_entries_before_transcript_and_volatile_entries_after_it() {
+        let entries = vec![
+            relative_system_entry("stable", "Stable", "Stable instructions"),
+            in_chat_system_entry("volatile", "Volatile", "Current memory and lore", 0),
+        ];
+        let transcript = vec![json!({"role": "user", "content": "Latest message"})];
+
+        let messages = assemble_prompt_messages(entries, transcript, "developer");
+
+        assert_eq!(messages[0]["role"], "developer");
+        assert_eq!(messages[0]["content"], "Stable instructions");
+        assert_eq!(messages[1]["role"], "user");
+        assert_eq!(messages[1]["content"], "Latest message");
+        assert_eq!(messages[2]["role"], "developer");
+        assert_eq!(messages[2]["content"], "Current memory and lore");
     }
 }
