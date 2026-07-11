@@ -67,8 +67,8 @@ mod desktop {
     };
     use engine::{
         consume_kqv_fallback_toast, emit_model_load_complete, emit_model_load_failed,
-        emit_model_load_finalizing, load_engine, shared_backend, using_rocm_backend,
-        LlamaGpuConfig,
+        emit_model_load_finalizing, fit_model_params, load_engine, shared_backend,
+        using_rocm_backend, LlamaGpuConfig, NativeFitPlan, NATIVE_FIT_MARGIN_BYTES,
     };
     use offload::{context_bucket_upper, merge_cached_candidate_layers, plan_smart_gpu_offload};
     use prompt::{
@@ -1333,6 +1333,15 @@ mod desktop {
             let multi_gpu_active = llama_multi_gpu_enabled
                 && llama_gpu_device_ids.len() >= 2
                 && llama_single_gpu_device_id.is_none();
+            let native_fit_request = llama_gpu_layers.is_none()
+                && forced_smart_gpu_layers.is_none()
+                && !multi_gpu_active
+                && llama_mmproj_path.is_none()
+                && !llama_mtp_enabled
+                && requested_context.is_some();
+            if native_fit_request && !hot_context_resident {
+                engine::unload_engine(&app)?;
+            }
             // KV cache placement (multi-GPU only): drives both planning and the
             // runtime context's offload_kqv. "pin" makes the chosen GPU the main
             // device for shared scratch buffers; under layer split each layer's
@@ -1483,6 +1492,7 @@ mod desktop {
             let mut effective_gpu_layers = llama_gpu_layers;
             let mut smart_gpu_layer_candidates: Option<Vec<u32>> = None;
             let mut smart_kv_aware_layer_estimate: Option<u32> = None;
+            let mut native_fit_plan: Option<NativeFitPlan> = None;
             let cached_runtime_report =
                 crate::storage_manager::models::model_get_llama_runtime_report(&app, model_path)
                     .ok()
@@ -1840,6 +1850,146 @@ mod desktop {
                 );
             }
 
+            let native_fit_eligible = native_fit_request
+                && backend_supports_gpu_offload
+                && !hot_context_resident;
+            if native_fit_eligible {
+                if let Some(fit_context) = requested_context {
+                    let fit_batch = fit_context.min(llama_batch_size).max(1);
+                    let mut fit_context_params = LlamaContextParams::default()
+                        .with_n_ctx(NonZeroU32::new(fit_context))
+                        .with_n_batch(fit_batch)
+                        .with_n_outputs_max(1)
+                        .with_flash_attention_policy(resolved_flash_attention_policy);
+                    if let Some(n_ubatch) = llama_ubatch_size {
+                        fit_context_params =
+                            fit_context_params.with_n_ubatch(n_ubatch.min(fit_batch));
+                    }
+                    if let Some(n_threads) = llama_threads {
+                        fit_context_params = fit_context_params.with_n_threads(n_threads as i32);
+                    }
+                    if let Some(n_threads_batch) = llama_threads_batch {
+                        fit_context_params =
+                            fit_context_params.with_n_threads_batch(n_threads_batch as i32);
+                    }
+                    if let Some(offload) = resolved_offload_kqv {
+                        fit_context_params = fit_context_params.with_offload_kqv(offload);
+                    }
+                    if let Some(swa_full) = llama_swa_full {
+                        fit_context_params = fit_context_params.with_swa_full(swa_full);
+                    }
+                    if let Some(kv_type) = llama_kv_type {
+                        fit_context_params =
+                            fit_context_params.with_type_k(kv_type).with_type_v(kv_type);
+                    }
+                    if let Some(base) = llama_rope_freq_base {
+                        fit_context_params = fit_context_params.with_rope_freq_base(base as f32);
+                    }
+                    if let Some(scale) = llama_rope_freq_scale {
+                        fit_context_params = fit_context_params.with_rope_freq_scale(scale as f32);
+                    }
+                    let fit_devices = llama_single_gpu_device_id
+                        .map(|device_id| vec![device_id])
+                        .unwrap_or_default();
+                    match fit_model_params(
+                        model_path,
+                        &fit_devices,
+                        fit_context_params,
+                        fit_context,
+                    ) {
+                        Ok(plan) => {
+                            let mut candidates = vec![plan.n_gpu_layers];
+                            if let Some(fallbacks) = smart_gpu_layer_candidates.take() {
+                                candidates.extend(
+                                    fallbacks
+                                        .into_iter()
+                                        .filter(|layers| *layers != plan.n_gpu_layers),
+                                );
+                            }
+                            effective_gpu_layers = Some(plan.n_gpu_layers);
+                            smart_gpu_layer_candidates = Some(candidates.clone());
+                            update_runtime_report_field(
+                                &mut runtime_report,
+                                "nativeFitApplied",
+                                json!(true),
+                            );
+                            update_runtime_report_field(
+                                &mut runtime_report,
+                                "nativeFitContext",
+                                json!(plan.n_ctx),
+                            );
+                            update_runtime_report_field(
+                                &mut runtime_report,
+                                "nativeFitGpuLayers",
+                                json!(plan.n_gpu_layers),
+                            );
+                            update_runtime_report_field(
+                                &mut runtime_report,
+                                "nativeFitMarginBytes",
+                                json!(NATIVE_FIT_MARGIN_BYTES),
+                            );
+                            update_runtime_report_field(
+                                &mut runtime_report,
+                                "nativeFitTensorSplit",
+                                json!(plan.tensor_split.clone()),
+                            );
+                            log_info(
+                                &app,
+                                "llama_cpp",
+                                format!(
+                                    "llama.cpp native fit selected context={} gpu_layers={} candidates={:?}",
+                                    plan.n_ctx, plan.n_gpu_layers, candidates
+                                ),
+                            );
+                            native_fit_plan = Some(plan);
+                        }
+                        Err(err) => {
+                            update_runtime_report_field(
+                                &mut runtime_report,
+                                "nativeFitApplied",
+                                json!(false),
+                            );
+                            update_runtime_report_field(
+                                &mut runtime_report,
+                                "nativeFitError",
+                                json!(err.clone()),
+                            );
+                            log_warn(
+                                &app,
+                                "llama_cpp",
+                                format!(
+                                    "llama.cpp native fit unavailable; retaining conservative planner: {err}"
+                                ),
+                            );
+                        }
+                    }
+                }
+            } else if native_fit_request && hot_context_resident {
+                if let Some(report) = cached_runtime_report.as_ref() {
+                    for field in [
+                        "nativeFitApplied",
+                        "nativeFitContext",
+                        "nativeFitGpuLayers",
+                        "nativeFitMarginBytes",
+                        "nativeFitTensorSplit",
+                        "nativeFitError",
+                    ] {
+                        if let Some(value) = report.get(field) {
+                            update_runtime_report_field(
+                                &mut runtime_report,
+                                field,
+                                value.clone(),
+                            );
+                        }
+                    }
+                }
+                log_info(
+                    &app,
+                    "llama_cpp",
+                    "reusing resident llama.cpp model and context without refitting parameters",
+                );
+            }
+
             check_abort_signal(abort_rx.as_mut())?;
             if multi_gpu_active && multi_gpu_distribution.is_none() {
                 // Smart planning did not run (explicit layers / strict / no offload):
@@ -1895,6 +2045,7 @@ mod desktop {
                 model_path,
                 effective_gpu_layers,
                 smart_gpu_layer_candidates.as_deref(),
+                native_fit_plan.as_ref(),
                 LlamaGpuConfig {
                     multi_gpu_enabled: multi_gpu_active,
                     device_ids: if multi_gpu_active {

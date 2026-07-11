@@ -697,6 +697,35 @@ export function EditModelPage() {
       [t("editModel.runtimeFacts.actualBatch"), formatRuntimeNumber(llamaRuntimeReport.actualBatchUsed)],
       [t("editModel.runtimeFacts.actualUbatch"), formatRuntimeNumber(llamaRuntimeReport.actualUbatchUsed)],
       [
+        t("editModel.runtimeFacts.nativeFit"),
+        llamaRuntimeReport.nativeFitApplied == null
+          ? null
+          : llamaRuntimeReport.nativeFitApplied
+            ? t("editModel.runtimeFacts.active")
+            : t("editModel.runtimeFacts.notNeeded"),
+      ],
+      [
+        t("editModel.runtimeFacts.nativeFitContext"),
+        formatRuntimeNumber(llamaRuntimeReport.nativeFitContext),
+      ],
+      [
+        t("editModel.runtimeFacts.nativeFitGpuLayers"),
+        formatRuntimeNumber(llamaRuntimeReport.nativeFitGpuLayers),
+      ],
+      [
+        t("editModel.runtimeFacts.nativeFitMargin"),
+        llamaRuntimeReport.nativeFitMarginBytes == null
+          ? null
+          : formatBytes(llamaRuntimeReport.nativeFitMarginBytes),
+      ],
+      [
+        t("editModel.runtimeFacts.nativeFitTensorSplit"),
+        llamaRuntimeReport.nativeFitTensorSplit?.length
+          ? llamaRuntimeReport.nativeFitTensorSplit.map((value) => value.toFixed(3)).join(", ")
+          : null,
+      ],
+      [t("editModel.runtimeFacts.nativeFitError"), llamaRuntimeReport.nativeFitError ?? null],
+      [
         t("editModel.runtimeFacts.smartOffloadFallback"),
         llamaRuntimeReport.smartGpuLayerFallbackActivated == null
           ? null
