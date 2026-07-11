@@ -1049,9 +1049,10 @@ mod desktop {
         let mut output = String::new();
         let mut prompt_tokens = 0u64;
         let mut completion_tokens = 0u64;
-        let inference_started_at = Instant::now();
+        let request_started_at = Instant::now();
         let mut first_token_ms: Option<u64> = None;
         let mut generation_elapsed_ms: Option<u64> = None;
+        let mut generation_elapsed_seconds: Option<f64> = None;
         let mut metric_samples: Vec<Value> = Vec::new();
         let mut finish_reason = "stop";
         let mut stream_emitted_len = 0usize;
@@ -2835,6 +2836,7 @@ mod desktop {
             let mut reached_stop_sequence = false;
             let mut pending_utf8 = Vec::<u8>::new();
             let mut sample_index = prompt_last_logits_index;
+            let generation_started_at = Instant::now();
             let mut last_heartbeat_at = Instant::now();
             let mut heartbeat_emitted = false;
             failure_stage = "generation";
@@ -3000,15 +3002,18 @@ mod desktop {
 
                 completion_tokens += 1;
                 if first_token_ms.is_none() {
-                    first_token_ms = Some(inference_started_at.elapsed().as_millis() as u64);
+                    first_token_ms = Some(request_started_at.elapsed().as_millis() as u64);
                 }
 
                 if !heartbeat_emitted || last_heartbeat_at.elapsed().as_secs() >= 1 {
                     heartbeat_emitted = true;
                     last_heartbeat_at = Instant::now();
-                    let elapsed_ms = inference_started_at.elapsed().as_millis() as u64;
-                    let tps = if elapsed_ms > 0 {
-                        (completion_tokens as f64) / (elapsed_ms as f64 / 1000.0)
+                    let generation_elapsed = generation_started_at.elapsed();
+                    let elapsed_ms = generation_elapsed.as_millis() as u64;
+                    let elapsed_seconds = generation_elapsed.as_secs_f64();
+                    let has_stable_rate = elapsed_seconds >= 1.0;
+                    let tps = if has_stable_rate {
+                        (completion_tokens as f64) / elapsed_seconds
                     } else {
                         0.0
                     };
@@ -3017,12 +3022,14 @@ mod desktop {
                     } else {
                         0.0
                     };
-                    metric_samples.push(json!({
-                        "tMs": elapsed_ms,
-                        "tokens": completion_tokens,
-                        "tps": tps,
-                        "ctxFill": ctx_fill,
-                    }));
+                    if has_stable_rate {
+                        metric_samples.push(json!({
+                            "tMs": elapsed_ms,
+                            "tokens": completion_tokens,
+                            "tps": tps,
+                            "ctxFill": ctx_fill,
+                        }));
+                    }
                     if let Some(ref id) = request_id {
                         let _ = app.emit(
                             "llm-generation-heartbeat",
@@ -3100,7 +3107,9 @@ mod desktop {
                 stream_emitted_len = output.len();
             }
 
-            generation_elapsed_ms = Some(inference_started_at.elapsed().as_millis() as u64);
+            let generation_elapsed = generation_started_at.elapsed();
+            generation_elapsed_ms = Some(generation_elapsed.as_millis() as u64);
+            generation_elapsed_seconds = Some(generation_elapsed.as_secs_f64());
 
             if let Some(runtime) = mtp_runtime.as_ref() {
                 let tokens_per_round = if runtime.rounds > 0 {
@@ -3432,12 +3441,12 @@ mod desktop {
             return Err(err);
         }
 
-        let tokens_per_second = generation_elapsed_ms
-            .and_then(|elapsed_ms| {
-                if elapsed_ms == 0 || completion_tokens == 0 {
+        let tokens_per_second = generation_elapsed_seconds
+            .and_then(|elapsed_seconds| {
+                if elapsed_seconds <= 0.0 || completion_tokens == 0 {
                     None
                 } else {
-                    Some((completion_tokens as f64) / (elapsed_ms as f64 / 1000.0))
+                    Some((completion_tokens as f64) / elapsed_seconds)
                 }
             })
             .filter(|v| v.is_finite() && *v >= 0.0);
