@@ -6586,6 +6586,22 @@ async fn generate_character_response(
             0,
         ));
     }
+    let continues_selected_character = operation_type == UsageOperationType::GroupChatContinue
+        && messages_for_generation.last().is_some_and(|message| {
+            message.role == "assistant"
+                && message.speaker_character_id.as_deref() == Some(selected_character_id)
+        });
+    if continues_selected_character {
+        system_prompt_entries.push(in_chat_user_entry(
+            "runtime_group_continue_same_speaker",
+            "Continue Same Speaker",
+            format!(
+                "[Continue speaking as {}. Extend their previous response naturally without repeating it.]",
+                selected_char_info.name
+            ),
+            0,
+        ));
+    }
     if let Some(guidance) = guidance {
         system_prompt_entries.push(in_chat_user_entry(
             "runtime_group_regenerate",
@@ -7255,8 +7271,10 @@ pub async fn group_chat_send(
         ),
     );
 
-    let conn = pool.get_connection()?;
-    let mut updated_session = group_sessions::group_session_get_internal_typed(&conn, &session_id)?;
+    let mut updated_session = {
+        let conn = pool.get_connection()?;
+        group_sessions::group_session_get_internal_typed(&conn, &session_id)?
+    };
     if updated_session.memory_type == "dynamic" {
         if let Err(e) =
             process_group_dynamic_memory_cycle(&app, &mut updated_session, &settings, &pool, false)
@@ -7910,6 +7928,24 @@ pub async fn group_chat_continue(
         Value::String(selected_character_id.clone()),
     );
     emit_group_chat_status(&app, &session_id, "complete", complete_extra);
+
+    drop(conn);
+    let mut updated_session = {
+        let conn = pool.get_connection()?;
+        group_sessions::group_session_get_internal_typed(&conn, &session_id)?
+    };
+    if updated_session.memory_type == "dynamic" {
+        if let Err(e) =
+            process_group_dynamic_memory_cycle(&app, &mut updated_session, &settings, &pool, false)
+                .await
+        {
+            log_warn(
+                &app,
+                "group_chat_continue",
+                format!("Dynamic memory cycle failed: {}", e),
+            );
+        }
+    }
 
     serde_json::to_string(&response)
         .map_err(|e| crate::utils::err_to_string(module_path!(), line!(), e))
