@@ -3976,16 +3976,21 @@ mod desktop {
                     &app,
                     "llama_cpp",
                     format!(
-                        "MTP stats: rounds={} drafted={} accepted={} tokens_per_round={:.2} draft_acceptance={:.2}",
+                        "MTP stats: rounds={} drafted={} accepted={} tokens_per_round={:.2} draft_acceptance={:.2} configured_draft_n={} final_draft_n={} adaptations={}",
                         runtime.rounds,
                         runtime.drafted,
                         runtime.accepted,
                         tokens_per_round,
-                        draft_acceptance
+                        draft_acceptance,
+                        runtime.draft_n_max,
+                        runtime.draft_n,
+                        runtime.adaptation_count,
                     ),
                 );
                 let stats = MtpStats {
                     draft_tokens: llama_mtp_draft_tokens,
+                    final_draft_tokens: u32::try_from(runtime.draft_n).ok(),
+                    adaptation_count: Some(runtime.adaptation_count),
                     rounds: runtime.rounds,
                     drafted: runtime.drafted,
                     accepted: runtime.accepted,

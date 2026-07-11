@@ -1164,6 +1164,10 @@ pub struct Persona {
 #[serde(rename_all = "camelCase")]
 pub struct MtpStats {
     pub draft_tokens: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub final_draft_tokens: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub adaptation_count: Option<u32>,
     pub rounds: u64,
     pub drafted: u64,
     pub accepted: u64,

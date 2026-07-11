@@ -281,6 +281,8 @@ export type PromptParameterEngine = z.infer<typeof PromptParameterEngineSchema>;
 
 export const MtpStatsSchema = z.object({
   draftTokens: z.number().int().nonnegative().nullable().optional(),
+  finalDraftTokens: z.number().int().nonnegative().nullable().optional(),
+  adaptationCount: z.number().int().nonnegative().nullable().optional(),
   rounds: z.number().int().nonnegative().nullable().optional(),
   drafted: z.number().int().nonnegative().nullable().optional(),
   accepted: z.number().int().nonnegative().nullable().optional(),
