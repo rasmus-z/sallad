@@ -52,11 +52,17 @@ impl RegenerateFlow {
             message_id,
             swap_places,
             guidance,
+            model_id,
             stream,
             request_id,
         } = args;
         let swap_places = role_swap_enabled(swap_places);
         let guidance = guidance
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .map(str::to_string);
+        let model_override = model_id
             .as_deref()
             .map(str::trim)
             .filter(|value| !value.is_empty())
@@ -71,7 +77,8 @@ impl RegenerateFlow {
             ),
         );
 
-        let prepared = ChatService::initialize(app.clone())?.prepare_regeneration(&session_id)?;
+        let prepared = ChatService::initialize(app.clone())?
+            .prepare_regeneration(&session_id, model_override.as_deref())?;
         let PreparedChatTurn {
             context,
             character,

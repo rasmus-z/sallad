@@ -6414,6 +6414,7 @@ async fn generate_character_response(
     request_id: &str,
     stream: bool,
     guidance: Option<&str>,
+    model_override: Option<&str>,
     operation_type: UsageOperationType,
 ) -> Result<GroupGenerationOutput, String> {
     let conn = pool.get_connection()?;
@@ -6429,7 +6430,7 @@ async fn generate_character_response(
     };
 
     // Get model and credentials
-    let (model, credential) = select_model_with_credential(settings, &character)?;
+    let (model, credential) = select_model_with_credential(settings, &character, model_override)?;
 
     let dynamic_settings = effective_group_dynamic_memory_settings(settings);
 
@@ -7168,6 +7169,7 @@ pub async fn group_chat_send(
         &req_id,
         stream.unwrap_or(true),
         None,
+        None,
         UsageOperationType::GroupChatMessage,
     )
     .await;
@@ -7398,6 +7400,7 @@ pub async fn group_chat_regenerate(
     message_id: String,
     force_character_id: Option<String>,
     guidance: Option<String>,
+    model_id: Option<String>,
     stream: Option<bool>,
     request_id: Option<String>,
     pool: State<'_, SwappablePool>,
@@ -7419,6 +7422,11 @@ pub async fn group_chat_regenerate(
     let abort_registry = app.state::<AbortRegistry>();
     let mut abort_rx = abort_registry.register(req_id.clone());
     let _abort_guard = AbortGuard::new(&abort_registry, req_id.clone());
+    let model_override = model_id
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(str::to_string);
 
     let (turn_number, original_speaker): (i32, Option<String>) = conn
         .query_row(
@@ -7560,6 +7568,7 @@ pub async fn group_chat_regenerate(
         &req_id,
         stream.unwrap_or(true),
         guidance.as_deref(),
+        model_override.as_deref(),
         UsageOperationType::GroupChatRegenerate,
     )
     .await;
@@ -7846,6 +7855,7 @@ pub async fn group_chat_continue(
         &pool,
         &req_id,
         stream.unwrap_or(true),
+        None,
         None,
         UsageOperationType::GroupChatContinue,
     )

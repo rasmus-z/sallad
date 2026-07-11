@@ -1249,6 +1249,8 @@ pub struct ChatRegenerateArgs {
     pub swap_places: Option<bool>,
     #[serde(default)]
     pub guidance: Option<String>,
+    #[serde(default, alias = "modelId")]
+    pub model_id: Option<String>,
     pub stream: Option<bool>,
     #[serde(alias = "requestId")]
     pub request_id: Option<String>,
