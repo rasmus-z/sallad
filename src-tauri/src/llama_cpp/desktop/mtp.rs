@@ -147,6 +147,75 @@ pub(super) fn enable_nextn_embeddings(
     Ok(())
 }
 
+pub(super) fn reset_for_prompt_reuse(
+    rt: &mut MtpRuntime<'_>,
+    draft_clear_from: u32,
+) -> Result<(), String> {
+    let cleared = if rt.shared {
+        rt.draft.clear_kv_cache();
+        true
+    } else {
+        rt.draft
+            .clear_kv_cache_seq(Some(0), Some(draft_clear_from), None)
+            .map_err(|e| format!("failed to rewind MTP prompt cache: {e}"))?
+    };
+    if !cleared {
+        return Err(format!(
+            "MTP prompt cache rewind failed at position {draft_clear_from}"
+        ));
+    }
+    rt.primed = false;
+    rt.carry_hidden.fill(0.0);
+    rt.h_last.fill(0.0);
+    rt.last_token = LlamaToken::new(0);
+    rt.draft_last_row = 0;
+    rt.pending.clear();
+    rt.rounds = 0;
+    rt.drafted = 0;
+    rt.accepted = 0;
+    Ok(())
+}
+
+pub(super) fn set_prefill_carry_from_target(
+    rt: &mut MtpRuntime<'_>,
+    target: &LlamaContext<'_>,
+    row: i32,
+) -> Result<(), String> {
+    rt.carry_hidden = target
+        .embeddings_nextn_ith(row)
+        .map_err(|e| format!("failed to restore MTP prompt-cache carry: {e}"))?
+        .to_vec();
+    Ok(())
+}
+
+pub(super) fn truncate_for_prompt_cache(
+    target: &mut LlamaContext<'_>,
+    rt: &mut MtpRuntime<'_>,
+    token_count: u32,
+) -> Result<(), String> {
+    let target_cleared = target
+        .clear_kv_cache_seq(Some(0), Some(token_count), None)
+        .map_err(|e| format!("failed to trim target prompt cache: {e}"))?;
+    if !target_cleared {
+        return Err(format!(
+            "target prompt cache trim failed at position {token_count}"
+        ));
+    }
+    if !rt.shared {
+        let draft_cleared = rt
+            .draft
+            .clear_kv_cache_seq(Some(0), Some(token_count), None)
+            .map_err(|e| format!("failed to trim MTP prompt cache: {e}"))?;
+        if !draft_cleared {
+            return Err(format!(
+                "MTP prompt cache trim failed at position {token_count}"
+            ));
+        }
+    }
+    rt.pending.clear();
+    Ok(())
+}
+
 pub(super) fn prefill_draft_chunk(
     rt: &mut MtpRuntime<'_>,
     target: &LlamaContext<'_>,

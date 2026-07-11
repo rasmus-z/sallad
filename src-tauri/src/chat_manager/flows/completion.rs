@@ -362,14 +362,6 @@ impl CompletionFlow {
         } else {
             None
         };
-        if let Some(block) = memory_block {
-            push_system_message(
-                &mut messages_for_api,
-                &system_role,
-                Some(format!("Relevant memories:\n{}", block)),
-            );
-        }
-
         let char_name = if swap_places {
             persona.as_ref().map(|p| p.title.as_str()).unwrap_or("user")
         } else {
@@ -431,6 +423,14 @@ impl CompletionFlow {
                 allow_audio_input,
                 time_frame_delta,
                 time_stamp_enabled,
+            );
+        }
+
+        if let Some(block) = memory_block {
+            push_system_message(
+                &mut chat_messages,
+                &system_role,
+                Some(format!("Relevant memories:\n{}", block)),
             );
         }
 

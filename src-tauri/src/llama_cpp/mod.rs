@@ -42,17 +42,21 @@ mod desktop {
     mod sampler;
 
     use llama_cpp_2::context::params::{KvCacheType, LlamaContextParams};
+    use llama_cpp_2::context::LlamaContext;
     use llama_cpp_2::llama_batch::LlamaBatch;
     use llama_cpp_2::model::{AddBos, LlamaChatMessage, LlamaChatTemplate, LlamaModel};
     use llama_cpp_2::mtmd::{MtmdBitmap, MtmdInputChunks, MtmdInputText};
     use llama_cpp_2::sampling::LlamaSampler;
+    use llama_cpp_2::token::LlamaToken;
     use llama_cpp_2::TokenToStringError;
     use llama_cpp_sys_2::{
         llama_flash_attn_type, LLAMA_FLASH_ATTN_TYPE_AUTO, LLAMA_FLASH_ATTN_TYPE_DISABLED,
         LLAMA_FLASH_ATTN_TYPE_ENABLED,
     };
+    use std::cell::RefCell;
     use std::num::NonZeroU32;
     use std::path::Path;
+    use std::sync::{mpsc, Arc, OnceLock};
     use std::time::{Instant, SystemTime, UNIX_EPOCH};
     use tokio::sync::oneshot::error::TryRecvError;
 
@@ -79,6 +83,201 @@ mod desktop {
     };
 
     const LLAMA_RUNTIME_REPORT_UPDATED_EVENT: &str = "llama-runtime-report-updated";
+
+    struct HotTextContext {
+        mtp_runtime: Option<mtp::MtpRuntime<'static>>,
+        context: Option<LlamaContext<'static>>,
+        model: Arc<LlamaModel>,
+        draft_model: Arc<LlamaModel>,
+        model_path: String,
+        context_key: String,
+        tokens: Vec<LlamaToken>,
+    }
+
+    thread_local! {
+        static HOT_TEXT_CONTEXT: RefCell<Option<HotTextContext>> = const { RefCell::new(None) };
+    }
+
+    enum LocalWorkerJob {
+        Request {
+            app: AppHandle,
+            request: ApiRequest,
+            response: tokio::sync::oneshot::Sender<Result<ApiResponse, String>>,
+        },
+        Unload {
+            app: AppHandle,
+            response: tokio::sync::oneshot::Sender<Result<(), String>>,
+        },
+    }
+
+    static LOCAL_WORKER: OnceLock<mpsc::Sender<LocalWorkerJob>> = OnceLock::new();
+
+    fn local_worker() -> &'static mpsc::Sender<LocalWorkerJob> {
+        LOCAL_WORKER.get_or_init(|| {
+            let (sender, receiver) = mpsc::channel::<LocalWorkerJob>();
+            std::thread::Builder::new()
+                .name("lettuce-llama".to_string())
+                .spawn(move || {
+                    while let Ok(job) = receiver.recv() {
+                        match job {
+                            LocalWorkerJob::Request {
+                                app,
+                                request,
+                                response,
+                            } => {
+                                let _ = response.send(handle_local_request_sync(app, request));
+                            }
+                            LocalWorkerJob::Unload { app, response } => {
+                                discard_hot_context();
+                                let _ = response.send(engine::unload_engine(&app));
+                            }
+                        }
+                    }
+                    discard_hot_context();
+                })
+                .expect("failed to start llama.cpp inference worker");
+            sender
+        })
+    }
+
+    pub async fn handle_local_request(
+        app: AppHandle,
+        request: ApiRequest,
+    ) -> Result<ApiResponse, String> {
+        let (response_tx, response_rx) = tokio::sync::oneshot::channel();
+        local_worker()
+            .send(LocalWorkerJob::Request {
+                app,
+                request,
+                response: response_tx,
+            })
+            .map_err(|_| "llama.cpp inference worker stopped".to_string())?;
+        response_rx
+            .await
+            .map_err(|_| "llama.cpp inference worker dropped its response".to_string())?
+    }
+
+    pub async fn unload_local_engine(app: AppHandle) -> Result<(), String> {
+        let (response_tx, response_rx) = tokio::sync::oneshot::channel();
+        local_worker()
+            .send(LocalWorkerJob::Unload {
+                app,
+                response: response_tx,
+            })
+            .map_err(|_| "llama.cpp inference worker stopped".to_string())?;
+        response_rx
+            .await
+            .map_err(|_| "llama.cpp inference worker dropped its response".to_string())?
+    }
+
+    pub(super) fn discard_hot_context() {
+        HOT_TEXT_CONTEXT.with(|slot| {
+            slot.borrow_mut().take();
+        });
+    }
+
+    fn discard_hot_context_if_model_differs(model_path: &str) {
+        HOT_TEXT_CONTEXT.with(|slot| {
+            let should_discard = slot
+                .borrow()
+                .as_ref()
+                .is_some_and(|cached| cached.model_path != model_path);
+            if should_discard {
+                slot.borrow_mut().take();
+            }
+        });
+    }
+
+    fn hot_context_matches_model_path(model_path: &str) -> bool {
+        HOT_TEXT_CONTEXT.with(|slot| {
+            slot.borrow()
+                .as_ref()
+                .is_some_and(|cached| cached.model_path == model_path)
+        })
+    }
+
+    fn take_hot_context(
+        model: &Arc<LlamaModel>,
+        draft_model: &Arc<LlamaModel>,
+        context_key: &str,
+    ) -> Option<(
+        LlamaContext<'static>,
+        Option<mtp::MtpRuntime<'static>>,
+        Vec<LlamaToken>,
+    )> {
+        HOT_TEXT_CONTEXT.with(|slot| {
+            let matches = slot.borrow().as_ref().is_some_and(|cached| {
+                cached.context_key == context_key
+                    && Arc::ptr_eq(&cached.model, model)
+                    && Arc::ptr_eq(&cached.draft_model, draft_model)
+            });
+            if !matches {
+                return None;
+            }
+            let mut cached = slot.borrow_mut().take()?;
+            let context = cached.context.take()?;
+            let mtp_runtime = cached.mtp_runtime.take();
+            Some((context, mtp_runtime, cached.tokens))
+        })
+    }
+
+    fn store_hot_context(
+        context: LlamaContext<'_>,
+        mtp_runtime: Option<mtp::MtpRuntime<'_>>,
+        model: Arc<LlamaModel>,
+        draft_model: Arc<LlamaModel>,
+        model_path: &str,
+        context_key: String,
+        tokens: Vec<LlamaToken>,
+    ) {
+        // The contexts only borrow the models stored beside them. The worker is
+        // single-threaded, and field order drops both contexts before either Arc.
+        let context =
+            unsafe { std::mem::transmute::<LlamaContext<'_>, LlamaContext<'static>>(context) };
+        let mtp_runtime = mtp_runtime.map(|runtime| unsafe {
+            std::mem::transmute::<mtp::MtpRuntime<'_>, mtp::MtpRuntime<'static>>(runtime)
+        });
+        HOT_TEXT_CONTEXT.with(|slot| {
+            *slot.borrow_mut() = Some(HotTextContext {
+                mtp_runtime,
+                context: Some(context),
+                model,
+                draft_model,
+                model_path: model_path.to_string(),
+                context_key,
+                tokens,
+            });
+        });
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn text_context_key(
+        n_ctx: u32,
+        n_batch: u32,
+        n_threads: Option<u32>,
+        n_threads_batch: Option<u32>,
+        offload_kqv: Option<bool>,
+        swa_full: Option<bool>,
+        kv_type: Option<&str>,
+        flash_attention: llama_flash_attn_type,
+        rope_freq_base: Option<f64>,
+        rope_freq_scale: Option<f64>,
+        mtp_active: bool,
+        mtp_draft_tokens: u32,
+    ) -> String {
+        format!(
+            "ctx={n_ctx};batch={n_batch};threads={n_threads:?};threads_batch={n_threads_batch:?};kqv={offload_kqv:?};swa={swa_full:?};kv={};flash={};rope_base={rope_freq_base:?};rope_scale={rope_freq_scale:?};mtp={mtp_active};mtp_n={mtp_draft_tokens}",
+            kv_type.unwrap_or("f16"),
+            flash_attention_policy_label(flash_attention),
+        )
+    }
+
+    fn common_token_prefix(left: &[LlamaToken], right: &[LlamaToken]) -> usize {
+        left.iter()
+            .zip(right.iter())
+            .take_while(|(left, right)| left == right)
+            .count()
+    }
 
     trait GenerationSampler<Ctx> {
         fn sample_generated_token(&mut self, ctx: &Ctx, idx: i32)
@@ -632,10 +831,7 @@ mod desktop {
         }
     }
 
-    pub async fn handle_local_request(
-        app: AppHandle,
-        req: ApiRequest,
-    ) -> Result<ApiResponse, String> {
+    fn handle_local_request_sync(app: AppHandle, req: ApiRequest) -> Result<ApiResponse, String> {
         let body = req
             .body
             .as_ref()
@@ -1048,6 +1244,7 @@ mod desktop {
 
         let mut output = String::new();
         let mut prompt_tokens = 0u64;
+        let mut cached_prompt_tokens = 0u64;
         let mut completion_tokens = 0u64;
         let request_started_at = Instant::now();
         let mut first_token_ms: Option<u64> = None;
@@ -1072,6 +1269,7 @@ mod desktop {
         let mut run_generation = |forced_smart_gpu_layers: Option<u32>| -> Result<(), String> {
             check_abort_signal(abort_rx.as_mut())?;
             failure_stage = "load_engine";
+            cached_prompt_tokens = 0;
             if forced_smart_gpu_layers.is_some() {
                 for field in [
                     "actualGpuLayersUsed",
@@ -1088,6 +1286,12 @@ mod desktop {
             // Planning reads free RAM/VRAM, so a resident model (including the
             // first attempt of a KV-aware retry) must not count against the
             // budget or skew the per-device split of the model replacing it.
+            if forced_smart_gpu_layers.is_some() {
+                discard_hot_context();
+            } else {
+                discard_hot_context_if_model_differs(model_path);
+            }
+            let hot_context_resident = hot_context_matches_model_path(model_path);
             if engine::unload_engine_if_model_differs(&app, model_path)? {
                 log_info(
                     &app,
@@ -1439,6 +1643,8 @@ mod desktop {
                             .and_then(|value| u32::try_from(value).ok());
                         let total_layers_match =
                             cached_total_layers == Some(smart_offload_plan.total_layers);
+                        let context_bucket_matches =
+                            hot_context_resident || bucket == current_context_bucket;
                         // A run that fell back to RAM KV proves its layer count
                         // does NOT fit with GPU KV; reusing it would repeat the
                         // fallback forever.
@@ -1448,12 +1654,13 @@ mod desktop {
                             .unwrap_or(false);
                         let cached_vram_budget =
                             report.get("availableVramBytes").and_then(|v| v.as_u64());
-                        let vram_budget_matches = match (cached_vram_budget, available_vram_bytes) {
-                            (Some(cached), Some(current)) => {
-                                cached.abs_diff(current) <= current / 20
-                            }
-                            _ => true,
-                        };
+                        let vram_budget_matches = hot_context_resident
+                            || match (cached_vram_budget, available_vram_bytes) {
+                                (Some(cached), Some(current)) => {
+                                    cached.abs_diff(current) <= current / 20
+                                }
+                                _ => true,
+                            };
                         if !planning_config_matches
                             || !total_layers_match
                             || cached_kqv_fallback
@@ -1473,7 +1680,7 @@ mod desktop {
                         }
                         if cached_status == Some("succeeded")
                             && cached_backend_path == Some("gpu_offload")
-                            && bucket == current_context_bucket
+                            && context_bucket_matches
                             && planning_config_matches
                             && total_layers_match
                             && !cached_kqv_fallback
@@ -2263,6 +2470,9 @@ mod desktop {
                 .filter(|(attempt_ctx, _)| *attempt_ctx != requested_ctx_size)
                 .collect();
             let can_fallback_kqv_to_ram = !llama_strict_mode && preferred_offload_kqv == Some(true);
+            let hot_draft_model = llama_mtp_draft_model
+                .clone()
+                .unwrap_or_else(|| engine.model.clone());
             let mut attempt_groups: Vec<(Option<bool>, Vec<(u32, u32)>)> = Vec::new();
             if !same_ctx_attempts.is_empty() {
                 attempt_groups.push((preferred_offload_kqv, same_ctx_attempts.clone()));
@@ -2281,6 +2491,9 @@ mod desktop {
                 ));
             }
             let mut ctx: Option<_> = None;
+            let mut reused_mtp_runtime = None;
+            let mut cached_context_tokens = None;
+            let mut active_context_key = None;
             failure_stage = "create_context";
 
             'context_attempt_groups: for (group_index, (attempt_offload_kqv, attempts)) in
@@ -2353,11 +2566,47 @@ mod desktop {
                         ),
                     );
 
+                    let attempt_context_key = text_context_key(
+                        attempt_ctx,
+                        attempt_batch,
+                        llama_threads,
+                        llama_threads_batch,
+                        attempt_offload_kqv,
+                        llama_swa_full,
+                        llama_kv_type_raw.as_deref(),
+                        resolved_flash_attention_policy,
+                        llama_rope_freq_base,
+                        llama_rope_freq_scale,
+                        llama_mtp_active,
+                        llama_mtp_draft_tokens,
+                    );
+                    if !use_vision {
+                        if let Some((cached_ctx, cached_mtp, cached_tokens)) =
+                            take_hot_context(&engine.model, &hot_draft_model, &attempt_context_key)
+                        {
+                            resolved_ctx_size = attempt_ctx;
+                            resolved_n_batch = attempt_batch;
+                            resolved_offload_kqv = attempt_offload_kqv;
+                            reused_mtp_runtime = cached_mtp;
+                            cached_context_tokens = Some(cached_tokens);
+                            active_context_key = Some(attempt_context_key);
+                            ctx = Some(cached_ctx);
+                            log_info(
+                                &app,
+                                "llama_cpp",
+                                "reusing hot llama.cpp context for prompt prefix cache",
+                            );
+                            break 'context_attempt_groups;
+                        }
+                    }
+                    discard_hot_context();
+
                     match model.new_context(backend, ctx_params) {
                         Ok(created) => {
                             resolved_ctx_size = attempt_ctx;
                             resolved_n_batch = attempt_batch;
                             resolved_offload_kqv = attempt_offload_kqv;
+                            active_context_key = Some(attempt_context_key);
                             kqv_fallback_activated = preferred_offload_kqv == Some(true)
                                 && attempt_offload_kqv == Some(false);
                             if kqv_fallback_activated {
@@ -2436,7 +2685,9 @@ mod desktop {
             let context_fallback_activated =
                 (ctx_size, n_batch) != (requested_ctx_size, initial_batch);
 
-            let mut mtp_runtime = if llama_mtp_active {
+            let mut mtp_runtime = if let Some(runtime) = reused_mtp_runtime {
+                Some(runtime)
+            } else if llama_mtp_active {
                 let mut draft_params = LlamaContextParams::default()
                     .with_n_ctx(NonZeroU32::new(resolved_ctx_size))
                     .with_n_batch(resolved_n_batch)
@@ -2701,10 +2952,116 @@ mod desktop {
             let batch_size = n_batch as usize;
             let mut batch = LlamaBatch::new(batch_size, 1);
             let mut global_pos: i32 = 0;
+            let mut context_tokens: Option<Vec<LlamaToken>> = None;
             let prompt_last_logits_index = match prepared_prompt {
                 PreparedPrompt::Text(tokens) => {
                     let tokens_len = tokens.len();
                     let mut chunk_start = 0usize;
+                    if let Some(cached_tokens) = cached_context_tokens.take() {
+                        let common_prefix = common_token_prefix(&cached_tokens, &tokens);
+                        let mut rewind_from = common_prefix.saturating_sub(1);
+                        let rewind_succeeded;
+
+                        if let Some(runtime) = mtp_runtime.as_mut() {
+                            if !runtime.shared && common_prefix >= 2 {
+                                let carry_position = common_prefix - 2;
+                                rewind_from = common_prefix - 1;
+                                rewind_succeeded = ctx
+                                    .clear_kv_cache_seq(Some(0), Some(carry_position as u32), None)
+                                    .map_err(|e| {
+                                        crate::utils::err_msg(
+                                            module_path!(),
+                                            line!(),
+                                            format!("Failed to rewind prompt KV cache: {e}"),
+                                        )
+                                    })?;
+                                if rewind_succeeded {
+                                    mtp::reset_for_prompt_reuse(runtime, rewind_from as u32)
+                                        .map_err(|e| {
+                                            crate::utils::err_msg(module_path!(), line!(), e)
+                                        })?;
+                                    batch.clear();
+                                    batch
+                                        .add(
+                                            tokens[carry_position],
+                                            carry_position as i32,
+                                            &[0],
+                                            false,
+                                        )
+                                        .map_err(|e| {
+                                            crate::utils::err_msg(
+                                                module_path!(),
+                                                line!(),
+                                                format!(
+                                                    "Failed to rebuild prompt-cache carry token: {e}"
+                                                ),
+                                            )
+                                        })?;
+                                    ctx.decode(&mut batch).map_err(|e| {
+                                        crate::utils::err_msg(
+                                            module_path!(),
+                                            line!(),
+                                            format!(
+                                                "Failed to rebuild prompt-cache carry state: {e}"
+                                            ),
+                                        )
+                                    })?;
+                                    mtp::set_prefill_carry_from_target(runtime, &ctx, 0).map_err(
+                                        |e| crate::utils::err_msg(module_path!(), line!(), e),
+                                    )?;
+                                    cached_prompt_tokens = carry_position as u64;
+                                }
+                            } else {
+                                rewind_succeeded = ctx
+                                    .clear_kv_cache_seq(Some(0), Some(rewind_from as u32), None)
+                                    .map_err(|e| {
+                                        crate::utils::err_msg(
+                                            module_path!(),
+                                            line!(),
+                                            format!("Failed to rewind prompt KV cache: {e}"),
+                                        )
+                                    })?;
+                                if rewind_succeeded {
+                                    mtp::reset_for_prompt_reuse(runtime, rewind_from as u32)
+                                        .map_err(|e| {
+                                            crate::utils::err_msg(module_path!(), line!(), e)
+                                        })?;
+                                    cached_prompt_tokens = rewind_from as u64;
+                                }
+                            }
+                        } else {
+                            rewind_succeeded = ctx
+                                .clear_kv_cache_seq(Some(0), Some(rewind_from as u32), None)
+                                .map_err(|e| {
+                                    crate::utils::err_msg(
+                                        module_path!(),
+                                        line!(),
+                                        format!("Failed to rewind prompt KV cache: {e}"),
+                                    )
+                                })?;
+                            if rewind_succeeded {
+                                cached_prompt_tokens = rewind_from as u64;
+                            }
+                        }
+
+                        if rewind_succeeded {
+                            chunk_start = rewind_from;
+                            global_pos = rewind_from as i32;
+                        } else {
+                            ctx.clear_kv_cache();
+                            if let Some(runtime) = mtp_runtime.as_mut() {
+                                mtp::reset_for_prompt_reuse(runtime, 0).map_err(|e| {
+                                    crate::utils::err_msg(module_path!(), line!(), e)
+                                })?;
+                            }
+                            cached_prompt_tokens = 0;
+                            log_warn(
+                                &app,
+                                "llama_cpp",
+                                "prompt KV cache could not be partially rewound; evaluating the full prompt",
+                            );
+                        }
+                    }
                     while chunk_start < tokens_len {
                         check_abort_signal(abort_rx.as_mut())?;
                         let chunk_end = (chunk_start + batch_size).min(tokens_len);
@@ -2746,6 +3103,7 @@ mod desktop {
                         global_pos += (chunk_end - chunk_start) as i32;
                         chunk_start = chunk_end;
                     }
+                    context_tokens = Some(tokens);
                     batch.n_tokens().saturating_sub(1)
                 }
                 PreparedPrompt::Vision(chunks) => {
@@ -2779,6 +3137,11 @@ mod desktop {
                 ),
             );
             update_runtime_report_field(&mut runtime_report, "promptTokens", json!(prompt_tokens));
+            update_runtime_report_field(
+                &mut runtime_report,
+                "cachedPromptTokens",
+                json!(cached_prompt_tokens),
+            );
             update_runtime_report_field(
                 &mut runtime_report,
                 "promptPositions",
@@ -3088,6 +3451,9 @@ mod desktop {
                 }
 
                 if mtp_runtime.is_some() {
+                    if let Some(tokens) = context_tokens.as_mut() {
+                        tokens.push(token);
+                    }
                     n_cur += 1;
                     continue;
                 }
@@ -3109,6 +3475,9 @@ mod desktop {
                         format!("llama_decode failed: {e}"),
                     )
                 })?;
+                if let Some(tokens) = context_tokens.as_mut() {
+                    tokens.push(token);
+                }
                 sample_index = batch.n_tokens() - 1;
             }
 
@@ -3372,6 +3741,44 @@ mod desktop {
                 }
             }
 
+            if let (Some(tokens), Some(context_key)) =
+                (context_tokens.take(), active_context_key.take())
+            {
+                let cache_ready = if llama_mtp_active && mtp_runtime.is_none() {
+                    false
+                } else if let Some(runtime) = mtp_runtime.as_mut() {
+                    match u32::try_from(tokens.len()) {
+                        Ok(token_count) => {
+                            match mtp::truncate_for_prompt_cache(&mut ctx, runtime, token_count) {
+                                Ok(()) => true,
+                                Err(err) => {
+                                    log_warn(
+                                        &app,
+                                        "llama_cpp",
+                                        format!("discarding unusable prompt cache: {err}"),
+                                    );
+                                    false
+                                }
+                            }
+                        }
+                        Err(_) => false,
+                    }
+                } else {
+                    true
+                };
+                if cache_ready {
+                    store_hot_context(
+                        ctx,
+                        mtp_runtime.take(),
+                        engine.model.clone(),
+                        hot_draft_model.clone(),
+                        model_path,
+                        context_key,
+                        tokens,
+                    );
+                }
+            }
+
             Ok(())
         };
         // One-shot retry: when context creation cannot fit the GPU KV cache at
@@ -3557,6 +3964,7 @@ mod desktop {
                 "kvType": rr("actualKvTypeUsed"),
                 "modelSizeBytes": rr("modelSizeBytes"),
                 "promptTokens": prompt_tokens,
+                "cachedPromptTokens": cached_prompt_tokens,
                 "completionTokens": completion_tokens,
                 "totalTokens": prompt_tokens + completion_tokens,
                 "ttftMs": first_token_ms,
@@ -3590,8 +3998,8 @@ mod desktop {
                     prompt_tokens: Some(prompt_tokens),
                     completion_tokens: Some(completion_tokens),
                     total_tokens: Some(prompt_tokens + completion_tokens),
-                    cached_prompt_tokens: None,
-                    cache_write_tokens: None,
+                    cached_prompt_tokens: Some(cached_prompt_tokens),
+                    cache_write_tokens: Some(prompt_tokens.saturating_sub(cached_prompt_tokens)),
                     reasoning_tokens: None,
                     image_tokens: None,
                     audio_tokens: None,
@@ -3610,6 +4018,7 @@ mod desktop {
 
         let usage_value = json!({
             "prompt_tokens": prompt_tokens,
+            "cached_prompt_tokens": cached_prompt_tokens,
             "completion_tokens": completion_tokens,
             "total_tokens": prompt_tokens + completion_tokens,
             "first_token_ms": first_token_ms,
@@ -3638,7 +4047,7 @@ mod desktop {
 
     #[cfg(test)]
     mod tests {
-        use super::{sample_generated_token, GenerationSampler};
+        use super::{common_token_prefix, sample_generated_token, GenerationSampler};
 
         #[derive(Default)]
         struct FakeSampler {
@@ -3678,6 +4087,16 @@ mod desktop {
 
             sampler.accept(token);
             assert_eq!(sampler.accept_calls, 1);
+        }
+
+        #[test]
+        fn prompt_cache_reuses_only_the_contiguous_token_prefix() {
+            use llama_cpp_2::token::LlamaToken;
+
+            let cached = [1, 2, 3, 4, 5].map(LlamaToken::new);
+            let next = [1, 2, 3, 9, 5].map(LlamaToken::new);
+
+            assert_eq!(common_token_prefix(&cached, &next), 3);
         }
     }
 }
@@ -3902,7 +4321,7 @@ pub async fn llamacpp_embedded_chat_template(
 pub async fn llamacpp_unload(app: AppHandle) -> Result<(), String> {
     #[cfg(not(mobile))]
     {
-        desktop::engine::unload_engine(&app)
+        desktop::unload_local_engine(app).await
     }
     #[cfg(mobile)]
     {

@@ -641,6 +641,7 @@ pub(super) fn load_engine(
         }
     }
     if should_reload {
+        super::discard_hot_context();
         if guard.model.is_some() {
             guard.model = None;
             guard.model_path = None;

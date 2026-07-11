@@ -214,3 +214,45 @@ pub fn swapped_prompt_entities(
 
     (swapped_character, Some(swapped_persona))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::insert_in_chat_prompt_entries;
+    use crate::chat_manager::types::{PromptEntryPosition, PromptEntryRole, SystemPromptEntry};
+    use serde_json::json;
+
+    fn in_chat_entry(content: &str, depth: u32) -> SystemPromptEntry {
+        SystemPromptEntry {
+            id: content.to_string(),
+            name: content.to_string(),
+            role: PromptEntryRole::System,
+            content: content.to_string(),
+            enabled: true,
+            injection_position: PromptEntryPosition::InChat,
+            injection_depth: depth,
+            conditional_min_messages: None,
+            interval_turns: None,
+            system_prompt: true,
+            conditions: None,
+            prompt_entry_payload: None,
+        }
+    }
+
+    #[test]
+    fn depth_zero_context_is_hidden_after_the_latest_user_message() {
+        let mut messages = vec![
+            json!({"role": "assistant", "content": "Earlier reply"}),
+            json!({"role": "user", "content": "Latest user message"}),
+        ];
+
+        insert_in_chat_prompt_entries(
+            &mut messages,
+            "system",
+            &[in_chat_entry("Current lore and memory", 0)],
+        );
+
+        assert_eq!(messages[1]["content"], "Latest user message");
+        assert_eq!(messages[2]["role"], "system");
+        assert_eq!(messages[2]["content"], "Current lore and memory");
+    }
+}
