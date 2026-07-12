@@ -5077,7 +5077,13 @@ fn load_character(conn: &rusqlite::Connection, character_id: &str) -> Result<Cha
         })?;
 
     let description = row.6;
-    let definition = row.7.or(description.clone());
+    let definition = row
+        .7
+        .map(|value| {
+            crate::storage_manager::entity_transfer::strip_legacy_card_prompt_sections(&value)
+        })
+        .filter(|value| !value.is_empty())
+        .or(description.clone());
     let design_reference_image_ids = row
         .4
         .as_deref()
@@ -5127,11 +5133,15 @@ fn load_characters_info(
                 |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?)),
             );
 
-        if let Ok((name, description, definition, system_prompt, memory_type)) = result {
-            let personality_source = definition
-                .as_ref()
-                .or(description.as_ref())
-                .or(system_prompt.as_ref());
+        if let Ok((name, description, definition, _system_prompt, memory_type)) = result {
+            let definition = definition
+                .map(|value| {
+                    crate::storage_manager::entity_transfer::strip_legacy_card_prompt_sections(
+                        &value,
+                    )
+                })
+                .filter(|value| !value.is_empty());
+            let personality_source = definition.as_ref().or(description.as_ref());
             let personality_summary = personality_source.map(|s| {
                 let mut summary: String = s.chars().take(200).collect();
                 if summary.len() < s.len() {

@@ -24,6 +24,7 @@ use crate::utils::log_info;
 
 mod engine;
 
+pub(crate) use engine::strip_legacy_card_prompt_sections;
 pub use engine::{CharacterFileFormat, CharacterFormatInfo};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -1581,7 +1582,11 @@ fn load_character_export_snapshot(
         None
     };
 
-    let resolved_definition = definition.clone().or_else(|| description.clone());
+    let resolved_definition = definition
+        .as_deref()
+        .map(strip_legacy_card_prompt_sections)
+        .filter(|value| !value.is_empty())
+        .or_else(|| description.clone());
     let memory_value = memory_type.unwrap_or_else(|| "manual".to_string());
     let voice_config = voice_config_raw
         .and_then(|vc| serde_json::from_str::<JsonValue>(&vc).ok())

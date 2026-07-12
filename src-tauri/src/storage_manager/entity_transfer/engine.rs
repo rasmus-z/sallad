@@ -322,8 +322,8 @@ pub fn build_definition_from_fields(
     description: &str,
     personality: &str,
     scenario: &str,
-    system_prompt: &str,
-    post_history_instructions: &str,
+    _system_prompt: &str,
+    _post_history_instructions: &str,
     mes_example: &str,
 ) -> Option<String> {
     let mut parts = Vec::new();
@@ -331,13 +331,6 @@ pub fn build_definition_from_fields(
     push_definition_block(&mut parts, None, description);
     push_definition_block(&mut parts, Some("Personality"), personality);
     push_definition_block(&mut parts, Some("Scenario"), scenario);
-    push_definition_block(&mut parts, Some("System Prompt"), system_prompt);
-    push_definition_block(
-        &mut parts,
-        Some("Post History Instructions"),
-        post_history_instructions,
-    );
-
     let example = mes_example.trim();
     if !example.is_empty() {
         parts.push(format!(
@@ -350,6 +343,71 @@ pub fn build_definition_from_fields(
         None
     } else {
         Some(parts.join("\n\n"))
+    }
+}
+
+pub fn strip_legacy_card_prompt_sections(definition: &str) -> String {
+    let mut output = Vec::new();
+    let mut skip = false;
+
+    for line in definition.lines() {
+        let trimmed = line.trim();
+        if trimmed.starts_with('[') && trimmed.ends_with(']') && trimmed.len() > 2 {
+            let label = trimmed[1..trimmed.len() - 1].trim();
+            skip = label.eq_ignore_ascii_case("system prompt")
+                || label.eq_ignore_ascii_case("post history instructions");
+            if skip {
+                while output
+                    .last()
+                    .is_some_and(|line: &&str| line.trim().is_empty())
+                {
+                    output.pop();
+                }
+                continue;
+            }
+        }
+
+        if !skip {
+            output.push(line);
+        }
+    }
+
+    output.join("\n").trim().to_string()
+}
+
+#[cfg(test)]
+mod prompt_section_tests {
+    use super::{build_definition_from_fields, strip_legacy_card_prompt_sections};
+
+    #[test]
+    fn card_instruction_fields_are_not_buried_in_definition() {
+        let definition = build_definition_from_fields(
+            "Description",
+            "Personality",
+            "Scenario",
+            "Hidden system prompt",
+            "Hidden post-history prompt",
+            "Example",
+        )
+        .unwrap();
+
+        assert!(!definition.contains("Hidden system prompt"));
+        assert!(!definition.contains("Hidden post-history prompt"));
+        assert!(definition.contains("Description"));
+        assert!(definition.contains("[Personality]\nPersonality"));
+        assert!(definition.contains("<example_dialogue>\nExample\n</example_dialogue>"));
+    }
+
+    #[test]
+    fn legacy_card_instruction_sections_are_removed_without_losing_other_sections() {
+        let definition = "Description\n\n[Personality]\nWarm\n\n[System Prompt]\nOld system prompt\n\n[Post History Instructions]\nOld post-history prompt\n\n[Scenario]\nCafe\n\n[Custom]\nKeep me";
+
+        let stripped = strip_legacy_card_prompt_sections(definition);
+
+        assert_eq!(
+            stripped,
+            "Description\n\n[Personality]\nWarm\n[Scenario]\nCafe\n\n[Custom]\nKeep me"
+        );
     }
 }
 
