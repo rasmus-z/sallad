@@ -4713,6 +4713,13 @@ export const enMessages = {
       description:
         "Speculative decoding via bundled MTP layers or an external draft file. Ignored when the model has neither.",
       toggle: "Toggle multi-token prediction",
+      visionWarningTitle: "MTP is unavailable for vision",
+      visionWarningDescription:
+        "Image requests will continue without MTP while an MMProj vision file is configured.",
+      placement: "Draft Model Placement",
+      placementDescription: "Auto keeps the draft model on the fastest GPU that has room",
+      placementGpu: "GPU",
+      placementCpu: "CPU",
       draftTokens: "Draft Tokens",
       draftTokensDescription: "Speculative tokens per step (1 to 8)",
       draftFile: "MTP Draft File",

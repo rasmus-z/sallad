@@ -179,6 +179,58 @@ fn push_unique(out: &mut Vec<u32>, value: u32) {
 const ATTENTION_SCORE_BYTES: u64 = 4;
 const COMPUTE_BUFFER_SAFETY_FACTOR: u64 = 2;
 const COMPUTE_RESERVE_FLOOR_BYTES: u64 = 256 * 1024 * 1024;
+const MTP_COMPUTE_REFERENCE_CONTEXT: u64 = 16_384;
+const MTP_COMPUTE_REFERENCE_BYTES: u64 = 384 * 1024 * 1024;
+const MTP_COMPUTE_MIN_BYTES: u64 = 128 * 1024 * 1024;
+
+pub(super) fn estimate_mtp_gpu_reserve_bytes(
+    model_path: &str,
+    planned_context: u32,
+) -> Result<u64, String> {
+    let metadata = load_model_metadata(model_path)?;
+    Ok(metadata
+        .model_size_bytes
+        .saturating_add(estimate_mtp_compute_reserve_bytes(planned_context)))
+}
+
+fn estimate_mtp_compute_reserve_bytes(planned_context: u32) -> u64 {
+    MTP_COMPUTE_REFERENCE_BYTES
+        .saturating_mul(u64::from(planned_context.max(1)))
+        .checked_div(MTP_COMPUTE_REFERENCE_CONTEXT)
+        .unwrap_or(MTP_COMPUTE_REFERENCE_BYTES)
+        .max(MTP_COMPUTE_MIN_BYTES)
+}
+
+pub(super) fn select_mtp_gpu_device(
+    selected_device_ids: &[usize],
+    device_free_vram: &[u64],
+) -> Option<usize> {
+    selected_device_ids
+        .iter()
+        .copied()
+        .zip(device_free_vram.iter().copied())
+        .max_by_key(|(_, free)| *free)
+        .map(|(device_id, _)| device_id)
+}
+
+pub(super) fn reserve_device_vram(
+    selected_device_ids: &[usize],
+    device_free_vram: &[u64],
+    device_id: Option<usize>,
+    reserve_bytes: u64,
+) -> Vec<u64> {
+    let mut adjusted = device_free_vram.to_vec();
+    if let Some(position) = device_id.and_then(|device_id| {
+        selected_device_ids
+            .iter()
+            .position(|selected| *selected == device_id)
+    }) {
+        if let Some(free) = adjusted.get_mut(position) {
+            *free = free.saturating_sub(reserve_bytes);
+        }
+    }
+    adjusted
+}
 
 fn estimated_runtime_reserve_bytes(
     metadata: &LlamaModelMetadata,
@@ -587,11 +639,45 @@ pub(super) fn plan_multi_gpu_distribution(
         }
         // "balanced" and any unknown strategy fall through to an even split.
         _ => {
-            let split = vec![1.0f32; n];
+            let effective_per_layer = bytes_per_layer.saturating_add(kv_bytes_per_layer);
+            let capacities: Vec<u32> = device_free_vram
+                .iter()
+                .map(|free| {
+                    if effective_per_layer == 0 {
+                        auto_total
+                    } else {
+                        u32::try_from(free / effective_per_layer).unwrap_or(auto_total)
+                    }
+                })
+                .collect();
+            let mut per_device = vec![0u32; n];
+            let mut remaining = auto_total;
+            while remaining > 0 {
+                let mut progressed = false;
+                for (assigned, capacity) in per_device.iter_mut().zip(capacities.iter()) {
+                    if remaining == 0 {
+                        break;
+                    }
+                    if *assigned < *capacity {
+                        *assigned += 1;
+                        remaining -= 1;
+                        progressed = true;
+                    }
+                }
+                if !progressed {
+                    break;
+                }
+            }
+            let assigned_total = per_device.iter().copied().sum();
+            let split: Vec<f32> = per_device.iter().map(|layers| *layers as f32).collect();
             MultiGpuDistribution {
-                n_gpu_layers: auto_total,
-                per_device_layers: distribute_by_weights(auto_total, &split),
-                tensor_split: if auto_total > 0 { split } else { Vec::new() },
+                n_gpu_layers: assigned_total,
+                per_device_layers: per_device,
+                tensor_split: if assigned_total > 0 {
+                    normalize_weights(&split)
+                } else {
+                    Vec::new()
+                },
                 main_gpu: None,
             }
         }
@@ -601,8 +687,9 @@ pub(super) fn plan_multi_gpu_distribution(
 #[cfg(test)]
 mod tests {
     use super::{
-        candidate_gpu_layers, estimated_runtime_reserve_bytes, model_weight_split_bytes,
-        plan_multi_gpu_distribution, LlamaModelMetadata,
+        candidate_gpu_layers, estimate_mtp_compute_reserve_bytes, estimated_runtime_reserve_bytes,
+        model_weight_split_bytes, plan_multi_gpu_distribution, reserve_device_vram,
+        select_mtp_gpu_device, LlamaModelMetadata,
     };
 
     fn large_context_metadata() -> LlamaModelMetadata {
@@ -615,6 +702,28 @@ mod tests {
             n_head: 32,
             n_head_kv: 8,
         }
+    }
+
+    #[test]
+    fn mtp_compute_reserve_scales_with_context_and_has_a_floor() {
+        assert_eq!(
+            estimate_mtp_compute_reserve_bytes(16_384),
+            384 * 1024 * 1024
+        );
+        assert_eq!(estimate_mtp_compute_reserve_bytes(8_192), 192 * 1024 * 1024);
+        assert_eq!(estimate_mtp_compute_reserve_bytes(1), 128 * 1024 * 1024);
+    }
+
+    #[test]
+    fn mtp_uses_the_selected_device_with_the_most_free_vram() {
+        let selected = [4, 7, 9];
+        let free = [8, 24, 16];
+
+        assert_eq!(select_mtp_gpu_device(&selected, &free), Some(7));
+        assert_eq!(
+            reserve_device_vram(&selected, &free, Some(7), 6),
+            vec![8, 18, 16]
+        );
     }
 
     #[test]
@@ -712,6 +821,15 @@ mod tests {
 
         assert_eq!(dist.n_gpu_layers, 32);
         assert_eq!(dist.per_device_layers, vec![16, 16]);
-        assert_eq!(dist.tensor_split, vec![1.0, 1.0]);
+        assert_eq!(dist.tensor_split, vec![0.5, 0.5]);
+    }
+
+    #[test]
+    fn balanced_distribution_respects_a_sidecar_reduced_device_budget() {
+        let dist = plan_multi_gpu_distribution("balanced", &[4, 16], 20, 1, 0, 16, None, None);
+
+        assert_eq!(dist.n_gpu_layers, 16);
+        assert_eq!(dist.per_device_layers, vec![4, 12]);
+        assert_eq!(dist.tensor_split, vec![0.25, 0.75]);
     }
 }

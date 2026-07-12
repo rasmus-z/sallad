@@ -821,6 +821,16 @@ pub(crate) fn build_llama_extra_fields(
     if let Some(v) = model
         .advanced_model_settings
         .as_ref()
+        .and_then(|a| a.llama_mtp_placement.clone())
+        .or_else(|| settings.advanced_model_settings.llama_mtp_placement.clone())
+        .map(|v| v.trim().to_ascii_lowercase())
+        .filter(|v| matches!(v.as_str(), "auto" | "gpu" | "cpu"))
+    {
+        extra.insert("llamaMtpPlacement".to_string(), json!(v));
+    }
+    if let Some(v) = model
+        .advanced_model_settings
+        .as_ref()
         .and_then(|a| a.llama_mtp_draft_tokens)
         .or(settings.advanced_model_settings.llama_mtp_draft_tokens)
         .filter(|v| *v > 0)

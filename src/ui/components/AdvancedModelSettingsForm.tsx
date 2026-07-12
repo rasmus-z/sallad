@@ -180,6 +180,7 @@ export function sanitizeAdvancedModelSettings(input: AdvancedModelSettings): Adv
     llamaChatTemplateOverride: input.llamaChatTemplateOverride?.trim() || null,
     llamaMmprojPath: input.llamaMmprojPath?.trim() || null,
     llamaMtpEnabled: input.llamaMtpEnabled ?? null,
+    llamaMtpPlacement: input.llamaMtpPlacement ?? null,
     llamaMtpDraftTokens: sanitize(input.llamaMtpDraftTokens, { min: 1, max: 8 }, true),
     llamaMtpModelPath: input.llamaMtpModelPath?.trim() || null,
     llamaChatTemplatePreset: input.llamaChatTemplatePreset?.trim() || null,

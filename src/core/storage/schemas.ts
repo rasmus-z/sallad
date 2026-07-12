@@ -516,6 +516,7 @@ export const AdvancedModelSettingsSchema = z.object({
   llamaRawCompletionFallback: z.boolean().nullable().optional(),
   llamaStrictMode: z.boolean().nullable().optional(),
   llamaMtpEnabled: z.boolean().nullable().optional(),
+  llamaMtpPlacement: z.enum(["auto", "gpu", "cpu"]).nullable().optional(),
   llamaMtpDraftTokens: z.number().int().min(1).max(8).nullable().optional(),
   llamaMtpModelPath: z.string().trim().min(1).nullable().optional(),
   llamaStreamingEnabled: z.boolean().nullable().optional(),

@@ -79,6 +79,7 @@ type ControllerReturn = {
   handleLlamaRawCompletionFallbackChange: (value: boolean | null) => void;
   handleLlamaStrictModeChange: (value: boolean | null) => void;
   handleLlamaMtpEnabledChange: (value: boolean | null) => void;
+  handleLlamaMtpPlacementChange: (value: AdvancedModelSettings["llamaMtpPlacement"]) => void;
   handleLlamaMtpDraftTokensChange: (value: number | null) => void;
   handleLlamaMtpModelPathChange: (value: string | null) => void;
   handleLlamaStreamingEnabledChange: (value: boolean | null) => void;
@@ -996,6 +997,19 @@ export function useModelEditorController(): ControllerReturn {
     [dispatch, state.modelAdvancedDraft],
   );
 
+  const handleLlamaMtpPlacementChange = useCallback(
+    (value: AdvancedModelSettings["llamaMtpPlacement"]) => {
+      dispatch({
+        type: "set_model_advanced_draft",
+        payload: {
+          ...state.modelAdvancedDraft,
+          llamaMtpPlacement: value,
+        },
+      });
+    },
+    [dispatch, state.modelAdvancedDraft],
+  );
+
   const handleLlamaMtpDraftTokensChange = useCallback(
     (value: number | null) => {
       dispatch({
@@ -1694,6 +1708,7 @@ export function useModelEditorController(): ControllerReturn {
     handleLlamaRawCompletionFallbackChange,
     handleLlamaStrictModeChange,
     handleLlamaMtpEnabledChange,
+    handleLlamaMtpPlacementChange,
     handleLlamaMtpDraftTokensChange,
     handleLlamaMtpModelPathChange,
     handleLlamaStreamingEnabledChange,

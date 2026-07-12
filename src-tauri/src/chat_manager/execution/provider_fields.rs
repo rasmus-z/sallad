@@ -12,8 +12,9 @@ use super::{
     resolve_llama_gpu_device_ids, resolve_llama_gpu_distribution_mode, resolve_llama_gpu_layers,
     resolve_llama_gpu_manual_layers, resolve_llama_kv_placement, resolve_llama_kv_type,
     resolve_llama_main_gpu, resolve_llama_mmproj_path, resolve_llama_mtp_draft_tokens,
-    resolve_llama_mtp_enabled, resolve_llama_mtp_model_path, resolve_llama_multi_gpu_enabled,
-    resolve_llama_offload_kqv, resolve_llama_priority_vram_limit_bytes,
+    resolve_llama_mtp_enabled, resolve_llama_mtp_model_path, resolve_llama_mtp_placement,
+    resolve_llama_multi_gpu_enabled, resolve_llama_offload_kqv,
+    resolve_llama_priority_vram_limit_bytes,
     resolve_llama_profile_min_p, resolve_llama_profile_typical_p,
     resolve_llama_raw_completion_fallback, resolve_llama_rope_freq_base,
     resolve_llama_rope_freq_scale, resolve_llama_sampler_order, resolve_llama_sampler_profile,
@@ -127,6 +128,9 @@ fn build_llama_extra_fields(
     if let Some(v) = resolve_llama_mtp_enabled(session, model, settings) {
         extra.insert("llamaMtpEnabled".to_string(), json!(v));
     }
+    if let Some(v) = resolve_llama_mtp_placement(session, model, settings) {
+        extra.insert("llamaMtpPlacement".to_string(), json!(v));
+    }
     if let Some(v) = resolve_llama_mtp_draft_tokens(session, model, settings) {
         extra.insert("llamaMtpDraftTokens".to_string(), json!(v));
     }
@@ -213,6 +217,7 @@ mod tests {
             llama_raw_completion_fallback: Some(true),
             llama_strict_mode: Some(true),
             llama_mtp_enabled: Some(true),
+            llama_mtp_placement: Some("gpu".to_string()),
             llama_mtp_draft_tokens: Some(2),
             llama_mtp_model_path: Some("/models/mtp.gguf".to_string()),
             llama_streaming_enabled: Some(true),
@@ -269,7 +274,7 @@ mod tests {
             .expect("fully populated llama settings should emit extra-body fields");
         assert_eq!(
             extra.len(),
-            39,
+            40,
             "unexpected llama extra-body key count; a resolver stopped emitting or a new field was added without updating this fixture: {:?}",
             extra.keys().collect::<Vec<_>>()
         );

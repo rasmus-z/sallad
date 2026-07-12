@@ -578,6 +578,7 @@ export function EditModelPage() {
     handleLlamaRawCompletionFallbackChange,
     handleLlamaStrictModeChange,
     handleLlamaMtpEnabledChange,
+    handleLlamaMtpPlacementChange,
     handleLlamaMtpDraftTokensChange,
     handleLlamaMtpModelPathChange,
     handleLlamaStreamingEnabledChange,
@@ -2081,6 +2082,7 @@ export function EditModelPage() {
           llamaPriorityVramLimitBytes: modelAdvancedDraft.llamaPriorityVramLimitBytes ?? null,
           llamaMmprojPath: modelAdvancedDraft.llamaMmprojPath ?? null,
           llamaMtpEnabled: modelAdvancedDraft.llamaMtpEnabled ?? null,
+          llamaMtpPlacement: modelAdvancedDraft.llamaMtpPlacement ?? null,
           llamaMtpModelPath: modelAdvancedDraft.llamaMtpModelPath ?? null,
         });
         if (!cancelled) {
@@ -2123,6 +2125,7 @@ export function EditModelPage() {
     modelAdvancedDraft.llamaPriorityVramLimitBytes,
     modelAdvancedDraft.llamaMmprojPath,
     modelAdvancedDraft.llamaMtpEnabled,
+    modelAdvancedDraft.llamaMtpPlacement,
     modelAdvancedDraft.llamaMtpModelPath,
   ]);
 
@@ -2169,6 +2172,7 @@ export function EditModelPage() {
             filePath: modelPath,
             llamaMmprojPath: modelAdvancedDraft.llamaMmprojPath ?? null,
             llamaMtpEnabled: modelAdvancedDraft.llamaMtpEnabled ?? null,
+            llamaMtpPlacement: modelAdvancedDraft.llamaMtpPlacement ?? null,
             llamaMtpModelPath: modelAdvancedDraft.llamaMtpModelPath ?? null,
           },
         );
@@ -2195,6 +2199,7 @@ export function EditModelPage() {
     isLocalModel,
     modelAdvancedDraft.llamaMmprojPath,
     modelAdvancedDraft.llamaMtpEnabled,
+    modelAdvancedDraft.llamaMtpPlacement,
     modelAdvancedDraft.llamaMtpModelPath,
   ]);
 
@@ -5123,6 +5128,59 @@ export function EditModelPage() {
 
                                     {modelAdvancedDraft.llamaMtpEnabled === true && (
                                       <div className="space-y-4">
+                                        {modelAdvancedDraft.llamaMmprojPath?.trim() && (
+                                          <div className="rounded-lg border border-warning/30 bg-warning/10 px-3 py-2.5">
+                                            <div className="flex items-start gap-2">
+                                              <AlertTriangle
+                                                size={14}
+                                                className="mt-0.5 shrink-0 text-warning"
+                                              />
+                                              <div className="space-y-0.5">
+                                                <p className="text-[12px] font-medium text-warning">
+                                                  {t("editModel.mtp.visionWarningTitle")}
+                                                </p>
+                                                <p className="text-[12px] leading-relaxed text-warning/80">
+                                                  {t("editModel.mtp.visionWarningDescription")}
+                                                </p>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        )}
+
+                                        <div className="flex items-center justify-between gap-4">
+                                          <div className="space-y-0.5">
+                                            <span className="block text-[13px] font-medium text-fg/70">
+                                              {t("editModel.mtp.placement")}
+                                            </span>
+                                            <span className="block text-[13px] text-fg/40">
+                                              {t("editModel.mtp.placementDescription")}
+                                            </span>
+                                          </div>
+                                          <select
+                                            value={modelAdvancedDraft.llamaMtpPlacement ?? "auto"}
+                                            onChange={(event) => {
+                                              const value = event.target.value;
+                                              handleLlamaMtpPlacementChange(
+                                                value === "auto"
+                                                  ? null
+                                                  : (value as "gpu" | "cpu"),
+                                              );
+                                            }}
+                                            className={cn(selectInputClassName, "w-36 shrink-0")}
+                                            aria-label={t("editModel.mtp.placement")}
+                                          >
+                                            <option value="auto" className="bg-[#16171d]">
+                                              {t("common.labels.auto")}
+                                            </option>
+                                            <option value="gpu" className="bg-[#16171d]">
+                                              {t("editModel.mtp.placementGpu")}
+                                            </option>
+                                            <option value="cpu" className="bg-[#16171d]">
+                                              {t("editModel.mtp.placementCpu")}
+                                            </option>
+                                          </select>
+                                        </div>
+
                                         <div className="flex items-center justify-between">
                                           <div className="space-y-0.5">
                                             <span className="block text-[13px] font-medium text-fg/70">

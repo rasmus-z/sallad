@@ -1,7 +1,8 @@
 use super::engine::{shared_backend, using_rocm_backend};
 use super::offload::{
-    compute_recommended_context_for_gpu_layers, load_model_metadata, plan_multi_gpu_distribution,
-    plan_smart_gpu_offload, LlamaModelMetadata,
+    compute_recommended_context_for_gpu_layers, estimate_mtp_gpu_reserve_bytes,
+    load_model_metadata, plan_multi_gpu_distribution, plan_smart_gpu_offload, reserve_device_vram,
+    select_mtp_gpu_device, LlamaModelMetadata,
 };
 use super::*;
 use crate::chat_manager::types::GpuLayerAssignment;
@@ -712,6 +713,7 @@ pub(crate) async fn llamacpp_context_info(
     llama_priority_vram_limit_bytes: Option<u64>,
     llama_mmproj_path: Option<String>,
     llama_mtp_enabled: Option<bool>,
+    llama_mtp_placement: Option<String>,
     llama_mtp_model_path: Option<String>,
 ) -> Result<LlamaCppContextInfo, String> {
     let _ = app;
@@ -755,6 +757,31 @@ pub(crate) async fn llamacpp_context_info(
         get_available_vram_bytes()
     };
     let supports_gpu_offload = shared_backend()?.supports_gpu_offload();
+    let mtp_placement = llama_mtp_placement
+        .as_deref()
+        .map(str::trim)
+        .unwrap_or("auto")
+        .to_ascii_lowercase();
+    let mtp_requested_reserve_bytes =
+        if supports_gpu_offload && llama_mtp_enabled == Some(true) && mtp_placement != "cpu" {
+            llama_mtp_model_path
+                .as_deref()
+                .filter(|path| !path.trim().is_empty())
+                .map(|path| estimate_mtp_gpu_reserve_bytes(path, 16_384))
+                .transpose()?
+                .unwrap_or(0)
+        } else {
+            0
+        };
+    let mtp_vram_reserve_bytes = if mtp_placement == "gpu"
+        || (mtp_placement == "auto"
+            && available_vram_bytes
+                .is_some_and(|bytes| mtp_requested_reserve_bytes < bytes.saturating_mul(9) / 10))
+    {
+        mtp_requested_reserve_bytes
+    } else {
+        0
+    };
     let sidecar_vram_reserve_bytes = if supports_gpu_offload {
         let mmproj_reserve = llama_mmproj_path
             .as_deref()
@@ -762,17 +789,7 @@ pub(crate) async fn llamacpp_context_info(
             .and_then(|path| std::fs::metadata(path).ok())
             .map(|meta| meta.len())
             .unwrap_or(0);
-        let mtp_reserve = if llama_mtp_enabled == Some(true) {
-            llama_mtp_model_path
-                .as_deref()
-                .filter(|path| !path.trim().is_empty())
-                .and_then(|path| std::fs::metadata(path).ok())
-                .map(|meta| meta.len())
-                .unwrap_or(0)
-        } else {
-            0
-        };
-        mmproj_reserve.saturating_add(mtp_reserve)
+        mmproj_reserve.saturating_add(mtp_vram_reserve_bytes)
     } else {
         0
     };
@@ -843,6 +860,17 @@ pub(crate) async fn llamacpp_context_info(
     let (per_device_vram, estimated_placement) = if multi_gpu_active && supports_gpu_offload {
         let per_dev = aligned_per_device_vram.clone();
         let device_free_aligned: Vec<u64> = per_dev.iter().map(|(_, free, _)| *free).collect();
+        let mtp_device_id = if mtp_vram_reserve_bytes > 0 {
+            select_mtp_gpu_device(&selected_gpu_device_ids, &device_free_aligned)
+        } else {
+            None
+        };
+        let distribution_device_free = reserve_device_vram(
+            &selected_gpu_device_ids,
+            &device_free_aligned,
+            mtp_device_id,
+            mtp_vram_reserve_bytes,
+        );
         let dist_mode = llama_gpu_distribution_mode.as_deref().unwrap_or("balanced");
         let dist = if dist_mode == "manual" {
             let manual_aligned: Vec<u32> = selected_gpu_device_ids
@@ -857,7 +885,7 @@ pub(crate) async fn llamacpp_context_info(
                 .collect();
             plan_multi_gpu_distribution(
                 "manual",
-                &device_free_aligned,
+                &distribution_device_free,
                 metadata.offload_layer_count(),
                 0,
                 0,
@@ -885,7 +913,7 @@ pub(crate) async fn llamacpp_context_info(
             let kv_bytes_per_layer = plan.kv_bytes_per_layer;
             plan_multi_gpu_distribution(
                 dist_mode,
-                &device_free_aligned,
+                &distribution_device_free,
                 plan.total_layers,
                 plan.bytes_per_layer,
                 kv_bytes_per_layer,

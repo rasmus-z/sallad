@@ -67,10 +67,13 @@ mod desktop {
     };
     use engine::{
         consume_kqv_fallback_toast, emit_model_load_complete, emit_model_load_failed,
-        emit_model_load_finalizing, fit_model_params, load_engine, shared_backend,
-        using_rocm_backend, LlamaGpuConfig, NativeFitPlan, NATIVE_FIT_MARGIN_BYTES,
+        emit_model_load_finalizing, fit_model_params, load_engine, measure_mmproj_fit_margins,
+        shared_backend, using_rocm_backend, LlamaGpuConfig, NativeFitPlan,
     };
-    use offload::{context_bucket_upper, merge_cached_candidate_layers, plan_smart_gpu_offload};
+    use offload::{
+        context_bucket_upper, estimate_mtp_gpu_reserve_bytes, merge_cached_candidate_layers,
+        plan_smart_gpu_offload, reserve_device_vram, select_mtp_gpu_device,
+    };
     use prompt::{
         add_bos_label, build_prompt, inject_media_markers, model_tokenizer_add_bos_label,
         model_tokenizer_adds_bos, prompt_add_bos_reason, prompt_mode_label, resolve_prompt_add_bos,
@@ -101,7 +104,7 @@ mod desktop {
         allocated_bytes: usize,
     }
 
-    const HOT_CONTEXT_CACHE_MAX_BYTES: usize = NATIVE_FIT_MARGIN_BYTES;
+    const HOT_CONTEXT_CACHE_MAX_BYTES: usize = 1024 * 1024 * 1024;
 
     thread_local! {
         static HOT_TEXT_CONTEXTS: RefCell<HotTextContextCache> = const { RefCell::new(HotTextContextCache {
@@ -1403,6 +1406,13 @@ mod desktop {
             .and_then(|v| v.as_str())
             .map(|s| s.trim().to_string())
             .filter(|s| !s.is_empty());
+        let llama_mtp_placement = body
+            .get("llamaMtpPlacement")
+            .or_else(|| body.get("llama_mtp_placement"))
+            .and_then(|v| v.as_str())
+            .map(|s| s.trim().to_ascii_lowercase())
+            .filter(|s| matches!(s.as_str(), "auto" | "gpu" | "cpu"))
+            .unwrap_or_else(|| "auto".to_string());
         let llama_flash_attention_policy = parse_flash_attention_policy(body);
         let llama_kv_type_raw = body
             .get("llamaKvType")
@@ -1553,6 +1563,9 @@ mod desktop {
             } else {
                 discard_hot_context_if_model_differs(model_path);
             }
+            if media_requested {
+                discard_hot_context();
+            }
             let hot_context_resident = hot_context_matches_model_path(model_path);
             if engine::unload_engine_if_model_differs(&app, model_path)? {
                 log_info(
@@ -1571,7 +1584,6 @@ mod desktop {
             let native_fit_request = llama_gpu_layers.is_none()
                 && forced_smart_gpu_layers.is_none()
                 && !multi_gpu_active
-                && llama_mmproj_path.is_none()
                 && !llama_mtp_enabled
                 && requested_context.is_some();
             if native_fit_request && !hot_context_resident {
@@ -1610,6 +1622,8 @@ mod desktop {
                 Some(placement)
             } else if llama_offload_kqv.is_some() {
                 llama_offload_kqv
+            } else if llama_mtp_enabled && !media_requested {
+                Some(false)
             } else if using_rocm_backend() {
                 Some(false)
             } else {
@@ -1703,26 +1717,6 @@ mod desktop {
             } else {
                 Vec::new()
             };
-            // Single fingerprint over every input that changes the layer plan.
-            // The cached layer count is only reused when this matches, so new
-            // planning-relevant settings must be added here, not as extra
-            // field-by-field comparisons at the cache check.
-            let smart_offload_planning_config = if multi_gpu_active {
-                format!(
-                    "multiGpu=true;devices={:?};mode={};kv={};mainGpu={:?};priorityLimitBytes={:?};manualLayers={:?}",
-                    llama_gpu_device_ids,
-                    distribution_mode,
-                    llama_kv_placement.as_deref().unwrap_or("auto"),
-                    llama_main_gpu,
-                    llama_priority_vram_limit_bytes,
-                    manual_layers_aligned,
-                )
-            } else {
-                format!(
-                    "multiGpu=false;singleDevice={:?}",
-                    llama_single_gpu_device_id
-                )
-            };
             let mut multi_gpu_distribution: Option<offload::MultiGpuDistribution> = None;
             let mut effective_gpu_layers = llama_gpu_layers;
             let mut smart_gpu_layer_candidates: Option<Vec<u32>> = None;
@@ -1752,14 +1746,17 @@ mod desktop {
                     }
                 }
             }
-            let llama_mtp_bundled = llama_mtp_enabled && mtp::model_has_mtp(model_path);
-            let llama_mtp_external_path = if llama_mtp_enabled && !llama_mtp_bundled {
-                llama_mtp_model_path
-                    .clone()
-                    .or_else(|| mtp::discover_external_mtp(model_path))
-            } else {
-                None
-            };
+            let active_mmproj_path = llama_mmproj_path.as_deref().filter(|_| media_requested);
+            let llama_mtp_bundled =
+                llama_mtp_enabled && !media_requested && mtp::model_has_mtp(model_path);
+            let llama_mtp_external_path =
+                if llama_mtp_enabled && !media_requested && !llama_mtp_bundled {
+                    llama_mtp_model_path
+                        .clone()
+                        .or_else(|| mtp::discover_external_mtp(model_path))
+                } else {
+                    None
+                };
             if let Some(ref external) = llama_mtp_external_path {
                 log_info(
                     &app,
@@ -1767,25 +1764,77 @@ mod desktop {
                     format!("MTP external draft model resolved: {}", external),
                 );
             }
+            let planned_mtp_context = requested_context.unwrap_or(16_384).max(1);
+            let mtp_gpu_reserve_bytes = llama_mtp_external_path
+                .as_deref()
+                .map(|path| estimate_mtp_gpu_reserve_bytes(path, planned_mtp_context))
+                .transpose()?
+                .unwrap_or(0);
+            let mtp_drafter_on_gpu = if !backend_supports_gpu_offload
+                || llama_mtp_external_path.is_none()
+            {
+                false
+            } else {
+                match llama_mtp_placement.as_str() {
+                    "cpu" => false,
+                    "gpu" => true,
+                    _ => available_vram_bytes
+                        .is_some_and(|bytes| mtp_gpu_reserve_bytes < bytes.saturating_mul(9) / 10),
+                }
+            };
+            let mtp_gpu_device_id = if !mtp_drafter_on_gpu {
+                None
+            } else if multi_gpu_active {
+                select_mtp_gpu_device(&llama_gpu_device_ids, &device_free_aligned)
+            } else {
+                llama_single_gpu_device_id
+            };
+            let device_free_for_distribution = reserve_device_vram(
+                &llama_gpu_device_ids,
+                &device_free_aligned,
+                mtp_gpu_device_id,
+                mtp_gpu_reserve_bytes,
+            );
             let sidecar_vram_reserve_bytes = if backend_supports_gpu_offload {
-                let mmproj_reserve = llama_mmproj_path
-                    .as_deref()
+                let mmproj_reserve = active_mmproj_path
                     .and_then(|path| std::fs::metadata(path).ok())
                     .map(|meta| meta.len())
                     .unwrap_or(0);
-                let mtp_reserve = if resolved_offload_kqv == Some(false) {
-                    0
+                let mtp_reserve = if mtp_drafter_on_gpu {
+                    mtp_gpu_reserve_bytes
                 } else {
-                    llama_mtp_external_path
-                        .as_deref()
-                        .and_then(|path| std::fs::metadata(path).ok())
-                        .map(|meta| meta.len())
-                        .unwrap_or(0)
+                    0
                 };
                 mmproj_reserve.saturating_add(mtp_reserve)
             } else {
                 0
             };
+            let smart_offload_planning_config = json!({
+                "multiGpu": multi_gpu_active,
+                "deviceIds": llama_gpu_device_ids,
+                "singleDeviceId": llama_single_gpu_device_id,
+                "distributionMode": distribution_mode,
+                "manualLayers": manual_layers_aligned,
+                "mainGpu": llama_main_gpu,
+                "priorityVramLimitBytes": llama_priority_vram_limit_bytes,
+                "kvPlacement": llama_kv_placement,
+                "offloadKqv": resolved_offload_kqv,
+                "kvType": llama_kv_type_raw,
+                "swaFull": llama_swa_full,
+                "context": requested_context,
+                "batch": llama_batch_size,
+                "ubatch": llama_ubatch_size,
+                "computeBatch": llama_compute_batch_size,
+                "flashAttention": resolved_flash_attention_policy,
+                "mmprojPath": active_mmproj_path,
+                "mtpEnabled": llama_mtp_enabled,
+                "mtpPlacement": llama_mtp_placement,
+                "mtpModelPath": llama_mtp_external_path,
+                "mtpDraftTokens": llama_mtp_draft_tokens,
+                "mtpGpuDeviceId": mtp_gpu_device_id,
+                "sidecarVramReserveBytes": sidecar_vram_reserve_bytes,
+            })
+            .to_string();
 
             if manual_distribution && backend_supports_gpu_offload {
                 // Manual mode: fixed per-GPU layer counts, no smart backoff ladder.
@@ -1996,7 +2045,7 @@ mod desktop {
                     // the pinned device.
                     multi_gpu_distribution = Some(offload::plan_multi_gpu_distribution(
                         &distribution_mode,
-                        &device_free_aligned,
+                        &device_free_for_distribution,
                         smart_offload_plan.total_layers,
                         smart_offload_plan.bytes_per_layer,
                         smart_offload_plan.kv_bytes_per_layer,
@@ -2059,6 +2108,26 @@ mod desktop {
                     &mut runtime_report,
                     "smartOffloadEffectiveVramBudgetBytes",
                     json!(smart_offload_plan.effective_vram_budget_bytes),
+                );
+                update_runtime_report_field(
+                    &mut runtime_report,
+                    "mtpPlacementRequested",
+                    json!(llama_mtp_placement),
+                );
+                update_runtime_report_field(
+                    &mut runtime_report,
+                    "mtpPlacementResolved",
+                    json!(if mtp_drafter_on_gpu { "gpu" } else { "cpu" }),
+                );
+                update_runtime_report_field(
+                    &mut runtime_report,
+                    "mtpGpuReserveBytes",
+                    json!(mtp_gpu_reserve_bytes),
+                );
+                update_runtime_report_field(
+                    &mut runtime_report,
+                    "mtpGpuDeviceId",
+                    json!(mtp_gpu_device_id),
                 );
                 log_info(
                     &app,
@@ -2125,10 +2194,12 @@ mod desktop {
                     let fit_devices = llama_single_gpu_device_id
                         .map(|device_id| vec![device_id])
                         .unwrap_or_default();
+                    let fit_margins = measure_mmproj_fit_margins(active_mmproj_path, &fit_devices)?;
                     match fit_model_params(
                         model_path,
                         &fit_devices,
                         fit_context_params,
+                        &fit_margins,
                         fit_context,
                     ) {
                         Ok(plan) => {
@@ -2160,7 +2231,7 @@ mod desktop {
                             update_runtime_report_field(
                                 &mut runtime_report,
                                 "nativeFitMarginBytes",
-                                json!(NATIVE_FIT_MARGIN_BYTES),
+                                json!(fit_margins.iter().sum::<usize>()),
                             );
                             update_runtime_report_field(
                                 &mut runtime_report,
@@ -2192,7 +2263,7 @@ mod desktop {
                                 &app,
                                 "llama_cpp",
                                 format!(
-                                    "llama.cpp native fit unavailable; retaining conservative planner: {err}"
+                                    "llama.cpp native fit unavailable; using smart offloader candidates: {err}"
                                 ),
                             );
                         }
@@ -2330,9 +2401,11 @@ mod desktop {
                     },
                 },
                 llama_strict_mode,
-                llama_mmproj_path.as_deref(),
+                active_mmproj_path,
                 llama_mtp_external_path.as_deref(),
-                resolved_offload_kqv != Some(false),
+                mtp_drafter_on_gpu,
+                llama_mtp_placement == "auto",
+                mtp_gpu_device_id,
             )?;
             let llama_mtp_draft_model = engine.mtp_model.clone();
             let model = engine.model.as_ref();
@@ -2409,6 +2482,8 @@ mod desktop {
                 Some(placement)
             } else if llama_offload_kqv.is_some() {
                 llama_offload_kqv
+            } else if llama_mtp_enabled && !media_requested {
+                Some(false)
             } else if using_rocm_backend() {
                 Some(false)
             } else {
@@ -2838,6 +2913,8 @@ mod desktop {
 
             let preferred_offload_kqv = if let Some(explicit) = llama_offload_kqv {
                 Some(explicit)
+            } else if llama_mtp_enabled && !media_requested {
+                Some(false)
             } else if using_rocm_backend() {
                 // Conservative ROCm default to avoid driver/device crashes on some AMD stacks.
                 Some(false)
@@ -4865,6 +4942,7 @@ pub async fn llamacpp_context_info(
     llama_priority_vram_limit_bytes: Option<u64>,
     llama_mmproj_path: Option<String>,
     llama_mtp_enabled: Option<bool>,
+    llama_mtp_placement: Option<String>,
     llama_mtp_model_path: Option<String>,
 ) -> Result<serde_json::Value, String> {
     #[cfg(not(mobile))]
@@ -4885,6 +4963,7 @@ pub async fn llamacpp_context_info(
             llama_priority_vram_limit_bytes,
             llama_mmproj_path,
             llama_mtp_enabled,
+            llama_mtp_placement,
             llama_mtp_model_path,
         )
         .await?;
@@ -4913,6 +4992,7 @@ pub async fn llamacpp_context_info(
         let _ = llama_priority_vram_limit_bytes;
         let _ = llama_mmproj_path;
         let _ = llama_mtp_enabled;
+        let _ = llama_mtp_placement;
         let _ = llama_mtp_model_path;
         Err(crate::utils::err_msg(
             module_path!(),

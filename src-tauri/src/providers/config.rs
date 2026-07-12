@@ -50,6 +50,7 @@ fn supported_extra_body_keys(provider_id: &str) -> &'static [&'static str] {
             "llamaStreamingEnabled",
             "llamaStrictMode",
             "llamaMtpEnabled",
+            "llamaMtpPlacement",
             "llamaMtpDraftTokens",
             "llamaMtpModelPath",
             "llamaSamplerProfile",

@@ -735,6 +735,26 @@ pub(super) fn resolve_llama_mtp_enabled(
         .or(settings.advanced_model_settings.llama_mtp_enabled)
 }
 
+pub(super) fn resolve_llama_mtp_placement(
+    session: &Session,
+    model: &Model,
+    settings: &Settings,
+) -> Option<String> {
+    session
+        .advanced_model_settings
+        .as_ref()
+        .and_then(|cfg| cfg.llama_mtp_placement.clone())
+        .or_else(|| {
+            model
+                .advanced_model_settings
+                .as_ref()
+                .and_then(|cfg| cfg.llama_mtp_placement.clone())
+        })
+        .or_else(|| settings.advanced_model_settings.llama_mtp_placement.clone())
+        .map(|value| value.trim().to_ascii_lowercase())
+        .filter(|value| matches!(value.as_str(), "auto" | "gpu" | "cpu"))
+}
+
 pub(super) fn resolve_llama_mtp_draft_tokens(
     session: &Session,
     model: &Model,

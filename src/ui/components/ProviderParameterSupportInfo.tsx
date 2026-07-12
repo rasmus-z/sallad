@@ -56,6 +56,7 @@ const PARAMETER_LABELS: Record<keyof AdvancedModelSettings, string> = {
   llamaRawCompletionFallback: "llama.cpp Raw Fallback",
   llamaStrictMode: "llama.cpp Strict Mode",
   llamaMtpEnabled: "llama.cpp Multi-Token Prediction",
+  llamaMtpPlacement: "llama.cpp MTP Placement",
   llamaMtpDraftTokens: "llama.cpp MTP Draft Tokens",
   llamaMtpModelPath: "llama.cpp MTP Model Path",
   llamaStreamingEnabled: "llama.cpp Streaming",
@@ -142,6 +143,7 @@ const PARAMETER_DESCRIPTIONS: Record<keyof AdvancedModelSettings, string> = {
     "Disable llama.cpp safety fallbacks that lower offload, context, or batch settings",
   llamaMtpEnabled:
     "Speculative decoding via the model's bundled MTP layers (needs an MTP-capable GGUF)",
+  llamaMtpPlacement: "Automatic, GPU, or CPU placement for the external MTP draft model",
   llamaMtpDraftTokens: "Speculative tokens drafted per MTP step (1 to 8)",
   llamaMtpModelPath: "External MTP draft GGUF path (auto-discovered from sibling mtp-*.gguf when empty)",
   llamaStreamingEnabled: "Disable incremental token streaming for llama.cpp models",

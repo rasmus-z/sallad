@@ -3215,6 +3215,7 @@ pub async fn hf_compute_local_runability(
     file_path: String,
     llama_mmproj_path: Option<String>,
     llama_mtp_enabled: Option<bool>,
+    llama_mtp_placement: Option<String>,
     llama_mtp_model_path: Option<String>,
 ) -> Result<LocalRunabilityResult, String> {
     let path = PathBuf::from(&file_path);
@@ -3243,7 +3244,9 @@ pub async fn hf_compute_local_runability(
             .and_then(|path| std::fs::metadata(path).ok())
             .map(|meta| meta.len())
             .unwrap_or(0);
-        let mtp_reserve = if llama_mtp_enabled == Some(true) {
+        let mtp_reserve = if llama_mtp_enabled == Some(true)
+            && llama_mtp_placement.as_deref() != Some("cpu")
+        {
             llama_mtp_model_path
                 .as_deref()
                 .filter(|path| !path.trim().is_empty())

@@ -2,7 +2,8 @@ use super::*;
 use llama_cpp_2::context::params::LlamaContextParams;
 use llama_cpp_2::llama_backend::LlamaBackend;
 use llama_cpp_2::model::params::LlamaModelParams;
-use llama_cpp_2::mtmd::{MtmdContext, MtmdContextParams};
+use llama_cpp_2::mtmd::{measure_memory_usage, MtmdContext, MtmdContextParams};
+use llama_cpp_2::{list_llama_ggml_backend_devices, LlamaBackendDeviceType};
 use llama_cpp_sys_2::{
     ggml_backend_dev_count, ggml_backend_dev_get, ggml_backend_dev_type,
     GGML_BACKEND_DEVICE_TYPE_ACCEL, GGML_BACKEND_DEVICE_TYPE_GPU,
@@ -48,6 +49,7 @@ pub(super) struct LlamaState {
     pub(super) mmproj_path: Option<String>,
     pub(super) mtp_model: Option<Arc<LlamaModel>>,
     pub(super) mtp_model_path: Option<String>,
+    pub(super) mtp_model_config_key: Option<String>,
     pub(super) kqv_fallback_toast_shown: bool,
 }
 
@@ -69,13 +71,78 @@ pub(super) struct NativeFitPlan {
     pub(super) tensor_split: Vec<f32>,
 }
 
-// Keep aligned with llama.cpp's common_params::fit_params_target default.
-pub(super) const NATIVE_FIT_MARGIN_BYTES: usize = 1024 * 1024 * 1024;
+pub(super) fn measure_mmproj_fit_margins(
+    mmproj_path: Option<&str>,
+    device_ids: &[usize],
+) -> Result<Vec<usize>, String> {
+    let default_margin = LlamaModelParams::default_fit_margin();
+    let mut margins = vec![0; llama_cpp_2::max_devices().max(1)];
+    let devices = list_llama_ggml_backend_devices();
+    let selected: Vec<_> = devices
+        .iter()
+        .filter(|device| {
+            matches!(
+                device.device_type,
+                LlamaBackendDeviceType::Gpu | LlamaBackendDeviceType::Accelerator
+            ) && (device_ids.is_empty() || device_ids.contains(&device.index))
+        })
+        .collect();
+    for margin in margins.iter_mut().take(selected.len()) {
+        *margin = default_margin;
+    }
+    let Some(mmproj_path) = mmproj_path else {
+        return Ok(margins);
+    };
+    let usage = measure_memory_usage(mmproj_path, &MtmdContextParams::default()).map_err(|e| {
+        crate::utils::err_msg(
+            module_path!(),
+            line!(),
+            format!("Failed to measure MTMD memory usage: {e}"),
+        )
+    })?;
+    let mut assigned_sidecar_bytes = 0usize;
+    for (position, device) in selected.iter().enumerate() {
+        let measured = usage
+            .iter()
+            .filter(|entry| !entry.host && entry.device_name == device.name)
+            .map(|entry| entry.bytes)
+            .sum();
+        if let Some(margin) = margins.get_mut(position) {
+            *margin = margin.checked_add(measured).ok_or_else(|| {
+                crate::utils::err_msg(module_path!(), line!(), "MTMD fit margin overflowed usize")
+            })?;
+            assigned_sidecar_bytes =
+                assigned_sidecar_bytes
+                    .checked_add(measured)
+                    .ok_or_else(|| {
+                        crate::utils::err_msg(
+                            module_path!(),
+                            line!(),
+                            "MTMD measured memory overflowed usize",
+                        )
+                    })?;
+        }
+    }
+    let measured_accelerator_bytes: usize = usage
+        .iter()
+        .filter(|entry| !entry.host)
+        .map(|entry| entry.bytes)
+        .sum();
+    if assigned_sidecar_bytes != measured_accelerator_bytes {
+        return Err(crate::utils::err_msg(
+            module_path!(),
+            line!(),
+            "MTMD memory measurement did not match the selected llama.cpp devices",
+        ));
+    }
+    Ok(margins)
+}
 
 pub(super) fn fit_model_params(
     model_path: &str,
     device_ids: &[usize],
     mut context_params: LlamaContextParams,
+    margins: &[usize],
     n_ctx_min: u32,
 ) -> Result<NativeFitPlan, String> {
     let path = CString::new(model_path).map_err(|e| {
@@ -96,7 +163,8 @@ pub(super) fn fit_model_params(
         })?;
     }
     let mut model_params = Box::pin(model_params);
-    let mut margins = vec![NATIVE_FIT_MARGIN_BYTES; llama_cpp_2::max_devices().max(1)];
+    let mut margins = margins.to_vec();
+    margins.resize(llama_cpp_2::max_devices().max(1), 0);
     let result = model_params
         .as_mut()
         .fit_params(
@@ -564,6 +632,8 @@ pub(super) fn load_engine(
     mmproj_path: Option<&str>,
     mtp_model_path: Option<&str>,
     mtp_drafter_on_gpu: bool,
+    mtp_gpu_fallback_allowed: bool,
+    mtp_gpu_device_id: Option<usize>,
 ) -> Result<LoadedEngine, String> {
     let engine = ENGINE.get_or_init(|| {
         Mutex::new(LlamaState {
@@ -582,6 +652,7 @@ pub(super) fn load_engine(
             mmproj_path: None,
             mtp_model: None,
             mtp_model_path: None,
+            mtp_model_config_key: None,
             kqv_fallback_toast_shown: false,
         })
     });
@@ -743,6 +814,7 @@ pub(super) fn load_engine(
             guard.mmproj_path = None;
             guard.mtp_model = None;
             guard.mtp_model_path = None;
+            guard.mtp_model_config_key = None;
             if let Some(app) = app {
                 log_info(
                     app,
@@ -1136,12 +1208,16 @@ pub(super) fn load_engine(
         }
     }
 
+    let mtp_model_config_key = mtp_model_path
+        .map(|path| format!("path={path};gpu={mtp_drafter_on_gpu};device={mtp_gpu_device_id:?}"));
     let mtp_changed = should_reload
         || guard.mtp_model_path.as_deref() != mtp_model_path
+        || guard.mtp_model_config_key != mtp_model_config_key
         || (mtp_model_path.is_some() && guard.mtp_model.is_none());
     if mtp_changed {
         guard.mtp_model = None;
         guard.mtp_model_path = None;
+        guard.mtp_model_config_key = None;
 
         if let Some(mtp_path) = mtp_model_path {
             if !Path::new(mtp_path).exists() {
@@ -1152,11 +1228,6 @@ pub(super) fn load_engine(
                 ));
             }
 
-            // Measured on the RTX 4060 (mtp_probe): a GPU-resident drafter
-            // attending CPU-resident KV forces ~345 MiB of cross-backend
-            // staging into its compute buffer; keeping the drafter beside the
-            // KV eliminates it. The drafter is ~227 MB, so CPU decode of the
-            // few draft tokens per round is negligible.
             let drafter_gpu_layers = if mtp_drafter_on_gpu
                 && guard.backend_path_used.as_deref() == Some("gpu_offload")
             {
@@ -1164,30 +1235,63 @@ pub(super) fn load_engine(
             } else {
                 Some(0)
             };
-            let drafter = load_model_with_progress(
+            let mtp_gpu_config = LlamaGpuConfig {
+                device_ids: mtp_gpu_device_id.into_iter().collect(),
+                ..LlamaGpuConfig::default()
+            };
+            let drafter_result = load_model_with_progress(
                 None,
                 None,
                 mtp_path,
                 drafter_gpu_layers,
-                &LlamaGpuConfig::default(),
+                &mtp_gpu_config,
                 guard.backend_path_used.as_deref().unwrap_or("cpu"),
                 MODEL_LOAD_STAGE_FINALIZING,
                 None,
-            )?;
+            );
+            let (drafter, drafter_gpu_layers) = match drafter_result {
+                Ok(drafter) => (drafter, drafter_gpu_layers),
+                Err(err) if drafter_gpu_layers != Some(0) && mtp_gpu_fallback_allowed => {
+                    if let Some(app) = app {
+                        log_warn(
+                            app,
+                            "llama_cpp",
+                            format!(
+                                "MTP auto GPU placement failed; retrying draft model on CPU: {err}"
+                            ),
+                        );
+                    }
+                    (
+                        load_model_with_progress(
+                            None,
+                            None,
+                            mtp_path,
+                            Some(0),
+                            &LlamaGpuConfig::default(),
+                            "cpu",
+                            MODEL_LOAD_STAGE_FINALIZING,
+                            None,
+                        )?,
+                        Some(0),
+                    )
+                }
+                Err(err) => return Err(err),
+            };
 
             if let Some(app) = app {
                 log_info(
                     app,
                     "llama_cpp",
                     format!(
-                        "MTP draft model loaded: path={} gpu_layers={:?}",
-                        mtp_path, drafter_gpu_layers
+                        "MTP draft model loaded: path={} gpu_layers={:?} gpu_device={:?}",
+                        mtp_path, drafter_gpu_layers, mtp_gpu_device_id
                     ),
                 );
             }
 
             guard.mtp_model = Some(Arc::new(drafter));
             guard.mtp_model_path = Some(mtp_path.to_string());
+            guard.mtp_model_config_key = mtp_model_config_key;
         }
     }
 
@@ -1231,6 +1335,7 @@ pub(crate) fn unload_engine(app: &AppHandle) -> Result<(), String> {
             mmproj_path: None,
             mtp_model: None,
             mtp_model_path: None,
+            mtp_model_config_key: None,
             kqv_fallback_toast_shown: false,
         })
     });
@@ -1252,6 +1357,7 @@ pub(crate) fn unload_engine(app: &AppHandle) -> Result<(), String> {
         guard.mmproj_path = None;
         guard.mtp_model = None;
         guard.mtp_model_path = None;
+        guard.mtp_model_config_key = None;
         guard.kqv_fallback_toast_shown = false;
         log_info(app, "llama_cpp", "unloaded llama.cpp model");
     }
@@ -1299,6 +1405,7 @@ pub(crate) fn consume_kqv_fallback_toast(
             mmproj_path: None,
             mtp_model: None,
             mtp_model_path: None,
+            mtp_model_config_key: None,
             kqv_fallback_toast_shown: false,
         })
     });
