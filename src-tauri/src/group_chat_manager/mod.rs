@@ -5802,15 +5802,22 @@ fn build_group_system_prompt(
     } else {
         prompts::APP_GROUP_CHAT_TEMPLATE_ID
     };
-    let character_template_id = if is_roleplay {
+    let group_template_id = if is_roleplay {
         character.group_chat_roleplay_prompt_template_id.as_deref()
     } else {
         character.group_chat_prompt_template_id.as_deref()
     };
-    let expected_prompt_type = if is_roleplay {
+    let group_prompt_type = if is_roleplay {
         PromptTemplateType::GroupChatRoleplay
     } else {
         PromptTemplateType::GroupChatConversational
+    };
+    let (character_template_id, expected_prompt_type) = match group_template_id {
+        Some(template_id) => (Some(template_id), group_prompt_type),
+        None => (
+            character.prompt_template_id.as_deref(),
+            PromptTemplateType::DirectChat,
+        ),
     };
     if let Err(err) = prompts::ensure_group_chat_templates(app) {
         log_warn(
