@@ -7499,7 +7499,7 @@ export const plMessages: DeepPartialMessageTree<LocaleMessages> = {
     stages: {
       penalties: {
         label: "Kary",
-        desc: "Zastosuj kary częstotliwości i obecności przed filtrowaniem.",
+        desc: "Zastosuj kary powtórzeń, częstotliwości i obecności przed filtrowaniem.",
       },
       grammar: {
         label: "Gramatyka",

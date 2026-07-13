@@ -36,6 +36,7 @@ import { useI18n } from "../../../core/i18n/context";
 import { cn, interactive } from "../../design-tokens";
 import { toast } from "../../components/toast";
 import { NumberInput } from "../../components/NumberInput";
+import { ADVANCED_LLAMA_REPEAT_PENALTY_RANGE } from "../../components/AdvancedModelSettingsForm";
 
 type RuntimeDefaults = {
   llamaDefaultContextLength: number | null;
@@ -48,6 +49,7 @@ type RuntimeDefaults = {
   llamaPriorityVramLimitBytes: number | null;
   llamaBatchSize: number | null;
   llamaUbatchSize: number | null;
+  llamaRepeatPenalty: number | null;
 };
 
 type LlamaGpuDevice = {
@@ -239,6 +241,7 @@ export function LocalRuntimeDefaultsPage() {
           llamaPriorityVramLimitBytes: advancedModel.llamaPriorityVramLimitBytes ?? null,
           llamaBatchSize: advancedModel.llamaBatchSize ?? null,
           llamaUbatchSize: advancedModel.llamaUbatchSize ?? null,
+          llamaRepeatPenalty: advancedModel.llamaRepeatPenalty ?? null,
         });
       })
       .catch(() => {});
@@ -271,6 +274,7 @@ export function LocalRuntimeDefaultsPage() {
           llamaPriorityVramLimitBytes: next.llamaPriorityVramLimitBytes ?? undefined,
           llamaBatchSize: next.llamaBatchSize ?? undefined,
           llamaUbatchSize: next.llamaUbatchSize ?? undefined,
+          llamaRepeatPenalty: next.llamaRepeatPenalty ?? undefined,
         });
       } catch (err) {
         toast.error(
@@ -584,6 +588,30 @@ export function LocalRuntimeDefaultsPage() {
                 <option value="q8_0">Q8_0</option>
                 <option value="q4_0">Q4_0</option>
               </select>
+            </SettingRow>
+
+            <SettingRow
+              icon={<Sparkles className="h-4 w-4 text-warning/80" />}
+              iconClassName="border-warning/30 bg-warning/10"
+              title={t("editModel.ollamaParams.repeatPenalty")}
+              description={t("editModel.ollamaParams.repeatPenaltyDescription")}
+            >
+              <div className="w-28">
+                <NumberInput
+                  min={ADVANCED_LLAMA_REPEAT_PENALTY_RANGE.min}
+                  max={ADVANCED_LLAMA_REPEAT_PENALTY_RANGE.max}
+                  step={0.01}
+                  value={defaults.llamaRepeatPenalty}
+                  onChange={(next) =>
+                    void persistDefaults({
+                      ...defaults,
+                      llamaRepeatPenalty: next,
+                    })
+                  }
+                  placeholder="1.00"
+                  className={cn(controlClassName, "w-full text-center")}
+                />
+              </div>
             </SettingRow>
 
             <div data-tour-id="runtime-defaults-multigpu">

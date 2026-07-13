@@ -7410,7 +7410,7 @@ export const idMessages: DeepPartialMessageTree<LocaleMessages> = {
     stages: {
       penalties: {
         label: "Penalti",
-        desc: "Terapkan penalti frekuensi dan kehadiran sebelum penyaringan.",
+        desc: "Terapkan penalti pengulangan, frekuensi, dan kehadiran sebelum penyaringan.",
       },
       grammar: {
         label: "Tata Bahasa",

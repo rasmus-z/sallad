@@ -8077,7 +8077,7 @@ export const noMessages: DeepPartialMessageTree<LocaleMessages> = {
     stages: {
       penalties: {
         label: "Straffer",
-        desc: "Bruk frekvens- og tilstedeværelsesstraffer før filtrering.",
+        desc: "Bruk repetisjons-, frekvens- og tilstedeværelsesstraffer før filtrering.",
       },
       grammar: {
         label: "Grammatikk",

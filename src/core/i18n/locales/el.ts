@@ -8077,7 +8077,7 @@ export const elMessages: DeepPartialMessageTree<LocaleMessages> = {
     stages: {
       penalties: {
         label: "Ποινές",
-        desc: "Εφαρμογή ποινών συχνότητας και παρουσίας πριν το φιλτράρισμα.",
+        desc: "Εφαρμογή ποινών επανάληψης, συχνότητας και παρουσίας πριν το φιλτράρισμα.",
       },
       grammar: {
         label: "Γραμματική",

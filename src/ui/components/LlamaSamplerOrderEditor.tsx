@@ -19,7 +19,7 @@ const STAGE_META: Record<
     labelKey: "samplerOrder.stages.penalties.label",
     descriptionKey: "samplerOrder.stages.penalties.desc",
     label: "Penalties",
-    description: "Apply frequency and presence penalties before filtering.",
+    description: "Apply repeat, frequency, and presence penalties before filtering.",
   },
   grammar: {
     labelKey: "samplerOrder.stages.grammar.label",

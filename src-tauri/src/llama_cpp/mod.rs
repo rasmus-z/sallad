@@ -1187,6 +1187,13 @@ mod desktop {
             .or_else(|| body.get("llama_typical_p"))
             .and_then(|v| v.as_f64())
             .or(sampler_defaults.typical_p);
+        let repeat_penalty = body
+            .get("repeat_penalty")
+            .or_else(|| body.get("repeatPenalty"))
+            .or_else(|| body.get("llamaRepeatPenalty"))
+            .or_else(|| body.get("llama_repeat_penalty"))
+            .and_then(|v| v.as_f64())
+            .filter(|v| (0.0..=2.0).contains(v));
         let dry_multiplier = body
             .get("dry_multiplier")
             .or_else(|| body.get("llamaDryMultiplier"))
@@ -3698,6 +3705,7 @@ mod desktop {
                 top_k,
                 min_p,
                 typical_p,
+                repeat_penalty,
                 dry_multiplier,
                 dry_base,
                 dry_allowed_length,

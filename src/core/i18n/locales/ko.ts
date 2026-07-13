@@ -8077,7 +8077,7 @@ export const koMessages: DeepPartialMessageTree<LocaleMessages> = {
     stages: {
       penalties: {
         label: "페널티",
-        desc: "필터링 전에 빈도 및 존재 페널티를 적용합니다.",
+        desc: "필터링 전에 반복, 빈도 및 존재 페널티를 적용합니다.",
       },
       grammar: {
         label: "문법",

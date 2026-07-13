@@ -8720,7 +8720,7 @@ export const enMessages = {
     stages: {
       penalties: {
         label: "Penalties",
-        desc: "Apply frequency and presence penalties before filtering.",
+        desc: "Apply repeat, frequency, and presence penalties before filtering.",
       },
       grammar: {
         label: "Grammar",

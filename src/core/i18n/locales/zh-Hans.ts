@@ -8077,7 +8077,7 @@ export const zhHansMessages: DeepPartialMessageTree<LocaleMessages> = {
     stages: {
       penalties: {
         label: "惩罚",
-        desc: "在筛选前应用频率和存在惩罚。",
+        desc: "在筛选前应用重复、频率和存在惩罚。",
       },
       grammar: {
         label: "语法",

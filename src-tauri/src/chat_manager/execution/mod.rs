@@ -1006,6 +1006,24 @@ pub(super) fn resolve_llama_profile_typical_p(
     .typical_p
 }
 
+pub(super) fn resolve_llama_repeat_penalty(
+    session: &Session,
+    model: &Model,
+    settings: &Settings,
+) -> Option<f64> {
+    session
+        .advanced_model_settings
+        .as_ref()
+        .and_then(|cfg| cfg.llama_repeat_penalty)
+        .or_else(|| {
+            model
+                .advanced_model_settings
+                .as_ref()
+                .and_then(|cfg| cfg.llama_repeat_penalty)
+        })
+        .or(settings.advanced_model_settings.llama_repeat_penalty)
+}
+
 pub(super) fn resolve_llama_dry_multiplier(
     session: &Session,
     model: &Model,

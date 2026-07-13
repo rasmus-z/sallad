@@ -66,6 +66,7 @@ type ControllerReturn = {
   handleLlamaSamplerOrderChange: (value: AdvancedModelSettings["llamaSamplerOrder"]) => void;
   handleLlamaMinPChange: (value: number | null) => void;
   handleLlamaTypicalPChange: (value: number | null) => void;
+  handleLlamaRepeatPenaltyChange: (value: number | null) => void;
   handleLlamaXtcProbabilityChange: (value: number | null) => void;
   handleLlamaXtcThresholdChange: (value: number | null) => void;
   handleLlamaDryMultiplierChange: (value: number | null) => void;
@@ -809,6 +810,19 @@ export function useModelEditorController(): ControllerReturn {
         payload: {
           ...state.modelAdvancedDraft,
           llamaTypicalP: value,
+        },
+      });
+    },
+    [dispatch, state.modelAdvancedDraft],
+  );
+
+  const handleLlamaRepeatPenaltyChange = useCallback(
+    (value: number | null) => {
+      dispatch({
+        type: "set_model_advanced_draft",
+        payload: {
+          ...state.modelAdvancedDraft,
+          llamaRepeatPenalty: value,
         },
       });
     },
@@ -1695,6 +1709,7 @@ export function useModelEditorController(): ControllerReturn {
     handleLlamaSamplerOrderChange,
     handleLlamaMinPChange,
     handleLlamaTypicalPChange,
+    handleLlamaRepeatPenaltyChange,
     handleLlamaXtcProbabilityChange,
     handleLlamaXtcThresholdChange,
     handleLlamaDryMultiplierChange,

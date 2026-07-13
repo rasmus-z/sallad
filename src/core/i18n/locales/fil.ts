@@ -8077,7 +8077,7 @@ export const filMessages: DeepPartialMessageTree<LocaleMessages> = {
     stages: {
       penalties: {
         label: "Mga Parusa",
-        desc: "I-apply ang frequency at presence penalty bago ang filtering.",
+        desc: "I-apply ang repetition, frequency, at presence penalty bago ang filtering.",
       },
       grammar: {
         label: "Grammar",

@@ -4,26 +4,26 @@ use std::collections::HashMap;
 use crate::chat_manager::types::{Model, Session, Settings};
 
 use super::{
-    is_llama_cpp_model, llama_sampler_profile_defaults, resolve_context_length,
-    resolve_frequency_penalty, resolve_llama_batch_size, resolve_llama_chat_template_override,
-    resolve_llama_chat_template_preset, resolve_llama_dry_allowed_length, resolve_llama_dry_base,
-    resolve_llama_dry_multiplier, resolve_llama_dry_penalty_last_n,
-    resolve_llama_dry_sequence_breakers, resolve_llama_flash_attention,
-    resolve_llama_gpu_device_ids, resolve_llama_gpu_distribution_mode, resolve_llama_gpu_layers,
-    resolve_llama_gpu_manual_layers, resolve_llama_kv_placement, resolve_llama_kv_type,
-    resolve_llama_main_gpu, resolve_llama_mmproj_path, resolve_llama_mtp_draft_tokens,
-    resolve_llama_mtp_enabled, resolve_llama_mtp_model_path, resolve_llama_mtp_placement,
-    resolve_llama_multi_gpu_enabled, resolve_llama_offload_kqv,
-    resolve_llama_priority_vram_limit_bytes,
-    resolve_llama_profile_min_p, resolve_llama_profile_typical_p,
-    resolve_llama_raw_completion_fallback, resolve_llama_rope_freq_base,
-    resolve_llama_rope_freq_scale, resolve_llama_sampler_order, resolve_llama_sampler_profile,
-    llama_pin_overridden_by_multi_gpu, resolve_llama_multi_gpu_enabled_leveled,
-    resolve_llama_seed, resolve_llama_single_gpu_device_id_leveled,
-    resolve_llama_streaming_enabled, resolve_llama_strict_mode, resolve_llama_swa_full,
-    resolve_llama_threads, resolve_llama_threads_batch, resolve_llama_ubatch_size,
-    resolve_llama_xtc_probability, resolve_llama_xtc_threshold, resolve_max_tokens,
-    resolve_presence_penalty, resolve_temperature, resolve_top_k, resolve_top_p,
+    is_llama_cpp_model, llama_pin_overridden_by_multi_gpu, llama_sampler_profile_defaults,
+    resolve_context_length, resolve_frequency_penalty, resolve_llama_batch_size,
+    resolve_llama_chat_template_override, resolve_llama_chat_template_preset,
+    resolve_llama_dry_allowed_length, resolve_llama_dry_base, resolve_llama_dry_multiplier,
+    resolve_llama_dry_penalty_last_n, resolve_llama_dry_sequence_breakers,
+    resolve_llama_flash_attention, resolve_llama_gpu_device_ids,
+    resolve_llama_gpu_distribution_mode, resolve_llama_gpu_layers, resolve_llama_gpu_manual_layers,
+    resolve_llama_kv_placement, resolve_llama_kv_type, resolve_llama_main_gpu,
+    resolve_llama_mmproj_path, resolve_llama_mtp_draft_tokens, resolve_llama_mtp_enabled,
+    resolve_llama_mtp_model_path, resolve_llama_mtp_placement, resolve_llama_multi_gpu_enabled,
+    resolve_llama_multi_gpu_enabled_leveled, resolve_llama_offload_kqv,
+    resolve_llama_priority_vram_limit_bytes, resolve_llama_profile_min_p,
+    resolve_llama_profile_typical_p, resolve_llama_raw_completion_fallback,
+    resolve_llama_repeat_penalty, resolve_llama_rope_freq_base, resolve_llama_rope_freq_scale,
+    resolve_llama_sampler_order, resolve_llama_sampler_profile, resolve_llama_seed,
+    resolve_llama_single_gpu_device_id_leveled, resolve_llama_streaming_enabled,
+    resolve_llama_strict_mode, resolve_llama_swa_full, resolve_llama_threads,
+    resolve_llama_threads_batch, resolve_llama_ubatch_size, resolve_llama_xtc_probability,
+    resolve_llama_xtc_threshold, resolve_max_tokens, resolve_presence_penalty, resolve_temperature,
+    resolve_top_k, resolve_top_p,
 };
 
 fn build_llama_extra_fields(
@@ -149,6 +149,9 @@ fn build_llama_extra_fields(
     if let Some(v) = resolve_llama_profile_typical_p(session, model, settings) {
         extra.insert("llamaTypicalP".to_string(), json!(v));
     }
+    if let Some(v) = resolve_llama_repeat_penalty(session, model, settings) {
+        extra.insert("llamaRepeatPenalty".to_string(), json!(v));
+    }
     if let Some(v) = resolve_llama_dry_multiplier(session, model, settings) {
         extra.insert("llamaDryMultiplier".to_string(), json!(v));
     }
@@ -225,6 +228,7 @@ mod tests {
             llama_sampler_order: Some(vec!["top_k".to_string()]),
             llama_min_p: Some(0.05),
             llama_typical_p: Some(0.9),
+            llama_repeat_penalty: Some(1.1),
             llama_dry_multiplier: Some(0.8),
             llama_dry_base: Some(1.75),
             llama_dry_allowed_length: Some(2),
@@ -272,9 +276,10 @@ mod tests {
         let (session, model, settings) = populated_llama_fixture();
         let extra = build_llama_extra_fields(&session, &model, &settings)
             .expect("fully populated llama settings should emit extra-body fields");
+        assert_eq!(extra.get("llamaRepeatPenalty"), Some(&json!(1.1)));
         assert_eq!(
             extra.len(),
-            40,
+            41,
             "unexpected llama extra-body key count; a resolver stopped emitting or a new field was added without updating this fixture: {:?}",
             extra.keys().collect::<Vec<_>>()
         );

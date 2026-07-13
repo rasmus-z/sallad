@@ -8077,7 +8077,7 @@ export const nlMessages: DeepPartialMessageTree<LocaleMessages> = {
     stages: {
       penalties: {
         label: "Boetes",
-        desc: "Frequentie- en aanwezigheidsboetes toepassen voor filtering.",
+        desc: "Herhalings-, frequentie- en aanwezigheidsboetes toepassen voor filtering.",
       },
       grammar: {
         label: "Grammatica",

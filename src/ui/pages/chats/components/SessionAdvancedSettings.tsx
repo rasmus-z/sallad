@@ -19,6 +19,7 @@ import {
   ADVANCED_LLAMA_DRY_BASE_RANGE,
   ADVANCED_LLAMA_DRY_MULTIPLIER_RANGE,
   ADVANCED_LLAMA_DRY_PENALTY_LAST_N_RANGE,
+  ADVANCED_LLAMA_REPEAT_PENALTY_RANGE,
   ADVANCED_LLAMA_XTC_PROBABILITY_RANGE,
   ADVANCED_LLAMA_XTC_THRESHOLD_RANGE,
 } from "../../../components/AdvancedModelSettingsForm";
@@ -579,6 +580,17 @@ export function SessionAdvancedSettings({
                                 max={1}
                                 step={0.01}
                                 onChange={(v) => update({ llamaTypicalP: v })}
+                              />
+
+                              <ParameterField
+                                label={t("editModel.ollamaParams.repeatPenalty")}
+                                description={t("editModel.ollamaParams.repeatPenaltyDescription")}
+                                value={draft.llamaRepeatPenalty}
+                                placeholder="1.00"
+                                min={ADVANCED_LLAMA_REPEAT_PENALTY_RANGE.min}
+                                max={ADVANCED_LLAMA_REPEAT_PENALTY_RANGE.max}
+                                step={0.01}
+                                onChange={(v) => update({ llamaRepeatPenalty: v })}
                               />
 
                               <ParameterField

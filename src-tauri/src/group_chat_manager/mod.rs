@@ -909,6 +909,14 @@ pub(crate) fn build_llama_extra_fields(
     if let Some(v) = model
         .advanced_model_settings
         .as_ref()
+        .and_then(|a| a.llama_repeat_penalty)
+        .or(settings.advanced_model_settings.llama_repeat_penalty)
+    {
+        extra.insert("llamaRepeatPenalty".to_string(), json!(v));
+    }
+    if let Some(v) = model
+        .advanced_model_settings
+        .as_ref()
         .and_then(|a| a.llama_dry_multiplier)
         .or(settings.advanced_model_settings.llama_dry_multiplier)
     {
@@ -2156,6 +2164,7 @@ fn sanitize_dynamic_memory_extra_body_fields(
         "llamaSamplerOrder",
         "llamaMinP",
         "llamaTypicalP",
+        "llamaRepeatPenalty",
         "llamaDryMultiplier",
         "llamaDryBase",
         "llamaDryAllowedLength",
@@ -2192,6 +2201,7 @@ fn sanitize_dynamic_memory_extra_body_fields(
     extra.insert("presence_penalty".to_string(), json!(0.0));
     extra.insert("min_p".to_string(), json!(0.0));
     extra.insert("typical_p".to_string(), json!(0.0));
+    extra.insert("llamaRepeatPenalty".to_string(), json!(1.0));
     extra.insert("llamaDryMultiplier".to_string(), json!(0.0));
 
     if extra.is_empty() {

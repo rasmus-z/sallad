@@ -8077,7 +8077,7 @@ export const ruMessages: DeepPartialMessageTree<LocaleMessages> = {
     stages: {
       penalties: {
         label: "Штрафы",
-        desc: "Применить штрафы за частоту и присутствие перед фильтрацией.",
+        desc: "Применить штрафы за повторение, частоту и присутствие перед фильтрацией.",
       },
       grammar: {
         label: "Грамматика",

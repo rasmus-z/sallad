@@ -3381,6 +3381,7 @@ fn sanitize_dynamic_memory_extra_body_fields(
         "llamaSamplerOrder",
         "llamaMinP",
         "llamaTypicalP",
+        "llamaRepeatPenalty",
         "llamaDryMultiplier",
         "llamaDryBase",
         "llamaDryAllowedLength",
@@ -3417,6 +3418,7 @@ fn sanitize_dynamic_memory_extra_body_fields(
     extra.insert("presence_penalty".to_string(), json!(0.0));
     extra.insert("min_p".to_string(), json!(0.0));
     extra.insert("typical_p".to_string(), json!(0.0));
+    extra.insert("llamaRepeatPenalty".to_string(), json!(1.0));
     extra.insert("llamaDryMultiplier".to_string(), json!(0.8));
     extra.insert("llamaDryBase".to_string(), json!(1.75));
     extra.insert("llamaDryAllowedLength".to_string(), json!(2));

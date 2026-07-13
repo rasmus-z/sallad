@@ -62,6 +62,7 @@ const PARAMETER_LABELS: Record<keyof AdvancedModelSettings, string> = {
   llamaStreamingEnabled: "llama.cpp Streaming",
   llamaSamplerProfile: "llama.cpp Sampler Profile",
   llamaSamplerOrder: "llama.cpp Sampler Order",
+  llamaRepeatPenalty: "llama.cpp Repeat Penalty",
   llamaMinP: "llama.cpp Min P",
   llamaTypicalP: "llama.cpp Typical P",
   llamaDryMultiplier: "llama.cpp DRY Multiplier",
@@ -150,6 +151,7 @@ const PARAMETER_DESCRIPTIONS: Record<keyof AdvancedModelSettings, string> = {
   llamaSamplerProfile:
     "Preset local sampler defaults for chat, creativity, stability, or reasoning",
   llamaSamplerOrder: "Array of sampler stages executed in the saved order for local llama.cpp",
+  llamaRepeatPenalty: "Multiplicatively penalize tokens already present in the local context",
   llamaMinP: "Min-p sampling threshold for llama.cpp (0-1)",
   llamaTypicalP: "Typical sampling threshold for llama.cpp (0-1)",
   llamaDryMultiplier: "Enable DRY sequence repetition penalties when greater than 0",

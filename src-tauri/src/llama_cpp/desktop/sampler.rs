@@ -33,6 +33,7 @@ pub(super) struct ResolvedSamplerConfig {
     pub(super) top_k: Option<u32>,
     pub(super) min_p: Option<f64>,
     pub(super) typical_p: Option<f64>,
+    pub(super) repeat_penalty: Option<f64>,
     pub(super) dry_multiplier: Option<f64>,
     pub(super) dry_base: Option<f64>,
     pub(super) dry_allowed_length: Option<u32>,
@@ -221,18 +222,21 @@ pub(super) fn build_sampler(
     }
     let penalty_freq = config.frequency_penalty.unwrap_or(0.0);
     let penalty_present = config.presence_penalty.unwrap_or(0.0);
-    let mut penalties_sampler = if penalty_freq != 0.0 || penalty_present != 0.0 {
-        active_params.insert("frequency_penalty".to_string(), json!(penalty_freq));
-        active_params.insert("presence_penalty".to_string(), json!(penalty_present));
-        Some(LlamaSampler::penalties(
-            -1,
-            1.0,
-            penalty_freq as f32,
-            penalty_present as f32,
-        ))
-    } else {
-        None
-    };
+    let repeat_penalty = config.repeat_penalty.unwrap_or(1.0);
+    let mut penalties_sampler =
+        if repeat_penalty != 1.0 || penalty_freq != 0.0 || penalty_present != 0.0 {
+            active_params.insert("repeat_penalty".to_string(), json!(repeat_penalty));
+            active_params.insert("frequency_penalty".to_string(), json!(penalty_freq));
+            active_params.insert("presence_penalty".to_string(), json!(penalty_present));
+            Some(LlamaSampler::penalties(
+                -1,
+                repeat_penalty as f32,
+                penalty_freq as f32,
+                penalty_present as f32,
+            ))
+        } else {
+            None
+        };
 
     let mut grammar_sampler = None;
     if let Some(template_result) = chat_template_result {

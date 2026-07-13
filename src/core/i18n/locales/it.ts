@@ -7410,7 +7410,7 @@ export const itMessages: DeepPartialMessageTree<LocaleMessages> = {
     stages: {
       penalties: {
         label: "Penalità",
-        desc: "Applica penalità di frequenza e presenza prima del filtraggio.",
+        desc: "Applica penalità di ripetizione, frequenza e presenza prima del filtraggio.",
       },
       grammar: {
         label: "Grammatica",

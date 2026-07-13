@@ -7410,7 +7410,7 @@ export const hiMessages: DeepPartialMessageTree<LocaleMessages> = {
     stages: {
       penalties: {
         label: "पेनल्टी",
-        desc: "फ़िल्टरिंग से पहले फ्रीक्वेंसी और प्रेज़ेंस पेनल्टी लागू करें।",
+        desc: "फ़िल्टरिंग से पहले रिपीट, फ्रीक्वेंसी और प्रेज़ेंस पेनल्टी लागू करें।",
       },
       grammar: {
         label: "व्याकरण",

@@ -7410,7 +7410,7 @@ export const jaMessages: DeepPartialMessageTree<LocaleMessages> = {
     stages: {
       penalties: {
         label: "ペナルティ",
-        desc: "フィルタリング前に頻度ペナルティと存在ペナルティを適用。",
+        desc: "フィルタリング前に繰り返し、頻度、存在ペナルティを適用。",
       },
       grammar: {
         label: "文法",

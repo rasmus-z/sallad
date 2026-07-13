@@ -7410,7 +7410,7 @@ export const viMessages: DeepPartialMessageTree<LocaleMessages> = {
     stages: {
       penalties: {
         label: "Phạt",
-        desc: "Áp dụng phạt tần suất và hiện diện trước khi lọc.",
+        desc: "Áp dụng phạt lặp lại, tần suất và hiện diện trước khi lọc.",
       },
       grammar: {
         label: "Ngữ pháp",

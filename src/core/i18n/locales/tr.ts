@@ -8077,7 +8077,7 @@ export const trMessages: DeepPartialMessageTree<LocaleMessages> = {
     stages: {
       penalties: {
         label: "Cezalar",
-        desc: "Filtrelemeden önce frekans ve varlık cezalarını uygula.",
+        desc: "Filtrelemeden önce tekrar, frekans ve varlık cezalarını uygula.",
       },
       grammar: {
         label: "Dilbilgisi",

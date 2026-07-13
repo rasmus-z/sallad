@@ -36,6 +36,7 @@ export const ADVANCED_LLAMA_DRY_ALLOWED_LENGTH_RANGE = { min: 0, max: 128 };
 export const ADVANCED_LLAMA_DRY_PENALTY_LAST_N_RANGE = { min: -1, max: 262_144 };
 export const ADVANCED_LLAMA_XTC_PROBABILITY_RANGE = { min: 0, max: 1 };
 export const ADVANCED_LLAMA_XTC_THRESHOLD_RANGE = { min: 0, max: 1 };
+export const ADVANCED_LLAMA_REPEAT_PENALTY_RANGE = { min: 0, max: 2 };
 export const ADVANCED_OLLAMA_NUM_CTX_RANGE = { min: 0, max: 262_144 };
 export const ADVANCED_OLLAMA_NUM_PREDICT_RANGE = { min: 0, max: 131_072 };
 export const ADVANCED_OLLAMA_NUM_KEEP_RANGE = { min: 0, max: 32_768 };
@@ -191,6 +192,11 @@ export function sanitizeAdvancedModelSettings(input: AdvancedModelSettings): Adv
     llamaSamplerOrder: normalizeLlamaSamplerOrder(input.llamaSamplerOrder),
     llamaMinP: sanitize(input.llamaMinP, ADVANCED_OLLAMA_MIN_P_RANGE, false),
     llamaTypicalP: sanitize(input.llamaTypicalP, ADVANCED_OLLAMA_TYPICAL_P_RANGE, false),
+    llamaRepeatPenalty: sanitize(
+      input.llamaRepeatPenalty,
+      ADVANCED_LLAMA_REPEAT_PENALTY_RANGE,
+      false,
+    ),
     llamaDryMultiplier: sanitize(
       input.llamaDryMultiplier,
       ADVANCED_LLAMA_DRY_MULTIPLIER_RANGE,

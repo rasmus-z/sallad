@@ -681,6 +681,8 @@ pub struct AdvancedModelSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub llama_typical_p: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub llama_repeat_penalty: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub llama_dry_multiplier: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub llama_dry_base: Option<f64>,
@@ -792,6 +794,7 @@ impl Default for AdvancedModelSettings {
             llama_sampler_order: None,
             llama_min_p: None,
             llama_typical_p: None,
+            llama_repeat_penalty: None,
             llama_dry_multiplier: None,
             llama_dry_base: None,
             llama_dry_allowed_length: None,

@@ -8077,7 +8077,7 @@ export const deMessages: DeepPartialMessageTree<LocaleMessages> = {
     stages: {
       penalties: {
         label: "Strafen",
-        desc: "Frequenz- und Präsenzstrafen vor dem Filtern anwenden.",
+        desc: "Wiederholungs-, Frequenz- und Präsenzstrafen vor dem Filtern anwenden.",
       },
       grammar: {
         label: "Grammatik",

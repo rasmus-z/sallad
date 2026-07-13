@@ -28,6 +28,7 @@ import {
   ADVANCED_LLAMA_DRY_BASE_RANGE,
   ADVANCED_LLAMA_DRY_ALLOWED_LENGTH_RANGE,
   ADVANCED_LLAMA_DRY_PENALTY_LAST_N_RANGE,
+  ADVANCED_LLAMA_REPEAT_PENALTY_RANGE,
   ADVANCED_OLLAMA_NUM_CTX_RANGE,
   ADVANCED_OLLAMA_NUM_PREDICT_RANGE,
   ADVANCED_OLLAMA_NUM_KEEP_RANGE,
@@ -565,6 +566,7 @@ export function EditModelPage() {
     handleLlamaSamplerOrderChange,
     handleLlamaMinPChange,
     handleLlamaTypicalPChange,
+    handleLlamaRepeatPenaltyChange,
     handleLlamaXtcProbabilityChange,
     handleLlamaXtcThresholdChange,
     handleLlamaDryMultiplierChange,
@@ -5352,6 +5354,28 @@ export function EditModelPage() {
                                       value={modelAdvancedDraft.llamaTypicalP ?? null}
                                       onChange={(next) => handleLlamaTypicalPChange(next)}
                                       placeholder={t("editModel.placeholders.default")}
+                                      className={numberInputClassName}
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-6">
+                                  <div className="space-y-4">
+                                    <div className="space-y-0.5">
+                                      <span className="block text-[13px] font-medium text-fg/70">
+                                        {t("editModel.ollamaParams.repeatPenalty")}
+                                      </span>
+                                      <span className="block text-[13px] text-fg/40">
+                                        {t("editModel.ollamaParams.repeatPenaltyDescription")}
+                                      </span>
+                                    </div>
+                                    <NumberInput
+                                      min={ADVANCED_LLAMA_REPEAT_PENALTY_RANGE.min}
+                                      max={ADVANCED_LLAMA_REPEAT_PENALTY_RANGE.max}
+                                      step={0.01}
+                                      value={modelAdvancedDraft.llamaRepeatPenalty ?? null}
+                                      onChange={(next) => handleLlamaRepeatPenaltyChange(next)}
+                                      placeholder="1.00"
                                       className={numberInputClassName}
                                     />
                                   </div>
