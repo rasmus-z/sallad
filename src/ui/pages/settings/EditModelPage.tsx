@@ -5158,29 +5158,31 @@ export function EditModelPage() {
                                               {t("editModel.mtp.placementDescription")}
                                             </span>
                                           </div>
-                                          <select
-                                            value={modelAdvancedDraft.llamaMtpPlacement ?? "auto"}
-                                            onChange={(event) => {
-                                              const value = event.target.value;
-                                              handleLlamaMtpPlacementChange(
-                                                value === "auto"
-                                                  ? null
-                                                  : (value as "gpu" | "cpu"),
-                                              );
-                                            }}
-                                            className={cn(selectInputClassName, "w-36 shrink-0")}
-                                            aria-label={t("editModel.mtp.placement")}
-                                          >
-                                            <option value="auto" className="bg-[#16171d]">
-                                              {t("common.labels.auto")}
-                                            </option>
-                                            <option value="gpu" className="bg-[#16171d]">
-                                              {t("editModel.mtp.placementGpu")}
-                                            </option>
-                                            <option value="cpu" className="bg-[#16171d]">
-                                              {t("editModel.mtp.placementCpu")}
-                                            </option>
-                                          </select>
+                                          <div className="w-36 shrink-0">
+                                            <select
+                                              value={modelAdvancedDraft.llamaMtpPlacement ?? "auto"}
+                                              onChange={(event) => {
+                                                const value = event.target.value;
+                                                handleLlamaMtpPlacementChange(
+                                                  value === "auto"
+                                                    ? null
+                                                    : (value as "gpu" | "cpu"),
+                                                );
+                                              }}
+                                              className={selectInputClassName}
+                                              aria-label={t("editModel.mtp.placement")}
+                                            >
+                                              <option value="auto" className="bg-[#16171d]">
+                                                {t("common.labels.auto")}
+                                              </option>
+                                              <option value="gpu" className="bg-[#16171d]">
+                                                {t("editModel.mtp.placementGpu")}
+                                              </option>
+                                              <option value="cpu" className="bg-[#16171d]">
+                                                {t("editModel.mtp.placementCpu")}
+                                              </option>
+                                            </select>
+                                          </div>
                                         </div>
 
                                         <div className="flex items-center justify-between">
