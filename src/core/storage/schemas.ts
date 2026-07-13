@@ -43,6 +43,13 @@ export const LlamaSamplerOrderStageSchema = z.enum(LLAMA_SAMPLER_ORDER_STAGE_VAL
 export type LlamaSamplerProfile = z.infer<typeof LlamaSamplerProfileSchema>;
 export type LlamaSamplerOrderStage = z.infer<typeof LlamaSamplerOrderStageSchema>;
 
+export const LlamaSamplerPresetSchema = z.object({
+  id: z.string().trim().min(1).max(128),
+  name: z.string().trim().min(1).max(64),
+  stages: z.array(LlamaSamplerOrderStageSchema).max(LLAMA_SAMPLER_ORDER_STAGE_VALUES.length),
+});
+export type LlamaSamplerPreset = z.infer<typeof LlamaSamplerPresetSchema>;
+
 export const DEFAULT_LLAMA_SAMPLER_ORDER: readonly LlamaSamplerOrderStage[] = [
   "penalties",
   "grammar",
@@ -77,15 +84,6 @@ export function normalizeLlamaSamplerOrder(value: unknown): LlamaSamplerOrderSta
     if (!known.has(trimmed) || seen.has(trimmed)) continue;
     seen.add(trimmed);
     normalized.push(trimmed as LlamaSamplerOrderStage);
-  }
-
-  if (normalized.length === 0) {
-    return null;
-  }
-
-  for (const stage of DEFAULT_LLAMA_SAMPLER_ORDER) {
-    if (seen.has(stage)) continue;
-    normalized.push(stage);
   }
 
   return normalized;
@@ -521,7 +519,7 @@ export const AdvancedModelSettingsSchema = z.object({
   llamaMtpModelPath: z.string().trim().min(1).nullable().optional(),
   llamaStreamingEnabled: z.boolean().nullable().optional(),
   llamaSamplerProfile: LlamaSamplerProfileSchema.nullable().optional(),
-  llamaSamplerOrder: z.array(LlamaSamplerOrderStageSchema).min(1).nullable().optional(),
+  llamaSamplerOrder: z.array(LlamaSamplerOrderStageSchema).nullable().optional(),
   llamaMinP: z.number().min(0).max(1).nullable().optional(),
   llamaTypicalP: z.number().min(0).max(1).nullable().optional(),
   llamaRepeatPenalty: z.number().min(0).max(2).nullable().optional(),
@@ -3125,6 +3123,7 @@ export const SettingsSchema = z.object({
       customLlmModelsDir: z.string().optional(),
       llamaDefaultContextLength: z.number().int().min(512).max(1048576).optional(),
       llamaDefaultKvCacheType: z.enum(["auto", "f16", "q8_0", "q4_0"]).optional(),
+      llamaSamplerPresets: z.array(LlamaSamplerPresetSchema).max(64).optional(),
       avatarGenerationEnabled: z.boolean().optional(),
       avatarGenerationModelId: z.string().optional(),
       sceneGenerationEnabled: z.boolean().optional(),
@@ -3205,6 +3204,7 @@ export function createDefaultSettings(): Settings {
       sceneGenerationMode: "auto",
       appUpdateChecksEnabled: true,
       developerModeEnabled: false,
+      llamaSamplerPresets: [],
       hostApi: {
         enabled: false,
         bindAddress: "0.0.0.0",

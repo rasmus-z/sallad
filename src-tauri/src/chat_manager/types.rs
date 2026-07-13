@@ -318,6 +318,8 @@ pub struct AdvancedSettings {
     #[serde(default)]
     pub llama_default_kv_cache_type: Option<String>,
     #[serde(default)]
+    pub llama_sampler_presets: Option<Vec<LlamaSamplerPreset>>,
+    #[serde(default)]
     pub sd_default_offload_mode: Option<String>,
     #[serde(default)]
     pub sd_default_size: Option<String>,
@@ -431,6 +433,15 @@ pub struct AdvancedSettings {
     pub accessibility: Option<AccessibilitySettings>,
     #[serde(default)]
     pub chat_appearance: Option<Value>,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct LlamaSamplerPreset {
+    pub id: String,
+    pub name: String,
+    #[serde(default)]
+    pub stages: Vec<String>,
 }
 
 #[derive(Deserialize, Serialize, Clone, Copy, Debug, PartialEq, Eq)]

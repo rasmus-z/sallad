@@ -180,22 +180,14 @@ fn normalize_sampler_order(value: Option<&[String]>) -> Vec<&'static str> {
     let mut seen = std::collections::HashSet::new();
     let mut order = Vec::new();
 
-    if let Some(value) = value {
-        for stage in value {
-            let Some(stage) = normalize_sampler_stage(stage) else {
-                continue;
-            };
-            if seen.insert(stage) {
-                order.push(stage);
-            }
-        }
-    }
-
-    if order.is_empty() {
+    let Some(value) = value else {
         return DEFAULT_LLAMA_SAMPLER_ORDER.to_vec();
-    }
+    };
 
-    for stage in DEFAULT_LLAMA_SAMPLER_ORDER {
+    for stage in value {
+        let Some(stage) = normalize_sampler_stage(stage) else {
+            continue;
+        };
         if seen.insert(stage) {
             order.push(stage);
         }
@@ -469,6 +461,11 @@ pub(super) fn build_sampler(
         }
     }
 
+    if let Some(sampler) = grammar_sampler {
+        order.insert(0, "grammar");
+        samplers.insert(0, sampler);
+    }
+
     if config.temperature > 0.0 {
         order.push("dist");
         samplers.push(LlamaSampler::dist(
@@ -484,4 +481,32 @@ pub(super) fn build_sampler(
         order,
         active_params: Value::Object(active_params),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sampler_order_preserves_explicit_subsets() {
+        let configured = vec![
+            "min_p".to_string(),
+            "temp".to_string(),
+            "min_p".to_string(),
+            "unknown".to_string(),
+        ];
+
+        assert_eq!(
+            normalize_sampler_order(Some(&configured)),
+            vec!["min_p", "temp"]
+        );
+    }
+
+    #[test]
+    fn sampler_order_preserves_an_explicit_empty_chain() {
+        let configured = Vec::<String>::new();
+
+        assert!(normalize_sampler_order(Some(&configured)).is_empty());
+        assert_eq!(normalize_sampler_order(None), DEFAULT_LLAMA_SAMPLER_ORDER);
+    }
 }

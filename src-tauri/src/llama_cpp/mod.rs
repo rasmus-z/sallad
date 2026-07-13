@@ -1149,8 +1149,7 @@ mod desktop {
                     .iter()
                     .filter_map(|item| item.as_str().map(|stage| stage.to_string()))
                     .collect::<Vec<_>>()
-            })
-            .filter(|items| !items.is_empty());
+            });
         let sampler_defaults = if disable_sampler_profile_defaults {
             SamplerProfileDefaults {
                 name: "custom",

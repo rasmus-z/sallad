@@ -231,6 +231,7 @@ fn default_settings() -> Settings {
         advanced_settings: Some(AdvancedSettings {
             llama_default_context_length: None,
             llama_default_kv_cache_type: None,
+            llama_sampler_presets: None,
             sd_default_offload_mode: None,
             sd_default_size: None,
             summarisation_model_id: None,
