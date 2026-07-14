@@ -93,6 +93,7 @@ impl FeatureGenerationSettings {
             llama_min_p: self.llama_min_p,
             llama_typical_p: self.llama_typical_p,
             llama_repeat_penalty: self.llama_repeat_penalty,
+            llama_n_pen_range: self.llama_n_pen_range,
             llama_xtc_probability: self.llama_xtc_probability,
             llama_xtc_threshold: self.llama_xtc_threshold,
             llama_dry_multiplier: self.llama_dry_multiplier,
@@ -120,6 +121,7 @@ impl FeatureGenerationSettings {
             || self.llama_min_p.is_some()
             || self.llama_typical_p.is_some()
             || self.llama_repeat_penalty.is_some()
+            || self.llama_n_pen_range.is_some()
             || self.llama_xtc_probability.is_some()
             || self.llama_xtc_threshold.is_some()
             || self.llama_dry_multiplier.is_some()

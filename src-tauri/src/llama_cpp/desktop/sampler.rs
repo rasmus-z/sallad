@@ -34,6 +34,8 @@ pub(super) struct ResolvedSamplerConfig {
     pub(super) min_p: Option<f64>,
     pub(super) typical_p: Option<f64>,
     pub(super) repeat_penalty: Option<f64>,
+    pub(super) n_pen_range: Option<i32>,
+    pub(super) context_size: u32,
     pub(super) dry_multiplier: Option<f64>,
     pub(super) dry_base: Option<f64>,
     pub(super) dry_allowed_length: Option<u32>,
@@ -196,6 +198,13 @@ fn normalize_sampler_order(value: Option<&[String]>) -> Vec<&'static str> {
     order
 }
 
+fn resolve_n_pen_range(value: Option<i32>, context_size: u32) -> i32 {
+    match value.unwrap_or(-1) {
+        -1 => i32::try_from(context_size).unwrap_or(i32::MAX),
+        value => value,
+    }
+}
+
 pub(super) fn build_sampler(
     model: &LlamaModel,
     config: &ResolvedSamplerConfig,
@@ -215,13 +224,15 @@ pub(super) fn build_sampler(
     let penalty_freq = config.frequency_penalty.unwrap_or(0.0);
     let penalty_present = config.presence_penalty.unwrap_or(0.0);
     let repeat_penalty = config.repeat_penalty.unwrap_or(1.0);
+    let n_pen_range = resolve_n_pen_range(config.n_pen_range, config.context_size);
     let mut penalties_sampler =
         if repeat_penalty != 1.0 || penalty_freq != 0.0 || penalty_present != 0.0 {
             active_params.insert("repeat_penalty".to_string(), json!(repeat_penalty));
+            active_params.insert("n_pen_range".to_string(), json!(n_pen_range));
             active_params.insert("frequency_penalty".to_string(), json!(penalty_freq));
             active_params.insert("presence_penalty".to_string(), json!(penalty_present));
             Some(LlamaSampler::penalties(
-                -1,
+                n_pen_range,
                 repeat_penalty as f32,
                 penalty_freq as f32,
                 penalty_present as f32,
@@ -508,5 +519,13 @@ mod tests {
 
         assert!(normalize_sampler_order(Some(&configured)).is_empty());
         assert_eq!(normalize_sampler_order(None), DEFAULT_LLAMA_SAMPLER_ORDER);
+    }
+
+    #[test]
+    fn penalty_range_resolves_full_context_and_preserves_explicit_values() {
+        assert_eq!(resolve_n_pen_range(None, 8_192), 8_192);
+        assert_eq!(resolve_n_pen_range(Some(-1), 4_096), 4_096);
+        assert_eq!(resolve_n_pen_range(Some(0), 4_096), 0);
+        assert_eq!(resolve_n_pen_range(Some(64), 4_096), 64);
     }
 }

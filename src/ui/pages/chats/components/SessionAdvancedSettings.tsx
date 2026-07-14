@@ -20,6 +20,7 @@ import {
   ADVANCED_LLAMA_DRY_MULTIPLIER_RANGE,
   ADVANCED_LLAMA_DRY_PENALTY_LAST_N_RANGE,
   ADVANCED_LLAMA_REPEAT_PENALTY_RANGE,
+  ADVANCED_LLAMA_N_PEN_RANGE,
   ADVANCED_LLAMA_XTC_PROBABILITY_RANGE,
   ADVANCED_LLAMA_XTC_THRESHOLD_RANGE,
 } from "../../../components/AdvancedModelSettingsForm";
@@ -414,6 +415,18 @@ export function SessionAdvancedSettings({
                                 max={ADVANCED_LLAMA_REPEAT_PENALTY_RANGE.max}
                                 step={0.01}
                                 onChange={(v) => update({ llamaRepeatPenalty: v })}
+                              />
+
+                              <ParameterField
+                                label={t("editModel.llamaSampler.penaltyRange")}
+                                description={t("editModel.llamaSampler.penaltyRangeDescription")}
+                                value={draft.llamaNPenRange}
+                                placeholder="-1"
+                                min={ADVANCED_LLAMA_N_PEN_RANGE.min}
+                                max={ADVANCED_LLAMA_N_PEN_RANGE.max}
+                                step={1}
+                                onChange={(v) => update({ llamaNPenRange: v })}
+                                inputMode="numeric"
                               />
 
                               <ParameterField

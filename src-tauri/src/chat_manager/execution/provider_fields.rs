@@ -15,8 +15,8 @@ use super::{
     resolve_llama_mmproj_path, resolve_llama_mtp_draft_tokens, resolve_llama_mtp_enabled,
     resolve_llama_mtp_model_path, resolve_llama_mtp_placement, resolve_llama_multi_gpu_enabled,
     resolve_llama_multi_gpu_enabled_leveled, resolve_llama_offload_kqv,
-    resolve_llama_priority_vram_limit_bytes, resolve_llama_profile_min_p,
-    resolve_llama_profile_typical_p, resolve_llama_raw_completion_fallback,
+    resolve_llama_n_pen_range, resolve_llama_priority_vram_limit_bytes,
+    resolve_llama_profile_min_p, resolve_llama_profile_typical_p, resolve_llama_raw_completion_fallback,
     resolve_llama_repeat_penalty, resolve_llama_rope_freq_base, resolve_llama_rope_freq_scale,
     resolve_llama_sampler_order, resolve_llama_sampler_profile, resolve_llama_seed,
     resolve_llama_single_gpu_device_id_leveled, resolve_llama_streaming_enabled,
@@ -152,6 +152,9 @@ fn build_llama_extra_fields(
     if let Some(v) = resolve_llama_repeat_penalty(session, model, settings) {
         extra.insert("llamaRepeatPenalty".to_string(), json!(v));
     }
+    if let Some(v) = resolve_llama_n_pen_range(session, model, settings) {
+        extra.insert("llamaNPenRange".to_string(), json!(v));
+    }
     if let Some(v) = resolve_llama_dry_multiplier(session, model, settings) {
         extra.insert("llamaDryMultiplier".to_string(), json!(v));
     }
@@ -229,6 +232,7 @@ mod tests {
             llama_min_p: Some(0.05),
             llama_typical_p: Some(0.9),
             llama_repeat_penalty: Some(1.1),
+            llama_n_pen_range: Some(64),
             llama_dry_multiplier: Some(0.8),
             llama_dry_base: Some(1.75),
             llama_dry_allowed_length: Some(2),
@@ -277,9 +281,10 @@ mod tests {
         let extra = build_llama_extra_fields(&session, &model, &settings)
             .expect("fully populated llama settings should emit extra-body fields");
         assert_eq!(extra.get("llamaRepeatPenalty"), Some(&json!(1.1)));
+        assert_eq!(extra.get("llamaNPenRange"), Some(&json!(64)));
         assert_eq!(
             extra.len(),
-            41,
+            42,
             "unexpected llama extra-body key count; a resolver stopped emitting or a new field was added without updating this fixture: {:?}",
             extra.keys().collect::<Vec<_>>()
         );

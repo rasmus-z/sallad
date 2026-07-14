@@ -41,6 +41,7 @@ export const ADVANCED_LLAMA_DRY_PENALTY_LAST_N_RANGE = { min: -1, max: 262_144 }
 export const ADVANCED_LLAMA_XTC_PROBABILITY_RANGE = { min: 0, max: 1 };
 export const ADVANCED_LLAMA_XTC_THRESHOLD_RANGE = { min: 0, max: 1 };
 export const ADVANCED_LLAMA_REPEAT_PENALTY_RANGE = { min: 0, max: 2 };
+export const ADVANCED_LLAMA_N_PEN_RANGE = { min: -1, max: 262_144 };
 export const ADVANCED_OLLAMA_NUM_CTX_RANGE = { min: 0, max: 262_144 };
 export const ADVANCED_OLLAMA_NUM_PREDICT_RANGE = { min: 0, max: 131_072 };
 export const ADVANCED_OLLAMA_NUM_KEEP_RANGE = { min: 0, max: 32_768 };
@@ -70,6 +71,7 @@ const FEATURE_GENERATION_NUMBER_RANGES = {
   llamaMinP: ADVANCED_TOP_P_RANGE,
   llamaTypicalP: ADVANCED_TOP_P_RANGE,
   llamaRepeatPenalty: ADVANCED_LLAMA_REPEAT_PENALTY_RANGE,
+  llamaNPenRange: ADVANCED_LLAMA_N_PEN_RANGE,
   llamaXtcProbability: ADVANCED_LLAMA_XTC_PROBABILITY_RANGE,
   llamaXtcThreshold: ADVANCED_LLAMA_XTC_THRESHOLD_RANGE,
   llamaDryMultiplier: ADVANCED_LLAMA_DRY_MULTIPLIER_RANGE,
@@ -271,6 +273,7 @@ export function sanitizeAdvancedModelSettings(input: AdvancedModelSettings): Adv
       ADVANCED_LLAMA_REPEAT_PENALTY_RANGE,
       false,
     ),
+    llamaNPenRange: sanitize(input.llamaNPenRange, ADVANCED_LLAMA_N_PEN_RANGE, true),
     llamaDryMultiplier: sanitize(
       input.llamaDryMultiplier,
       ADVANCED_LLAMA_DRY_MULTIPLIER_RANGE,

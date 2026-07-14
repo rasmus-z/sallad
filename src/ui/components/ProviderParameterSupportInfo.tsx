@@ -11,7 +11,9 @@ interface ProviderParameterSupportInfoProps {
   compact?: boolean;
 }
 
-const PARAMETER_LABELS: Record<keyof AdvancedModelSettings, string> = {
+type StaticParameter = Exclude<keyof AdvancedModelSettings, "llamaNPenRange">;
+
+const PARAMETER_LABELS: Record<StaticParameter, string> = {
   temperature: "Temperature",
   topP: "Top P",
   maxOutputTokens: "Max Tokens",
@@ -98,7 +100,7 @@ const PARAMETER_LABELS: Record<keyof AdvancedModelSettings, string> = {
   featureGenerationSettings: "Feature Generation Overrides",
 };
 
-const PARAMETER_DESCRIPTIONS: Record<keyof AdvancedModelSettings, string> = {
+const PARAMETER_DESCRIPTIONS: Record<StaticParameter, string> = {
   temperature: "Controls randomness (0-2)",
   topP: "Nucleus sampling threshold (0-1)",
   maxOutputTokens: "Maximum response length",
@@ -198,6 +200,14 @@ export function ProviderParameterSupportInfo({
 }: ProviderParameterSupportInfoProps) {
   const { t } = useI18n();
   const provider = resolveParameterSupport(providerId);
+  const parameterLabel = (parameter: keyof AdvancedModelSettings) =>
+    parameter === "llamaNPenRange"
+      ? `llama.cpp ${t("editModel.llamaSampler.penaltyRange")}`
+      : PARAMETER_LABELS[parameter as StaticParameter];
+  const parameterDescription = (parameter: keyof AdvancedModelSettings) =>
+    parameter === "llamaNPenRange"
+      ? t("editModel.llamaSampler.penaltyRangeDescription")
+      : PARAMETER_DESCRIPTIONS[parameter as StaticParameter];
 
   if (!provider) {
     return (
@@ -224,7 +234,7 @@ export function ProviderParameterSupportInfo({
             key={param}
             className="rounded-md border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-medium text-emerald-200"
           >
-            {PARAMETER_LABELS[param]}
+            {parameterLabel(param)}
           </span>
         ))}
       </div>
@@ -277,7 +287,7 @@ export function ProviderParameterSupportInfo({
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-white">{PARAMETER_LABELS[param]}</div>
+                <div className="text-sm font-medium text-white">{parameterLabel(param)}</div>
                 <div className="text-xs text-white/50 truncate">
                   {param === "reasoningEffort" && reasoningCapability.type === "none"
                     ? t("components.providerParameterSupport.reasoningNotSupportedEffort")
@@ -285,7 +295,7 @@ export function ProviderParameterSupportInfo({
                       ? t("components.providerParameterSupport.reasoningNotSupportedBudgetOnly")
                       : param === "reasoningBudgetTokens" && reasoningCapability.type === "none"
                         ? t("components.providerParameterSupport.reasoningNotSupported")
-                        : PARAMETER_DESCRIPTIONS[param]}
+                        : parameterDescription(param)}
                 </div>
               </div>
             </div>
@@ -341,6 +351,10 @@ export function ProviderParameterSupportInfo({
  */
 export function AllProvidersParameterSupport() {
   const { t } = useI18n();
+  const parameterLabel = (parameter: keyof AdvancedModelSettings) =>
+    parameter === "llamaNPenRange"
+      ? `llama.cpp ${t("editModel.llamaSampler.penaltyRange")}`
+      : PARAMETER_LABELS[parameter as StaticParameter];
   const allProviders = Object.values(PROVIDER_PARAMETER_SUPPORT);
   const allParams = Object.keys(
     PROVIDER_PARAMETER_SUPPORT.openai.supportedParameters,
@@ -361,7 +375,7 @@ export function AllProvidersParameterSupport() {
               </th>
               {allParams.map((param) => (
                 <th key={param} className="pb-2 px-2 text-center font-medium text-white/60">
-                  {PARAMETER_LABELS[param]}
+                  {parameterLabel(param)}
                 </th>
               ))}
             </tr>

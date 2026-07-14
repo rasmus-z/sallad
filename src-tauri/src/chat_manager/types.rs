@@ -495,6 +495,8 @@ pub struct FeatureGenerationSettings {
     #[serde(default)]
     pub llama_repeat_penalty: Option<f64>,
     #[serde(default)]
+    pub llama_n_pen_range: Option<i32>,
+    #[serde(default)]
     pub llama_xtc_probability: Option<f64>,
     #[serde(default)]
     pub llama_xtc_threshold: Option<f64>,
@@ -780,6 +782,8 @@ pub struct AdvancedModelSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub llama_repeat_penalty: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub llama_n_pen_range: Option<i32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub llama_dry_multiplier: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub llama_dry_base: Option<f64>,
@@ -905,6 +909,7 @@ impl Default for AdvancedModelSettings {
             llama_min_p: None,
             llama_typical_p: None,
             llama_repeat_penalty: None,
+            llama_n_pen_range: None,
             llama_dry_multiplier: None,
             llama_dry_base: None,
             llama_dry_allowed_length: None,

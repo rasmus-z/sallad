@@ -29,6 +29,7 @@ import {
   ADVANCED_LLAMA_DRY_ALLOWED_LENGTH_RANGE,
   ADVANCED_LLAMA_DRY_PENALTY_LAST_N_RANGE,
   ADVANCED_LLAMA_REPEAT_PENALTY_RANGE,
+  ADVANCED_LLAMA_N_PEN_RANGE,
   ADVANCED_OLLAMA_NUM_CTX_RANGE,
   ADVANCED_OLLAMA_NUM_PREDICT_RANGE,
   ADVANCED_OLLAMA_NUM_KEEP_RANGE,
@@ -629,6 +630,7 @@ export function EditModelPage() {
     handleLlamaMinPChange,
     handleLlamaTypicalPChange,
     handleLlamaRepeatPenaltyChange,
+    handleLlamaNPenRangeChange,
     handleLlamaXtcProbabilityChange,
     handleLlamaXtcThresholdChange,
     handleLlamaDryMultiplierChange,
@@ -3929,6 +3931,26 @@ export function EditModelPage() {
                                       value={modelAdvancedDraft.llamaRepeatPenalty ?? null}
                                       onChange={(next) => handleLlamaRepeatPenaltyChange(next)}
                                       placeholder="1.00"
+                                      className={numberInputClassName}
+                                    />
+                                  </div>
+
+                                  <div className="space-y-4">
+                                    <div className="space-y-0.5">
+                                      <span className="block text-[13px] font-medium text-fg/70">
+                                        {t("editModel.llamaSampler.penaltyRange")}
+                                      </span>
+                                      <span className="block text-[13px] text-fg/40">
+                                        {t("editModel.llamaSampler.penaltyRangeDescription")}
+                                      </span>
+                                    </div>
+                                    <NumberInput
+                                      min={ADVANCED_LLAMA_N_PEN_RANGE.min}
+                                      max={ADVANCED_LLAMA_N_PEN_RANGE.max}
+                                      step={1}
+                                      value={modelAdvancedDraft.llamaNPenRange ?? null}
+                                      onChange={(next) => handleLlamaNPenRangeChange(next)}
+                                      placeholder="-1"
                                       className={numberInputClassName}
                                     />
                                   </div>

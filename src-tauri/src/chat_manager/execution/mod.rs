@@ -1024,6 +1024,24 @@ pub(super) fn resolve_llama_repeat_penalty(
         .or(settings.advanced_model_settings.llama_repeat_penalty)
 }
 
+pub(super) fn resolve_llama_n_pen_range(
+    session: &Session,
+    model: &Model,
+    settings: &Settings,
+) -> Option<i32> {
+    session
+        .advanced_model_settings
+        .as_ref()
+        .and_then(|cfg| cfg.llama_n_pen_range)
+        .or_else(|| {
+            model
+                .advanced_model_settings
+                .as_ref()
+                .and_then(|cfg| cfg.llama_n_pen_range)
+        })
+        .or(settings.advanced_model_settings.llama_n_pen_range)
+}
+
 pub(super) fn resolve_llama_dry_multiplier(
     session: &Session,
     model: &Model,

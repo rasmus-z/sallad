@@ -1193,6 +1193,16 @@ mod desktop {
             .or_else(|| body.get("llama_repeat_penalty"))
             .and_then(|v| v.as_f64())
             .filter(|v| (0.0..=2.0).contains(v));
+        let n_pen_range = body
+            .get("n_pen_range")
+            .or_else(|| body.get("nPenRange"))
+            .or_else(|| body.get("penalty_last_n"))
+            .or_else(|| body.get("repeat_last_n"))
+            .or_else(|| body.get("llamaNPenRange"))
+            .or_else(|| body.get("llama_n_pen_range"))
+            .and_then(|v| v.as_i64())
+            .and_then(|v| i32::try_from(v).ok())
+            .filter(|v| (-1..=262_144).contains(v));
         let dry_multiplier = body
             .get("dry_multiplier")
             .or_else(|| body.get("llamaDryMultiplier"))
@@ -3705,6 +3715,8 @@ mod desktop {
                 min_p,
                 typical_p,
                 repeat_penalty,
+                n_pen_range,
+                context_size: ctx_size,
                 dry_multiplier,
                 dry_base,
                 dry_allowed_length,

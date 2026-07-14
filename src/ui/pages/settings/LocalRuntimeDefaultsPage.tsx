@@ -36,7 +36,10 @@ import { useI18n } from "../../../core/i18n/context";
 import { cn, interactive } from "../../design-tokens";
 import { toast } from "../../components/toast";
 import { NumberInput } from "../../components/NumberInput";
-import { ADVANCED_LLAMA_REPEAT_PENALTY_RANGE } from "../../components/AdvancedModelSettingsForm";
+import {
+  ADVANCED_LLAMA_N_PEN_RANGE,
+  ADVANCED_LLAMA_REPEAT_PENALTY_RANGE,
+} from "../../components/AdvancedModelSettingsForm";
 
 type RuntimeDefaults = {
   llamaDefaultContextLength: number | null;
@@ -50,6 +53,7 @@ type RuntimeDefaults = {
   llamaBatchSize: number | null;
   llamaUbatchSize: number | null;
   llamaRepeatPenalty: number | null;
+  llamaNPenRange: number | null;
 };
 
 type LlamaGpuDevice = {
@@ -242,6 +246,7 @@ export function LocalRuntimeDefaultsPage() {
           llamaBatchSize: advancedModel.llamaBatchSize ?? null,
           llamaUbatchSize: advancedModel.llamaUbatchSize ?? null,
           llamaRepeatPenalty: advancedModel.llamaRepeatPenalty ?? null,
+          llamaNPenRange: advancedModel.llamaNPenRange ?? null,
         });
       })
       .catch(() => {});
@@ -275,6 +280,7 @@ export function LocalRuntimeDefaultsPage() {
           llamaBatchSize: next.llamaBatchSize ?? undefined,
           llamaUbatchSize: next.llamaUbatchSize ?? undefined,
           llamaRepeatPenalty: next.llamaRepeatPenalty ?? undefined,
+          llamaNPenRange: next.llamaNPenRange ?? undefined,
         });
       } catch (err) {
         toast.error(
@@ -609,6 +615,30 @@ export function LocalRuntimeDefaultsPage() {
                     })
                   }
                   placeholder="1.00"
+                  className={cn(controlClassName, "w-full text-center")}
+                />
+              </div>
+            </SettingRow>
+
+            <SettingRow
+              icon={<ListOrdered className="h-4 w-4 text-warning/80" />}
+              iconClassName="border-warning/30 bg-warning/10"
+              title={t("editModel.llamaSampler.penaltyRange")}
+              description={t("editModel.llamaSampler.penaltyRangeDescription")}
+            >
+              <div className="w-28">
+                <NumberInput
+                  min={ADVANCED_LLAMA_N_PEN_RANGE.min}
+                  max={ADVANCED_LLAMA_N_PEN_RANGE.max}
+                  step={1}
+                  value={defaults.llamaNPenRange}
+                  onChange={(next) =>
+                    void persistDefaults({
+                      ...defaults,
+                      llamaNPenRange: next,
+                    })
+                  }
+                  placeholder="-1"
                   className={cn(controlClassName, "w-full text-center")}
                 />
               </div>

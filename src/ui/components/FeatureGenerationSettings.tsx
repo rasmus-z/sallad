@@ -16,6 +16,7 @@ import {
   ADVANCED_LLAMA_DRY_MULTIPLIER_RANGE,
   ADVANCED_LLAMA_DRY_PENALTY_LAST_N_RANGE,
   ADVANCED_LLAMA_REPEAT_PENALTY_RANGE,
+  ADVANCED_LLAMA_N_PEN_RANGE,
   ADVANCED_LLAMA_SEED_RANGE,
   ADVANCED_LLAMA_XTC_PROBABILITY_RANGE,
   ADVANCED_LLAMA_XTC_THRESHOLD_RANGE,
@@ -107,6 +108,13 @@ const LLAMA_NUMBER_FIELDS = [
     range: ADVANCED_LLAMA_REPEAT_PENALTY_RANGE,
     decimals: 2,
     step: 0.01,
+  },
+  {
+    key: "llamaNPenRange",
+    labelKey: "featureGeneration.penaltyRange",
+    range: ADVANCED_LLAMA_N_PEN_RANGE,
+    decimals: 0,
+    step: 1,
   },
   {
     key: "llamaXtcProbability",
