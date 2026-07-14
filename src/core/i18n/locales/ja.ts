@@ -4277,6 +4277,12 @@ export const jaMessages: DeepPartialMessageTree<LocaleMessages> = {
       deleteConfirm: "削除",
       thisEntry: "このエントリー",
       condensedName: "凝縮されたシステムプロンプト",
+      mock: {
+        userLabel: "ユーザーメッセージ #{{n}}",
+        userContent: "これはユーザーのサンプルメッセージ #{{n}} です",
+        assistantLabel: "アシスタントメッセージ #{{n}}",
+        assistantContent: "これはアシスタントのサンプルメッセージ #{{n}} です",
+      },
       imageAttachment: "[画像添付: {{label}}]",
       imageSlot: {
         character: "キャラクターリファレンス画像",

@@ -4946,6 +4946,12 @@ export const nlMessages: DeepPartialMessageTree<LocaleMessages> = {
       deleteConfirm: "Verwijderen",
       thisEntry: "deze vermelding",
       condensedName: "Gecondenseerde systeemprompt",
+      mock: {
+        userLabel: "Gebruikersbericht #{{n}}",
+        userContent: "Dit is een voorbeeld van gebruikersbericht #{{n}}",
+        assistantLabel: "Assistentbericht #{{n}}",
+        assistantContent: "Dit is een voorbeeld van assistentbericht #{{n}}",
+      },
       imageAttachment: "[Afbeeldingsbijlage: {{label}}]",
       imageSlot: {
         character: "Karakterreferentieafbeelding",

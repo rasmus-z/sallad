@@ -4946,6 +4946,12 @@ export const zhHantMessages: DeepPartialMessageTree<LocaleMessages> = {
       deleteConfirm: "刪除",
       thisEntry: "此條目",
       condensedName: "濃縮系統提示",
+      mock: {
+        userLabel: "使用者訊息 #{{n}}",
+        userContent: "這是一則使用者範例訊息 #{{n}}",
+        assistantLabel: "助理訊息 #{{n}}",
+        assistantContent: "這是一則助理範例訊息 #{{n}}",
+      },
       imageAttachment: "【圖片附件：{{label}}】",
       imageSlot: {
         character: "角色參考圖片",

@@ -4946,6 +4946,12 @@ export const noMessages: DeepPartialMessageTree<LocaleMessages> = {
       deleteConfirm: "Slett",
       thisEntry: "denne oppføringen",
       condensedName: "Komprimert systemprompt",
+      mock: {
+        userLabel: "Brukermelding #{{n}}",
+        userContent: "Dette er en eksempelmelding fra brukeren #{{n}}",
+        assistantLabel: "Assistentmelding #{{n}}",
+        assistantContent: "Dette er en eksempelmelding fra assistenten #{{n}}",
+      },
       imageAttachment: "[Bildevedlegg: {{label}}]",
       imageSlot: {
         character: "Karakterreferansebilde",

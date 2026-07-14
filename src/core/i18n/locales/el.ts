@@ -4946,6 +4946,12 @@ export const elMessages: DeepPartialMessageTree<LocaleMessages> = {
       deleteConfirm: "Διαγραφή",
       thisEntry: "αυτή η καταχώρηση",
       condensedName: "Συμπυκνωμένη Προτροπή Συστήματος",
+      mock: {
+        userLabel: "Μήνυμα χρήστη #{{n}}",
+        userContent: "Αυτό είναι ένα δοκιμαστικό μήνυμα χρήστη #{{n}}",
+        assistantLabel: "Μήνυμα βοηθού #{{n}}",
+        assistantContent: "Αυτό είναι ένα δοκιμαστικό μήνυμα βοηθού #{{n}}",
+      },
       imageAttachment: "[Συνημμένη εικόνα: {{label}}]",
       imageSlot: {
         character: "Εικόνα αναφοράς χαρακτήρα",

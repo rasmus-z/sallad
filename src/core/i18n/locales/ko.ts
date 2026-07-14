@@ -4946,6 +4946,12 @@ export const koMessages: DeepPartialMessageTree<LocaleMessages> = {
       deleteConfirm: "삭제",
       thisEntry: "이 항목",
       condensedName: "압축된 시스템 프롬프트",
+      mock: {
+        userLabel: "사용자 메시지 #{{n}}",
+        userContent: "사용자 예시 메시지 #{{n}}입니다",
+        assistantLabel: "어시스턴트 메시지 #{{n}}",
+        assistantContent: "어시스턴트 예시 메시지 #{{n}}입니다",
+      },
       imageAttachment: "[이미지 첨부: {{label}}]",
       imageSlot: {
         character: "캐릭터 참조 이미지",

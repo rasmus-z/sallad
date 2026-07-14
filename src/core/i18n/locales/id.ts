@@ -4277,6 +4277,12 @@ export const idMessages: DeepPartialMessageTree<LocaleMessages> = {
       deleteConfirm: "Hapus",
       thisEntry: "entri ini",
       condensedName: "Prompt Sistem Ringkas",
+      mock: {
+        userLabel: "Pesan pengguna #{{n}}",
+        userContent: "Ini adalah contoh pesan pengguna #{{n}}",
+        assistantLabel: "Pesan asisten #{{n}}",
+        assistantContent: "Ini adalah contoh pesan asisten #{{n}}",
+      },
       imageAttachment: "[Lampiran gambar: {{label}}]",
       imageSlot: {
         character: "Gambar referensi karakter",

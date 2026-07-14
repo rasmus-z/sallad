@@ -4277,6 +4277,12 @@ export const viMessages: DeepPartialMessageTree<LocaleMessages> = {
       deleteConfirm: "Delete",
       thisEntry: "this entry",
       condensedName: "Condensed System Prompt",
+      mock: {
+        userLabel: "Tin nhắn người dùng #{{n}}",
+        userContent: "Đây là tin nhắn người dùng mẫu #{{n}}",
+        assistantLabel: "Tin nhắn trợ lý #{{n}}",
+        assistantContent: "Đây là tin nhắn trợ lý mẫu #{{n}}",
+      },
       imageAttachment: "[Image attachment: {{label}}]",
       imageSlot: {
         character: "Character reference image",

@@ -5114,6 +5114,12 @@ export const enMessages = {
       deleteConfirm: "Delete",
       thisEntry: "this entry",
       condensedName: "Condensed System Prompt",
+      mock: {
+        userLabel: "User message #{{n}}",
+        userContent: "This is a mock user message #{{n}}",
+        assistantLabel: "Assistant message #{{n}}",
+        assistantContent: "This is a mock assistant message #{{n}}",
+      },
       imageAttachment: "[Image attachment: {{label}}]",
       imageSlot: {
         character: "Character reference image",

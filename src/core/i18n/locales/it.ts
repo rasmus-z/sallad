@@ -4277,6 +4277,12 @@ export const itMessages: DeepPartialMessageTree<LocaleMessages> = {
       deleteConfirm: "Elimina",
       thisEntry: "questa voce",
       condensedName: "Prompt di sistema condensato",
+      mock: {
+        userLabel: "Messaggio utente n. {{n}}",
+        userContent: "Questo è un messaggio utente di esempio n. {{n}}",
+        assistantLabel: "Messaggio assistente n. {{n}}",
+        assistantContent: "Questo è un messaggio assistente di esempio n. {{n}}",
+      },
       imageAttachment: "[Allegato immagine: {{label}}]",
       imageSlot: {
         character: "Immagine di riferimento del personaggio",

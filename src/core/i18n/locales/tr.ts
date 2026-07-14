@@ -4946,6 +4946,12 @@ export const trMessages: DeepPartialMessageTree<LocaleMessages> = {
       deleteConfirm: "Sil",
       thisEntry: "bu girişi",
       condensedName: "Yoğunlaştırılmış Sistem İstemi",
+      mock: {
+        userLabel: "Kullanıcı mesajı #{{n}}",
+        userContent: "Bu, örnek kullanıcı mesajı #{{n}}",
+        assistantLabel: "Asistan mesajı #{{n}}",
+        assistantContent: "Bu, örnek asistan mesajı #{{n}}",
+      },
       imageAttachment: "[Resim eki: {{label}}]",
       imageSlot: {
         character: "Karakter referans resmi",

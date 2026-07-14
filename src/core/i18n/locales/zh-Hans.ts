@@ -4946,6 +4946,12 @@ export const zhHansMessages: DeepPartialMessageTree<LocaleMessages> = {
       deleteConfirm: "删除",
       thisEntry: "此条目",
       condensedName: "精简系统提示",
+      mock: {
+        userLabel: "用户消息 #{{n}}",
+        userContent: "这是一条示例用户消息 #{{n}}",
+        assistantLabel: "助手消息 #{{n}}",
+        assistantContent: "这是一条示例助手消息 #{{n}}",
+      },
       imageAttachment: "[图像附件:{{label}}]",
       imageSlot: {
         character: "角色参考图像",

@@ -4946,6 +4946,12 @@ export const filMessages: DeepPartialMessageTree<LocaleMessages> = {
       deleteConfirm: "Tanggalin",
       thisEntry: "ang entry na ito",
       condensedName: "Condensed System Prompt",
+      mock: {
+        userLabel: "Mensahe ng user #{{n}}",
+        userContent: "Isa itong halimbawang mensahe ng user #{{n}}",
+        assistantLabel: "Mensahe ng assistant #{{n}}",
+        assistantContent: "Isa itong halimbawang mensahe ng assistant #{{n}}",
+      },
       imageAttachment: "[Attachment na larawan: {{label}}]",
       imageSlot: {
         character: "Reference image ng karakter",

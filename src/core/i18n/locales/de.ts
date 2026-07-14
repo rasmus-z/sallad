@@ -4946,6 +4946,12 @@ export const deMessages: DeepPartialMessageTree<LocaleMessages> = {
       deleteConfirm: "Löschen",
       thisEntry: "diesen Eintrag",
       condensedName: "Verdichteter System-Prompt",
+      mock: {
+        userLabel: "Benutzernachricht #{{n}}",
+        userContent: "Dies ist eine Beispiel-Benutzernachricht #{{n}}",
+        assistantLabel: "Assistentennachricht #{{n}}",
+        assistantContent: "Dies ist eine Beispiel-Assistentennachricht #{{n}}",
+      },
       imageAttachment: "[Bildanhang: {{label}}]",
       imageSlot: {
         character: "Charakter-Referenzbild",

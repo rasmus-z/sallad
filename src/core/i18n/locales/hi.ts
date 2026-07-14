@@ -4277,6 +4277,12 @@ export const hiMessages: DeepPartialMessageTree<LocaleMessages> = {
       deleteConfirm: "हटाएँ",
       thisEntry: "यह प्रविष्टि",
       condensedName: "संक्षिप्त सिस्टम प्रॉम्प्ट",
+      mock: {
+        userLabel: "यूज़र संदेश #{{n}}",
+        userContent: "यह एक नमूना यूज़र संदेश #{{n}} है",
+        assistantLabel: "असिस्टेंट संदेश #{{n}}",
+        assistantContent: "यह एक नमूना असिस्टेंट संदेश #{{n}} है",
+      },
       imageAttachment: "[छवि अटैचमेंट: {{label}}]",
       imageSlot: {
         character: "कैरेक्टर संदर्भ छवि",

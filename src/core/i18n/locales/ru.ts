@@ -4946,6 +4946,12 @@ export const ruMessages: DeepPartialMessageTree<LocaleMessages> = {
       deleteConfirm: "Удалить",
       thisEntry: "эта запись",
       condensedName: "Краткая системная подсказка",
+      mock: {
+        userLabel: "Сообщение пользователя №{{n}}",
+        userContent: "Это пример сообщения пользователя №{{n}}",
+        assistantLabel: "Сообщение ассистента №{{n}}",
+        assistantContent: "Это пример сообщения ассистента №{{n}}",
+      },
       imageAttachment: "[Прикрепленное изображение: {{label}}]",
       imageSlot: {
         character: "Справочное изображение персонажа",

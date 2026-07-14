@@ -4946,6 +4946,12 @@ export const frMessages: DeepPartialMessageTree<LocaleMessages> = {
       deleteConfirm: "Supprimer",
       thisEntry: "cette entrée",
       condensedName: "Prompt système condensé",
+      mock: {
+        userLabel: "Message de l’utilisateur n°{{n}}",
+        userContent: "Ceci est un exemple de message utilisateur n°{{n}}",
+        assistantLabel: "Message de l’assistant n°{{n}}",
+        assistantContent: "Ceci est un exemple de message de l’assistant n°{{n}}",
+      },
       imageAttachment: "[Pièce jointe image : {{label}}]",
       imageSlot: {
         character: "Image de référence du personnage",
