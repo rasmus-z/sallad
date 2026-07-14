@@ -194,14 +194,29 @@ export function SettingsLayout() {
 
   const [hasMetrics, setHasMetrics] = useState(false);
   useEffect(() => {
+    if (hasMetrics) return;
     let cancelled = false;
-    void hasLlmMetrics().then((value) => {
-      if (!cancelled) setHasMetrics(value);
-    });
+    let attempt = 0;
+    let timer: number | undefined;
+    const check = () => {
+      void hasLlmMetrics().then((value) => {
+        if (cancelled) return;
+        if (value) {
+          setHasMetrics(true);
+          return;
+        }
+        attempt += 1;
+        if (attempt < 5) {
+          timer = window.setTimeout(check, attempt * 1000);
+        }
+      });
+    };
+    check();
     return () => {
       cancelled = true;
+      if (timer !== undefined) window.clearTimeout(timer);
     };
-  }, []);
+  }, [hasMetrics, location.pathname]);
 
   const groups = useMemo<NavGroup[]>(() => {
     const main: NavItem[] = [
@@ -445,7 +460,7 @@ export function SettingsLayout() {
       { key: "support", label: t("settings.groups.help"), items: support },
       { key: "danger", items: danger },
     ];
-  }, [providerCount, modelCount, navigate, toModelsList, t]);
+  }, [providerCount, modelCount, hasMetrics, navigate, toModelsList, t]);
 
   const allItems = groups.flatMap((g) =>
     g.items.flatMap((item) => [item, ...(item.children ?? [])]),
