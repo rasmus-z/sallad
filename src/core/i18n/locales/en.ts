@@ -277,6 +277,9 @@ export const enMessages = {
       hostApi: {
         title: "API Server",
       },
+      groupChats: {
+        title: "Group Chats",
+      },
     },
   },
   accessibility: {
@@ -5320,6 +5323,11 @@ export const enMessages = {
       disabledText:
         "When disabled, the app uses a simple sliding window of recent messages determined by the Context Window setting.",
     },
+    groupChats: {
+      title: "Group Chats",
+      description:
+        "Choose which model and sampling settings pick the next speaker in group chats.",
+    },
     usageAnalytics: {
       recalculateTitle: "Recalculate Usage Costs",
       recalculateDesc: "Update all historical usage records with correct pricing",
@@ -6144,6 +6152,8 @@ export const enMessages = {
       overwriteSampler: "Overwrite Sampler Configuration",
       overwriteSamplerDescription:
         "Use a fixed, loop-resistant llama.cpp sampler setup for dynamic memory instead of the summarisation model's saved configuration. Enables DRY repetition suppression to stop models (e.g. Gemma) from getting stuck in repeating loops during memory generation.",
+      overwriteSamplerGenerationSettingsNote:
+        "This is ignored when Dynamic Memory sampler overrides are set in the model editor's Features tab.",
       samplerValues: "Sampler values",
       samplerOrder: "order",
       samplerTemperature: "Temperature",
@@ -8711,6 +8721,76 @@ export const enMessages = {
     draftMenuNoWriter: "Add a compatible scene writer model before using this helper.",
     regenerate: "Regenerate",
     useThis: "Use This",
+  },
+  featureGeneration: {
+    title: "Generation Settings",
+    tabTitle: "Features",
+    tabDescription:
+      "Configure how each app feature samples when it uses this model. Unset fields inherit from this model's generation settings.",
+    features: {
+      dynamicMemory: "Dynamic Memory",
+      companionSoulWriter: "Companion Soul Writer",
+      companionMemory: "Companion Memory",
+      lorebookEntryGenerator: "Lorebook Entry Generator",
+      lorebookGenerator: "Lorebook Generator",
+      sceneWriter: "Scene Writer",
+      helpMeReply: "Help Me Reply",
+      groupSpeakerSelection: "Group Speaker Selection",
+      creationHelper: "Creation Helper",
+    },
+    companionMemoryTitle: "Companion Memory Generation",
+    description:
+      "Override sampling for this feature. Unset fields inherit from the model configuration.",
+    reset: "Reset overrides",
+    modelDefault: "Model default",
+    featureDefaultHelper: "Feature default: {{value}}",
+    inheritsHelper: "Inherits from the model when unset.",
+    listHelper: "Comma separated. Leave empty to inherit.",
+    samplingSection: "Sampling",
+    llamaSection: "llama.cpp Sampling",
+    ollamaSection: "Ollama Sampling",
+    temperature: "Temperature",
+    topP: "Top P",
+    topK: "Top K",
+    maxOutputTokens: "Max Output Tokens",
+    frequencyPenalty: "Frequency Penalty",
+    presencePenalty: "Presence Penalty",
+    samplerProfile: "Sampler Profile",
+    minP: "Min P",
+    typicalP: "Typical P",
+    repeatPenalty: "Repeat Penalty",
+    xtcProbability: "XTC Probability",
+    xtcThreshold: "XTC Threshold",
+    dryMultiplier: "DRY Multiplier",
+    dryBase: "DRY Base",
+    dryAllowedLength: "DRY Allowed Length",
+    dryPenaltyLastN: "DRY Penalty Last N",
+    drySequenceBreakers: "DRY Sequence Breakers",
+    seed: "Seed",
+    tfsZ: "TFS Z",
+    mirostat: "Mirostat",
+    mirostatTau: "Mirostat Tau",
+    mirostatEta: "Mirostat Eta",
+    stopSequences: "Stop Sequences",
+  },
+  groupChatsSettings: {
+    page: {
+      info: "Group chats use a dedicated model call to decide which character speaks next. Choose the model used for speaker selection here. Sampling overrides live in the model editor's Features tab.",
+    },
+    sectionTitles: {
+      speakerSelection: "Speaker Selection",
+    },
+    labels: {
+      speakerModel: "Speaker Selection Model",
+      speakerModelDescription:
+        "Model used to pick the next speaker in group chats. Leave on the app default to use your default model.",
+      selectSpeakerModel: "Select Speaker Selection Model",
+      searchModels: "Search models...",
+      useAppDefault: "Use app default{{model}}",
+      useAppDefaultBase: "Use app default",
+      selectedModel: "Selected model",
+      noModelsAvailable: "No models available. Add a model in Settings first.",
+    },
   },
   samplerOrder: {
     title: "Sampler Order",

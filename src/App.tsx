@@ -42,6 +42,7 @@ import { HelpPage } from "./ui/pages/settings/HelpPage";
 import { AdvancedPage } from "./ui/pages/settings/AdvancedPage";
 import { CreationHelperPage as AICreationHelperPage } from "./ui/pages/settings/CreationHelperPage";
 import { HelpMeReplyPage } from "./ui/pages/settings/HelpMeReplyPage";
+import { GroupChatsSettingsPage } from "./ui/pages/settings/GroupChatsSettingsPage";
 import { LorebooksPage } from "./ui/pages/settings/LorebooksPage";
 import { LorebookGeneratorFlowPage } from "./ui/pages/library/LorebookGeneratorFlowPage";
 import { CompanionsHubPage } from "./ui/pages/settings/CompanionsHubPage";
@@ -1169,6 +1170,10 @@ function AppContent() {
                   element={<AICreationHelperPage />}
                 />
                 <Route path="/settings/advanced/help-me-reply" element={<HelpMeReplyPage />} />
+                <Route
+                  path="/settings/advanced/group-chats"
+                  element={<GroupChatsSettingsPage />}
+                />
                 <Route path="/settings/advanced/lorebooks" element={<LorebooksPage />} />
                 <Route
                   path="/settings/advanced/companion-soul-writer"

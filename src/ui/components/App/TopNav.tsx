@@ -105,6 +105,10 @@ export function TopNav({ currentPath, onBackOverride, titleOverride, rightAction
         titleKey: "common.nav.helpMeReply",
       },
       {
+        match: (p) => p === "/settings/advanced/group-chats",
+        titleKey: "common.nav.groupChats",
+      },
+      {
         match: (p) => p === "/settings/advanced/host-api",
         titleKey: "common.nav.hostApi",
       },

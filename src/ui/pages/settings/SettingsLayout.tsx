@@ -29,6 +29,7 @@ import {
   PenLine,
   Heart,
   Network,
+  Users,
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
@@ -346,6 +347,13 @@ export function SettingsLayout() {
             matchPath: "/settings/advanced/companions",
             extraMatchPaths: ["/settings/advanced/companion-soul-writer"],
             onSelect: () => navigate("/settings/advanced/companions"),
+          },
+          {
+            key: "advanced.groupChats",
+            icon: <Users />,
+            label: t("settings.items.groupChats.title"),
+            matchPath: "/settings/advanced/group-chats",
+            onSelect: () => navigate("/settings/advanced/group-chats"),
           },
           {
             key: "advanced.hostApi",

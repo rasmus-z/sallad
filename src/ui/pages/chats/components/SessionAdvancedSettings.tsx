@@ -322,6 +322,176 @@ export function SessionAdvancedSettings({
                             onChange={(v) => update({ topK: v })}
                             inputMode="numeric"
                           />
+
+                          {isLlama && (
+                            <>
+                              <ParameterField
+                                label={t("sessionAdvanced.samplingMemory.minP")}
+                                description={t("sessionAdvanced.samplingMemory.minPDesc")}
+                                value={draft.llamaMinP}
+                                placeholder={t("sessionAdvanced.defaultPlaceholder")}
+                                min={0}
+                                max={1}
+                                step={0.01}
+                                onChange={(v) => update({ llamaMinP: v })}
+                              />
+
+                              <ParameterField
+                                label={t("sessionAdvanced.samplingMemory.typicalP")}
+                                description={t("sessionAdvanced.samplingMemory.typicalPDesc")}
+                                value={draft.llamaTypicalP}
+                                placeholder={t("sessionAdvanced.defaultPlaceholder")}
+                                min={0}
+                                max={1}
+                                step={0.01}
+                                onChange={(v) => update({ llamaTypicalP: v })}
+                              />
+
+                              <ParameterField
+                                label={t("sessionAdvanced.samplingMemory.xtcProbability")}
+                                description={t("sessionAdvanced.samplingMemory.xtcProbabilityDesc")}
+                                value={draft.llamaXtcProbability}
+                                placeholder={t("sessionAdvanced.defaultPlaceholder")}
+                                min={ADVANCED_LLAMA_XTC_PROBABILITY_RANGE.min}
+                                max={ADVANCED_LLAMA_XTC_PROBABILITY_RANGE.max}
+                                step={0.01}
+                                onChange={(v) => update({ llamaXtcProbability: v })}
+                              />
+
+                              <ParameterField
+                                label={t("sessionAdvanced.samplingMemory.xtcThreshold")}
+                                description={t("sessionAdvanced.samplingMemory.xtcThresholdDesc")}
+                                value={draft.llamaXtcThreshold}
+                                placeholder="0.10"
+                                min={ADVANCED_LLAMA_XTC_THRESHOLD_RANGE.min}
+                                max={ADVANCED_LLAMA_XTC_THRESHOLD_RANGE.max}
+                                step={0.01}
+                                onChange={(v) => update({ llamaXtcThreshold: v })}
+                              />
+
+                              <ParameterField
+                                label={t("sessionAdvanced.samplingMemory.seed")}
+                                description={t("sessionAdvanced.samplingMemory.seedDesc")}
+                                value={draft.llamaSeed}
+                                placeholder={t("sessionAdvanced.randomPlaceholder")}
+                                min={0}
+                                max={2147483647}
+                                step={1}
+                                onChange={(v) => update({ llamaSeed: v })}
+                                inputMode="numeric"
+                              />
+
+                              <div className="space-y-2">
+                                <label className="text-[13px] font-medium text-fg/80">
+                                  {t("sessionAdvanced.samplingMemory.samplerProfile")}
+                                </label>
+                                <p className="text-[11px] text-fg/40 leading-relaxed">
+                                  {t("sessionAdvanced.samplingMemory.samplerProfileDesc")}
+                                </p>
+                                <select
+                                  value={draft.llamaSamplerProfile ?? "balanced"}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    update({
+                                      llamaSamplerProfile: val === "balanced" ? null : (val as any),
+                                    });
+                                  }}
+                                  className="w-full rounded-lg border border-fg/10 bg-fg/5 px-3 py-2 text-sm text-fg transition focus:border-fg/20 focus:outline-none"
+                                >
+                                  <option value="balanced">{t("sessionAdvanced.samplingMemory.balanced")}</option>
+                                  <option value="creative">{t("sessionAdvanced.samplingMemory.creative")}</option>
+                                  <option value="stable">{t("sessionAdvanced.samplingMemory.stable")}</option>
+                                  <option value="reasoning">{t("sessionAdvanced.samplingMemory.reasoning")}</option>
+                                </select>
+                              </div>
+
+                              <ParameterField
+                                label={t("editModel.ollamaParams.repeatPenalty")}
+                                description={t("editModel.ollamaParams.repeatPenaltyDescription")}
+                                value={draft.llamaRepeatPenalty}
+                                placeholder="1.00"
+                                min={ADVANCED_LLAMA_REPEAT_PENALTY_RANGE.min}
+                                max={ADVANCED_LLAMA_REPEAT_PENALTY_RANGE.max}
+                                step={0.01}
+                                onChange={(v) => update({ llamaRepeatPenalty: v })}
+                              />
+
+                              <ParameterField
+                                label={t("sessionAdvanced.dry.multiplier")}
+                                description={t("sessionAdvanced.dry.multiplierDesc")}
+                                value={draft.llamaDryMultiplier}
+                                placeholder="0.80"
+                                min={ADVANCED_LLAMA_DRY_MULTIPLIER_RANGE.min}
+                                max={ADVANCED_LLAMA_DRY_MULTIPLIER_RANGE.max}
+                                step={0.05}
+                                onChange={(v) => update({ llamaDryMultiplier: v })}
+                              />
+
+                              <ParameterField
+                                label={t("sessionAdvanced.dry.base")}
+                                description={t("sessionAdvanced.dry.baseDesc")}
+                                value={draft.llamaDryBase}
+                                placeholder="1.75"
+                                min={ADVANCED_LLAMA_DRY_BASE_RANGE.min}
+                                max={ADVANCED_LLAMA_DRY_BASE_RANGE.max}
+                                step={0.05}
+                                onChange={(v) => update({ llamaDryBase: v })}
+                              />
+
+                              <ParameterField
+                                label={t("sessionAdvanced.dry.allowedLength")}
+                                description={t("sessionAdvanced.dry.allowedLengthDesc")}
+                                value={draft.llamaDryAllowedLength}
+                                placeholder="2"
+                                min={ADVANCED_LLAMA_DRY_ALLOWED_LENGTH_RANGE.min}
+                                max={ADVANCED_LLAMA_DRY_ALLOWED_LENGTH_RANGE.max}
+                                step={1}
+                                onChange={(v) => update({ llamaDryAllowedLength: v })}
+                                inputMode="numeric"
+                              />
+
+                              <ParameterField
+                                label={t("sessionAdvanced.dry.penaltyLastN")}
+                                description={t("sessionAdvanced.dry.penaltyLastNDesc")}
+                                value={draft.llamaDryPenaltyLastN}
+                                placeholder="-1"
+                                min={ADVANCED_LLAMA_DRY_PENALTY_LAST_N_RANGE.min}
+                                max={ADVANCED_LLAMA_DRY_PENALTY_LAST_N_RANGE.max}
+                                step={1}
+                                onChange={(v) => update({ llamaDryPenaltyLastN: v })}
+                                inputMode="numeric"
+                              />
+
+                              <div className="space-y-2">
+                                <label className="text-[13px] font-medium text-fg/80">
+                                  {t("sessionAdvanced.dry.sequenceBreakers")}
+                                </label>
+                                <p className="text-[11px] text-fg/40 leading-relaxed">
+                                  {t("sessionAdvanced.dry.sequenceBreakersDesc")}
+                                </p>
+                                <input
+                                  type="text"
+                                  value={draft.llamaDrySequenceBreakers?.join(", ") ?? ""}
+                                  onChange={(e) => {
+                                    const next = e.target.value
+                                      .split(",")
+                                      .map((item) => item.trim())
+                                      .filter((item) => item.length > 0);
+                                    update({
+                                      llamaDrySequenceBreakers: next.length ? next : null,
+                                    });
+                                  }}
+                                  placeholder={'\\n, :, ", *'}
+                                  className="w-full rounded-lg border border-fg/10 bg-fg/5 px-3 py-2 text-sm text-fg transition focus:border-fg/20 focus:outline-none"
+                                />
+                              </div>
+
+                              <LlamaSamplerOrderEditor
+                                value={draft.llamaSamplerOrder}
+                                onChange={(llamaSamplerOrder) => update({ llamaSamplerOrder })}
+                              />
+                            </>
+                          )}
                         </div>
 
                         {/* Output & Penalties */}
@@ -561,119 +731,6 @@ export function SessionAdvancedSettings({
                             </h3>
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                               <ParameterField
-                                label={t("sessionAdvanced.samplingMemory.minP")}
-                                description={t("sessionAdvanced.samplingMemory.minPDesc")}
-                                value={draft.llamaMinP}
-                                placeholder={t("sessionAdvanced.defaultPlaceholder")}
-                                min={0}
-                                max={1}
-                                step={0.01}
-                                onChange={(v) => update({ llamaMinP: v })}
-                              />
-
-                              <ParameterField
-                                label={t("sessionAdvanced.samplingMemory.typicalP")}
-                                description={t("sessionAdvanced.samplingMemory.typicalPDesc")}
-                                value={draft.llamaTypicalP}
-                                placeholder={t("sessionAdvanced.defaultPlaceholder")}
-                                min={0}
-                                max={1}
-                                step={0.01}
-                                onChange={(v) => update({ llamaTypicalP: v })}
-                              />
-
-                              <ParameterField
-                                label={t("editModel.ollamaParams.repeatPenalty")}
-                                description={t("editModel.ollamaParams.repeatPenaltyDescription")}
-                                value={draft.llamaRepeatPenalty}
-                                placeholder="1.00"
-                                min={ADVANCED_LLAMA_REPEAT_PENALTY_RANGE.min}
-                                max={ADVANCED_LLAMA_REPEAT_PENALTY_RANGE.max}
-                                step={0.01}
-                                onChange={(v) => update({ llamaRepeatPenalty: v })}
-                              />
-
-                              <ParameterField
-                                label={t("sessionAdvanced.dry.multiplier")}
-                                description={t("sessionAdvanced.dry.multiplierDesc")}
-                                value={draft.llamaDryMultiplier}
-                                placeholder="0.80"
-                                min={ADVANCED_LLAMA_DRY_MULTIPLIER_RANGE.min}
-                                max={ADVANCED_LLAMA_DRY_MULTIPLIER_RANGE.max}
-                                step={0.05}
-                                onChange={(v) => update({ llamaDryMultiplier: v })}
-                              />
-
-                              <ParameterField
-                                label={t("sessionAdvanced.dry.base")}
-                                description={t("sessionAdvanced.dry.baseDesc")}
-                                value={draft.llamaDryBase}
-                                placeholder="1.75"
-                                min={ADVANCED_LLAMA_DRY_BASE_RANGE.min}
-                                max={ADVANCED_LLAMA_DRY_BASE_RANGE.max}
-                                step={0.05}
-                                onChange={(v) => update({ llamaDryBase: v })}
-                              />
-
-                              <ParameterField
-                                label={t("sessionAdvanced.dry.allowedLength")}
-                                description={t("sessionAdvanced.dry.allowedLengthDesc")}
-                                value={draft.llamaDryAllowedLength}
-                                placeholder="2"
-                                min={ADVANCED_LLAMA_DRY_ALLOWED_LENGTH_RANGE.min}
-                                max={ADVANCED_LLAMA_DRY_ALLOWED_LENGTH_RANGE.max}
-                                step={1}
-                                onChange={(v) => update({ llamaDryAllowedLength: v })}
-                                inputMode="numeric"
-                              />
-
-                              <ParameterField
-                                label={t("sessionAdvanced.dry.penaltyLastN")}
-                                description={t("sessionAdvanced.dry.penaltyLastNDesc")}
-                                value={draft.llamaDryPenaltyLastN}
-                                placeholder="-1"
-                                min={ADVANCED_LLAMA_DRY_PENALTY_LAST_N_RANGE.min}
-                                max={ADVANCED_LLAMA_DRY_PENALTY_LAST_N_RANGE.max}
-                                step={1}
-                                onChange={(v) => update({ llamaDryPenaltyLastN: v })}
-                                inputMode="numeric"
-                              />
-
-                              <ParameterField
-                                label={t("sessionAdvanced.samplingMemory.xtcProbability")}
-                                description={t("sessionAdvanced.samplingMemory.xtcProbabilityDesc")}
-                                value={draft.llamaXtcProbability}
-                                placeholder={t("sessionAdvanced.defaultPlaceholder")}
-                                min={ADVANCED_LLAMA_XTC_PROBABILITY_RANGE.min}
-                                max={ADVANCED_LLAMA_XTC_PROBABILITY_RANGE.max}
-                                step={0.01}
-                                onChange={(v) => update({ llamaXtcProbability: v })}
-                              />
-
-                              <ParameterField
-                                label={t("sessionAdvanced.samplingMemory.xtcThreshold")}
-                                description={t("sessionAdvanced.samplingMemory.xtcThresholdDesc")}
-                                value={draft.llamaXtcThreshold}
-                                placeholder="0.10"
-                                min={ADVANCED_LLAMA_XTC_THRESHOLD_RANGE.min}
-                                max={ADVANCED_LLAMA_XTC_THRESHOLD_RANGE.max}
-                                step={0.01}
-                                onChange={(v) => update({ llamaXtcThreshold: v })}
-                              />
-
-                              <ParameterField
-                                label={t("sessionAdvanced.samplingMemory.seed")}
-                                description={t("sessionAdvanced.samplingMemory.seedDesc")}
-                                value={draft.llamaSeed}
-                                placeholder={t("sessionAdvanced.randomPlaceholder")}
-                                min={0}
-                                max={2147483647}
-                                step={1}
-                                onChange={(v) => update({ llamaSeed: v })}
-                                inputMode="numeric"
-                              />
-
-                              <ParameterField
                                 label={t("sessionAdvanced.samplingMemory.ropeBase")}
                                 description={t("sessionAdvanced.samplingMemory.ropeBaseDesc")}
                                 value={draft.llamaRopeFreqBase}
@@ -694,30 +751,6 @@ export function SessionAdvancedSettings({
                                 step={0.01}
                                 onChange={(v) => update({ llamaRopeFreqScale: v })}
                               />
-
-                              <div className="space-y-2">
-                                <label className="text-[13px] font-medium text-fg/80">
-                                  {t("sessionAdvanced.dry.sequenceBreakers")}
-                                </label>
-                                <p className="text-[11px] text-fg/40 leading-relaxed">
-                                  {t("sessionAdvanced.dry.sequenceBreakersDesc")}
-                                </p>
-                                <input
-                                  type="text"
-                                  value={draft.llamaDrySequenceBreakers?.join(", ") ?? ""}
-                                  onChange={(e) => {
-                                    const next = e.target.value
-                                      .split(",")
-                                      .map((item) => item.trim())
-                                      .filter((item) => item.length > 0);
-                                    update({
-                                      llamaDrySequenceBreakers: next.length ? next : null,
-                                    });
-                                  }}
-                                  placeholder={'\\n, :, ", *'}
-                                  className="w-full rounded-lg border border-fg/10 bg-fg/5 px-3 py-2 text-sm text-fg transition focus:border-fg/20 focus:outline-none"
-                                />
-                              </div>
 
                               <div className="space-y-2">
                                 <label className="text-[13px] font-medium text-fg/80">
@@ -774,37 +807,6 @@ export function SessionAdvancedSettings({
                                   <option value="on">{t("sessionAdvanced.samplingMemory.on")}</option>
                                   <option value="off">{t("sessionAdvanced.samplingMemory.off")}</option>
                                 </select>
-                              </div>
-
-                              <div className="space-y-2">
-                                <label className="text-[13px] font-medium text-fg/80">
-                                  {t("sessionAdvanced.samplingMemory.samplerProfile")}
-                                </label>
-                                <p className="text-[11px] text-fg/40 leading-relaxed">
-                                  {t("sessionAdvanced.samplingMemory.samplerProfileDesc")}
-                                </p>
-                                <select
-                                  value={draft.llamaSamplerProfile ?? "balanced"}
-                                  onChange={(e) => {
-                                    const val = e.target.value;
-                                    update({
-                                      llamaSamplerProfile: val === "balanced" ? null : (val as any),
-                                    });
-                                  }}
-                                  className="w-full rounded-lg border border-fg/10 bg-fg/5 px-3 py-2 text-sm text-fg transition focus:border-fg/20 focus:outline-none"
-                                >
-                                  <option value="balanced">{t("sessionAdvanced.samplingMemory.balanced")}</option>
-                                  <option value="creative">{t("sessionAdvanced.samplingMemory.creative")}</option>
-                                  <option value="stable">{t("sessionAdvanced.samplingMemory.stable")}</option>
-                                  <option value="reasoning">{t("sessionAdvanced.samplingMemory.reasoning")}</option>
-                                </select>
-                              </div>
-
-                              <div className="md:col-span-2">
-                                <LlamaSamplerOrderEditor
-                                  value={draft.llamaSamplerOrder}
-                                  onChange={(llamaSamplerOrder) => update({ llamaSamplerOrder })}
-                                />
                               </div>
                             </div>
                           </div>

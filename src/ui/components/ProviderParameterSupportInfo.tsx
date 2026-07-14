@@ -95,6 +95,7 @@ const PARAMETER_LABELS: Record<keyof AdvancedModelSettings, string> = {
   promptCachingEnabled: "Prompt Caching",
   promptCachingTtl: "Prompt Caching TTL",
   openRouterProvider: "Pinned OpenRouter Provider",
+  featureGenerationSettings: "Feature Generation Overrides",
 };
 
 const PARAMETER_DESCRIPTIONS: Record<keyof AdvancedModelSettings, string> = {
@@ -184,6 +185,7 @@ const PARAMETER_DESCRIPTIONS: Record<keyof AdvancedModelSettings, string> = {
   promptCachingEnabled: "Enable prompt caching",
   promptCachingTtl: "How long a cached prompt prefix stays reusable",
   openRouterProvider: "Route this model through one OpenRouter endpoint",
+  featureGenerationSettings: "Per-feature sampling overrides for app features using this model",
 };
 
 /**

@@ -1457,7 +1457,8 @@ export function DynamicMemoryPage() {
                           {t("dynamicMemory.page.overwriteSampler")}
                         </div>
                         <div className="mt-1 text-[11px] leading-relaxed text-fg/45">
-                          {t("dynamicMemory.page.overwriteSamplerDescription")}
+                          {t("dynamicMemory.page.overwriteSamplerDescription")}{" "}
+                          {t("dynamicMemory.page.overwriteSamplerGenerationSettingsNote")}
                         </div>
                       </div>
                       <Switch

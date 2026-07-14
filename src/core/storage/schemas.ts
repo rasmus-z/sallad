@@ -438,6 +438,52 @@ export const LlmMetricDetailSchema = LlmMetricSummarySchema.extend({
 });
 export type LlmMetricDetail = z.infer<typeof LlmMetricDetailSchema>;
 
+export const FeatureGenerationSettingsSchema = z.object({
+  temperature: z.number().min(0).max(2).nullable().optional(),
+  topP: z.number().min(0).max(1).nullable().optional(),
+  topK: z.number().int().min(1).max(500).nullable().optional(),
+  maxOutputTokens: z.number().int().min(1).nullable().optional(),
+  frequencyPenalty: z.number().min(-2).max(2).nullable().optional(),
+  presencePenalty: z.number().min(-2).max(2).nullable().optional(),
+  llamaSamplerProfile: LlamaSamplerProfileSchema.nullable().optional(),
+  llamaSamplerOrder: z.array(LlamaSamplerOrderStageSchema).nullable().optional(),
+  llamaMinP: z.number().min(0).max(1).nullable().optional(),
+  llamaTypicalP: z.number().min(0).max(1).nullable().optional(),
+  llamaRepeatPenalty: z.number().min(0).max(2).nullable().optional(),
+  llamaXtcProbability: z.number().min(0).max(1).nullable().optional(),
+  llamaXtcThreshold: z.number().min(0).max(1).nullable().optional(),
+  llamaDryMultiplier: z.number().min(0).max(10).nullable().optional(),
+  llamaDryBase: z.number().min(0).max(10).nullable().optional(),
+  llamaDryAllowedLength: z.number().int().min(0).max(128).nullable().optional(),
+  llamaDryPenaltyLastN: z.number().int().min(-1).max(262_144).nullable().optional(),
+  llamaDrySequenceBreakers: z.array(z.string()).nullable().optional(),
+  llamaSeed: z.number().int().min(0).max(2_147_483_647).nullable().optional(),
+  ollamaMinP: z.number().min(0).max(1).nullable().optional(),
+  ollamaTypicalP: z.number().min(0).max(1).nullable().optional(),
+  ollamaTfsZ: z.number().min(0).max(1).nullable().optional(),
+  ollamaRepeatPenalty: z.number().min(0).max(2).nullable().optional(),
+  ollamaMirostat: z.number().int().min(0).max(2).nullable().optional(),
+  ollamaMirostatTau: z.number().min(0).max(10).nullable().optional(),
+  ollamaMirostatEta: z.number().min(0).max(1).nullable().optional(),
+  ollamaSeed: z.number().int().min(0).max(2_147_483_647).nullable().optional(),
+  ollamaStop: z.array(z.string().min(1)).nullable().optional(),
+});
+export type FeatureGenerationSettings = z.infer<typeof FeatureGenerationSettingsSchema>;
+
+export const FeatureGenerationSettingsMapSchema = z.object({
+  dynamicMemory: FeatureGenerationSettingsSchema.optional(),
+  companionSoulWriter: FeatureGenerationSettingsSchema.optional(),
+  companionMemory: FeatureGenerationSettingsSchema.optional(),
+  lorebookEntryGenerator: FeatureGenerationSettingsSchema.optional(),
+  lorebookGenerator: FeatureGenerationSettingsSchema.optional(),
+  sceneWriter: FeatureGenerationSettingsSchema.optional(),
+  helpMeReply: FeatureGenerationSettingsSchema.optional(),
+  groupSpeakerSelection: FeatureGenerationSettingsSchema.optional(),
+  creationHelper: FeatureGenerationSettingsSchema.optional(),
+});
+export type FeatureGenerationSettingsMap = z.infer<typeof FeatureGenerationSettingsMapSchema>;
+export type FeatureGenerationKey = keyof FeatureGenerationSettingsMap;
+
 export const AdvancedModelSettingsSchema = z.object({
   temperature: z.number().min(0).max(2).nullable().optional(),
   topP: z.number().min(0).max(1).nullable().optional(),
@@ -563,6 +609,7 @@ export const AdvancedModelSettingsSchema = z.object({
     })
     .nullable()
     .optional(),
+  featureGenerationSettings: FeatureGenerationSettingsMapSchema.optional(),
 });
 
 export type AdvancedModelSettings = z.infer<typeof AdvancedModelSettingsSchema>;
@@ -3124,6 +3171,7 @@ export const SettingsSchema = z.object({
       llamaDefaultContextLength: z.number().int().min(512).max(1048576).optional(),
       llamaDefaultKvCacheType: z.enum(["auto", "f16", "q8_0", "q4_0"]).optional(),
       llamaSamplerPresets: z.array(LlamaSamplerPresetSchema).max(64).optional(),
+      groupSpeakerSelectionModelId: z.string().optional(),
       avatarGenerationEnabled: z.boolean().optional(),
       avatarGenerationModelId: z.string().optional(),
       sceneGenerationEnabled: z.boolean().optional(),

@@ -12,6 +12,7 @@ import {
   Zap,
   BookOpen,
   Network,
+  Users,
 } from "lucide-react";
 import {
   readSettings,
@@ -537,6 +538,44 @@ export function AdvancedPage() {
                     <p className="mt-0.5 text-[11px] leading-relaxed text-fg/50">
                       Configure the full lorebook generator pipeline and the entry generator that
                       drafts single entries and keywords from chat messages.
+                    </p>
+                  </div>
+
+                  <ChevronRight className="h-4 w-4 shrink-0 text-fg/25 transition-colors group-hover:text-fg/50" />
+                </div>
+              </div>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate("/settings/advanced/group-chats")}
+            className={cn(
+              "group w-full text-left",
+              "relative overflow-hidden rounded-xl border border-fg/10 bg-fg/5 px-4 py-3.5",
+              "transition-all duration-300 hover:border-fg/20",
+              interactive.active.scale,
+              interactive.focus.ring,
+            )}
+          >
+            <div className="relative flex items-start gap-3">
+              <div
+                className={cn(
+                  "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border",
+                  "border-info/30 bg-info/10 text-info/90",
+                )}
+              >
+                <Users className="h-4 w-4" />
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex-1">
+                    <span className={cn(typography.body.size, "font-medium text-fg")}>
+                      {t("advanced.groupChats.title")}
+                    </span>
+                    <p className="mt-0.5 text-[11px] leading-relaxed text-fg/50">
+                      {t("advanced.groupChats.description")}
                     </p>
                   </div>
 

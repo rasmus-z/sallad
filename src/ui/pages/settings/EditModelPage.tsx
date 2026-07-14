@@ -42,7 +42,9 @@ import {
   ADVANCED_OLLAMA_MIROSTAT_ETA_RANGE,
   ADVANCED_OLLAMA_REPEAT_PENALTY_RANGE,
   ADVANCED_OLLAMA_SEED_RANGE,
+  sanitizeFeatureGenerationSettings,
 } from "../../components/AdvancedModelSettingsForm";
+import { FeatureGenerationSettingsEditor } from "../../components/FeatureGenerationSettings";
 import { BottomMenu, MenuButton, MenuSection } from "../../components/BottomMenu";
 import { GuidedTour, useGuidedTour } from "../../components/GuidedTour";
 import { ModelSelectionBottomMenu } from "../../components/ModelSelectionBottomMenu";
@@ -84,7 +86,12 @@ import { useModelEditorController } from "./hooks/useModelEditorController";
 import { useNavigationManager } from "../../navigation";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { addOrUpdateModel, readSettings, readSettingsCached } from "../../../core/storage/repo";
-import type { LlamaLastRuntimeReport, ReasoningSupport } from "../../../core/storage/schemas";
+import type {
+  FeatureGenerationKey,
+  FeatureGenerationSettings,
+  LlamaLastRuntimeReport,
+  ReasoningSupport,
+} from "../../../core/storage/schemas";
 import {
   getProviderReasoningSupport,
   getProviderCachingSupport,
@@ -286,6 +293,58 @@ type EditorSectionKey =
   | "caching"
   | "capabilities";
 
+const FEATURE_GENERATION_PANEL_SECTIONS = [
+  {
+    key: "dynamicMemory",
+    labelKey: "featureGeneration.features.dynamicMemory",
+    defaults: { temperature: 0.4, topP: 1.0 },
+  },
+  {
+    key: "companionSoulWriter",
+    labelKey: "featureGeneration.features.companionSoulWriter",
+    defaults: { temperature: 0.4, topP: 1.0 },
+  },
+  {
+    key: "companionMemory",
+    labelKey: "featureGeneration.features.companionMemory",
+    defaults: { temperature: 0.3, topP: 1.0 },
+  },
+  {
+    key: "lorebookEntryGenerator",
+    labelKey: "featureGeneration.features.lorebookEntryGenerator",
+    defaults: { temperature: 0.2, topP: 1.0 },
+  },
+  {
+    key: "lorebookGenerator",
+    labelKey: "featureGeneration.features.lorebookGenerator",
+    defaults: { temperature: 0.3, topP: 1.0 },
+  },
+  {
+    key: "sceneWriter",
+    labelKey: "featureGeneration.features.sceneWriter",
+    defaults: { temperature: 0.7, topP: 1.0, maxOutputTokens: 1280 },
+  },
+  {
+    key: "helpMeReply",
+    labelKey: "featureGeneration.features.helpMeReply",
+    defaults: { temperature: 0.8, topP: 1.0 },
+  },
+  {
+    key: "groupSpeakerSelection",
+    labelKey: "featureGeneration.features.groupSpeakerSelection",
+    defaults: { temperature: 0.3, topP: 1.0, maxOutputTokens: 500 },
+  },
+  {
+    key: "creationHelper",
+    labelKey: "featureGeneration.features.creationHelper",
+    defaults: { temperature: 0.7, topP: 1.0, maxOutputTokens: 20480 },
+  },
+] satisfies ReadonlyArray<{
+  key: FeatureGenerationKey;
+  labelKey: TranslationKey;
+  defaults: { temperature: number; topP: number; maxOutputTokens?: number };
+}>;
+
 const EDITOR_FADE_DURATION = 0.16;
 
 const LLAMA_KV_TYPE_OPTIONS = [
@@ -436,6 +495,9 @@ function FieldBlock({
 export function EditModelPage() {
   const { t } = useI18n();
   const [showParameterSupport, setShowParameterSupport] = useState(false);
+  const [generationTarget, setGenerationTarget] = useState<"default" | FeatureGenerationKey>(
+    "default",
+  );
   const [isManualInput, setIsManualInput] = useState(false);
   const [showModelSelector, setShowModelSelector] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -1745,6 +1807,22 @@ export function EditModelPage() {
       : []),
     { key: "capabilities", label: t("editModel.sections.capabilities") },
   ];
+  function updateFeatureGenerationSettings(
+    key: FeatureGenerationKey,
+    next: FeatureGenerationSettings | null,
+  ) {
+    const sanitized = sanitizeFeatureGenerationSettings(next);
+    const map = { ...(modelAdvancedDraft.featureGenerationSettings ?? {}) };
+    if (sanitized) {
+      map[key] = sanitized;
+    } else {
+      delete map[key];
+    }
+    setModelAdvancedDraft({
+      ...modelAdvancedDraft,
+      featureGenerationSettings: Object.keys(map).length > 0 ? map : undefined,
+    });
+  }
   function updateSdSetting<K extends keyof typeof modelAdvancedDraft>(
     key: K,
     value: (typeof modelAdvancedDraft)[K],
@@ -3076,6 +3154,63 @@ export function EditModelPage() {
                         {/* Generation Parameters */}
                         {activeDetailPanel === "generation" && (
                           <div className="space-y-4">
+                            {!isFixedImageProvider && (
+                              <div className="space-y-2.5">
+                                <span className="block text-[13px] font-medium text-fg/70">
+                                  {t("featureGeneration.tabTitle")}
+                                </span>
+                                <div className="flex flex-wrap gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => setGenerationTarget("default")}
+                                    className={cn(
+                                      "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors",
+                                      generationTarget === "default"
+                                        ? "border-accent/40 bg-accent/10 text-accent"
+                                        : "border-fg/10 bg-fg/5 text-fg/70 hover:border-fg/20 hover:bg-fg/8 hover:text-fg",
+                                    )}
+                                  >
+                                    {t("common.labels.default")}
+                                  </button>
+                                  {FEATURE_GENERATION_PANEL_SECTIONS.map((section) => {
+                                    const isActive = generationTarget === section.key;
+                                    const hasOverrides =
+                                      !!modelAdvancedDraft.featureGenerationSettings?.[
+                                        section.key
+                                      ];
+                                    return (
+                                      <button
+                                        key={section.key}
+                                        type="button"
+                                        onClick={() => setGenerationTarget(section.key)}
+                                        className={cn(
+                                          "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors",
+                                          isActive
+                                            ? "border-accent/40 bg-accent/10 text-accent"
+                                            : "border-fg/10 bg-fg/5 text-fg/70 hover:border-fg/20 hover:bg-fg/8 hover:text-fg",
+                                        )}
+                                      >
+                                        {t(section.labelKey)}
+                                        {hasOverrides && (
+                                          <span
+                                            className={cn(
+                                              "h-1.5 w-1.5 rounded-full",
+                                              isActive ? "bg-accent" : "bg-accent/60",
+                                            )}
+                                          />
+                                        )}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                                {generationTarget !== "default" && (
+                                  <p className="text-[12px] leading-relaxed text-fg/45">
+                                    {t("featureGeneration.tabDescription")}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+
                             <div className="flex items-start justify-between gap-3">
                               <p className="text-[12px] text-fg/45">{generationSummary}</p>
                               <button
@@ -3086,6 +3221,28 @@ export function EditModelPage() {
                                 <Info size={14} />
                               </button>
                             </div>
+
+                            {generationTarget !== "default" && !isFixedImageProvider ? (
+                              (() => {
+                                const section = FEATURE_GENERATION_PANEL_SECTIONS.find(
+                                  (entry) => entry.key === generationTarget,
+                                );
+                                if (!section) return null;
+                                return (
+                                  <FeatureGenerationSettingsEditor
+                                    value={
+                                      modelAdvancedDraft.featureGenerationSettings?.[section.key]
+                                    }
+                                    onChange={(next) =>
+                                      updateFeatureGenerationSettings(section.key, next)
+                                    }
+                                    providerId={editorModel?.providerId ?? null}
+                                    defaults={section.defaults}
+                                  />
+                                );
+                              })()
+                            ) : (
+                              <>
 
                             {isFixedImageProvider ? (
                               <div className="space-y-5">
@@ -3647,6 +3804,537 @@ export function EditModelPage() {
                                   </div>
                                 </div>
                               </div>
+                            )}
+
+                            {isLocalModel && (
+                              <div className="space-y-6">
+                                <div className="flex items-center gap-2 border-l-2 border-fg/20 pl-3">
+                                  <div className="space-y-0.5">
+                                    <span className="block text-[13px] font-bold text-fg/80 uppercase tracking-tight">
+                                      {t("editModel.runtimeSections.samplingQualityTitle")}
+                                    </span>
+                                    <span className="block text-[13px] text-fg/40">
+                                      {t("editModel.runtimeSections.samplingQualityDescription")}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                  <div className="space-y-0.5">
+                                    <span className="block text-[13px] font-medium text-fg/70">
+                                      {t("editModel.llamaSampler.samplerProfile")}
+                                    </span>
+                                    <span className="block text-[13px] text-fg/40">
+                                      {t("editModel.llamaSampler.samplerProfileDescription")}
+                                    </span>
+                                  </div>
+                                  <select
+                                    value={selectedSamplerProfile}
+                                    onChange={(e) =>
+                                      handleLlamaSamplerProfileChange(
+                                        e.target.value as
+                                        | "balanced"
+                                        | "creative"
+                                        | "stable"
+                                        | "reasoning",
+                                      )
+                                    }
+                                    className={selectInputClassName}
+                                  >
+                                    {LLAMA_SAMPLER_PROFILE_OPTIONS.map((option) => (
+                                      <option
+                                        key={option.value}
+                                        value={option.value}
+                                        className="bg-[#16171d]"
+                                      >
+                                        {t(option.labelKey)}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  <div className="flex flex-wrap gap-2 pt-1">
+                                    {LLAMA_SAMPLER_PROFILE_DETAILS[selectedSamplerProfile].map(
+                                      (detail) => (
+                                        <span
+                                          key={detail}
+                                          className="font-mono text-[13px] text-fg/55"
+                                        >
+                                          {t(detail)}
+                                        </span>
+                                      ),
+                                    )}
+                                  </div>
+                                </div>
+
+                                <LlamaSamplerOrderEditor
+                                  value={modelAdvancedDraft.llamaSamplerOrder}
+                                  onChange={handleLlamaSamplerOrderChange}
+                                />
+
+                                <div className="grid grid-cols-2 gap-6">
+                                  <div className="space-y-4">
+                                    <div className="space-y-0.5">
+                                      <span className="block text-[13px] font-medium text-fg/70">
+                                        {t("editModel.llamaSampler.minP")}
+                                      </span>
+                                      <span className="block text-[13px] text-fg/40">
+                                        {t("editModel.llamaSampler.localOverride")}
+                                      </span>
+                                    </div>
+                                    <NumberInput
+                                      min={0}
+                                      max={1}
+                                      step={0.01}
+                                      value={modelAdvancedDraft.llamaMinP ?? null}
+                                      onChange={(next) => handleLlamaMinPChange(next)}
+                                      placeholder={t("editModel.placeholders.default")}
+                                      className={numberInputClassName}
+                                    />
+                                  </div>
+
+                                  <div className="space-y-4">
+                                    <div className="space-y-0.5">
+                                      <span className="block text-[13px] font-medium text-fg/70">
+                                        {t("editModel.llamaSampler.typicalP")}
+                                      </span>
+                                      <span className="block text-[13px] text-fg/40">
+                                        {t("editModel.llamaSampler.localOverride")}
+                                      </span>
+                                    </div>
+                                    <NumberInput
+                                      min={0}
+                                      max={1}
+                                      step={0.01}
+                                      value={modelAdvancedDraft.llamaTypicalP ?? null}
+                                      onChange={(next) => handleLlamaTypicalPChange(next)}
+                                      placeholder={t("editModel.placeholders.default")}
+                                      className={numberInputClassName}
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-6">
+                                  <div className="space-y-4">
+                                    <div className="space-y-0.5">
+                                      <span className="block text-[13px] font-medium text-fg/70">
+                                        {t("editModel.ollamaParams.repeatPenalty")}
+                                      </span>
+                                      <span className="block text-[13px] text-fg/40">
+                                        {t("editModel.ollamaParams.repeatPenaltyDescription")}
+                                      </span>
+                                    </div>
+                                    <NumberInput
+                                      min={ADVANCED_LLAMA_REPEAT_PENALTY_RANGE.min}
+                                      max={ADVANCED_LLAMA_REPEAT_PENALTY_RANGE.max}
+                                      step={0.01}
+                                      value={modelAdvancedDraft.llamaRepeatPenalty ?? null}
+                                      onChange={(next) => handleLlamaRepeatPenaltyChange(next)}
+                                      placeholder="1.00"
+                                      className={numberInputClassName}
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-6">
+                                  <div className="space-y-4">
+                                    <div className="space-y-0.5">
+                                      <span className="block text-[13px] font-medium text-fg/70">
+                                        {t("editModel.llamaSampler.xtcProbability")}
+                                      </span>
+                                      <span className="block text-[13px] text-fg/40">
+                                        {t("editModel.llamaSampler.localOverride")}
+                                      </span>
+                                    </div>
+                                    <NumberInput
+                                      min={0}
+                                      max={1}
+                                      step={0.01}
+                                      value={modelAdvancedDraft.llamaXtcProbability ?? null}
+                                      onChange={(next) => handleLlamaXtcProbabilityChange(next)}
+                                      placeholder={t("editModel.placeholders.default")}
+                                      className={numberInputClassName}
+                                    />
+                                  </div>
+
+                                  <div className="space-y-4">
+                                    <div className="space-y-0.5">
+                                      <span className="block text-[13px] font-medium text-fg/70">
+                                        {t("editModel.llamaSampler.xtcThreshold")}
+                                      </span>
+                                      <span className="block text-[13px] text-fg/40">
+                                        {t("editModel.llamaSampler.localOverride")}
+                                      </span>
+                                    </div>
+                                    <NumberInput
+                                      min={0}
+                                      max={1}
+                                      step={0.01}
+                                      value={modelAdvancedDraft.llamaXtcThreshold ?? null}
+                                      onChange={(next) => handleLlamaXtcThresholdChange(next)}
+                                      placeholder={t("editModel.placeholders.default")}
+                                      className={numberInputClassName}
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-6">
+                                  <div className="space-y-4">
+                                    <div className="space-y-0.5">
+                                      <span className="block text-[13px] font-medium text-fg/70">
+                                        {t("editModel.llamaSampler.dryMultiplier")}
+                                      </span>
+                                      <span className="block text-[13px] text-fg/40">
+                                        {t("editModel.llamaSampler.dryMultiplierDescription")}
+                                      </span>
+                                    </div>
+                                    <NumberInput
+                                      min={ADVANCED_LLAMA_DRY_MULTIPLIER_RANGE.min}
+                                      max={ADVANCED_LLAMA_DRY_MULTIPLIER_RANGE.max}
+                                      step={0.05}
+                                      value={modelAdvancedDraft.llamaDryMultiplier ?? null}
+                                      onChange={(next) => handleLlamaDryMultiplierChange(next)}
+                                      placeholder={t("editModel.placeholders.dryMultiplier")}
+                                      className={numberInputClassName}
+                                    />
+                                  </div>
+
+                                  <div className="space-y-4">
+                                    <div className="space-y-0.5">
+                                      <span className="block text-[13px] font-medium text-fg/70">
+                                        {t("editModel.llamaSampler.dryBase")}
+                                      </span>
+                                      <span className="block text-[13px] text-fg/40">
+                                        {t("editModel.llamaSampler.dryBaseDescription")}
+                                      </span>
+                                    </div>
+                                    <NumberInput
+                                      min={ADVANCED_LLAMA_DRY_BASE_RANGE.min}
+                                      max={ADVANCED_LLAMA_DRY_BASE_RANGE.max}
+                                      step={0.05}
+                                      value={modelAdvancedDraft.llamaDryBase ?? null}
+                                      onChange={(next) => handleLlamaDryBaseChange(next)}
+                                      placeholder={t("editModel.placeholders.dryBase")}
+                                      className={numberInputClassName}
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-6">
+                                  <div className="space-y-4">
+                                    <div className="space-y-0.5">
+                                      <span className="block text-[13px] font-medium text-fg/70">
+                                        {t("editModel.llamaSampler.dryAllowedLength")}
+                                      </span>
+                                      <span className="block text-[13px] text-fg/40">
+                                        {t("editModel.llamaSampler.dryAllowedLengthDescription")}
+                                      </span>
+                                    </div>
+                                    <NumberInput
+                                      min={ADVANCED_LLAMA_DRY_ALLOWED_LENGTH_RANGE.min}
+                                      max={ADVANCED_LLAMA_DRY_ALLOWED_LENGTH_RANGE.max}
+                                      step={1}
+                                      value={modelAdvancedDraft.llamaDryAllowedLength ?? null}
+                                      onChange={(next) => handleLlamaDryAllowedLengthChange(next)}
+                                      placeholder={t("editModel.placeholders.dryAllowedLength")}
+                                      className={numberInputClassName}
+                                    />
+                                  </div>
+
+                                  <div className="space-y-4">
+                                    <div className="space-y-0.5">
+                                      <span className="block text-[13px] font-medium text-fg/70">
+                                        {t("editModel.llamaSampler.dryPenaltyLastN")}
+                                      </span>
+                                      <span className="block text-[13px] text-fg/40">
+                                        {t("editModel.llamaSampler.dryPenaltyLastNDescription")}
+                                      </span>
+                                    </div>
+                                    <NumberInput
+                                      min={ADVANCED_LLAMA_DRY_PENALTY_LAST_N_RANGE.min}
+                                      max={ADVANCED_LLAMA_DRY_PENALTY_LAST_N_RANGE.max}
+                                      step={1}
+                                      value={modelAdvancedDraft.llamaDryPenaltyLastN ?? null}
+                                      onChange={(next) => handleLlamaDryPenaltyLastNChange(next)}
+                                      placeholder={t("editModel.placeholders.dryPenaltyLastN")}
+                                      className={numberInputClassName}
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                  <div className="space-y-0.5">
+                                    <span className="block text-[13px] font-medium text-fg/70">
+                                      {t("editModel.llamaSampler.drySequenceBreakers")}
+                                    </span>
+                                    <span className="block text-[13px] text-fg/40">
+                                      {t("editModel.llamaSampler.drySequenceBreakersDescription")}
+                                    </span>
+                                  </div>
+                                  <input
+                                    type="text"
+                                    value={joinStringList(modelAdvancedDraft.llamaDrySequenceBreakers)}
+                                    onChange={(e) => {
+                                      const next = e.target.value
+                                        .split(",")
+                                        .map((item) => item.trim())
+                                        .filter((item) => item.length > 0);
+                                      handleLlamaDrySequenceBreakersChange(
+                                        next.length ? next : null,
+                                      );
+                                    }}
+                                    placeholder={'\\n, :, ", *'}
+                                    className={textAreaInputClassName}
+                                  />
+                                </div>
+
+                                <div className="space-y-4">
+                                  <div className="space-y-0.5">
+                                    <span className="block text-[13px] font-medium text-fg/70">
+                                      {t("editModel.llamaSampler.seed")}
+                                    </span>
+                                    <span className="block text-[13px] text-fg/40">
+                                      {t("editModel.llamaSampler.seedDescription")}
+                                    </span>
+                                  </div>
+                                  <NumberInput
+                                    min={ADVANCED_LLAMA_SEED_RANGE.min}
+                                    max={ADVANCED_LLAMA_SEED_RANGE.max}
+                                    step={1}
+                                    value={modelAdvancedDraft.llamaSeed ?? null}
+                                    onChange={(next) =>
+                                      handleLlamaSeedChange(
+                                        next === null || next < 0 ? null : Math.trunc(next),
+                                      )
+                                    }
+                                    placeholder={t("editModel.placeholders.random")}
+                                    className={numberInputClassName}
+                                  />
+                                </div>
+                              </div>
+                            )}
+
+                            {isOllamaModel && (
+                              <>
+                                <div className="space-y-6">
+                                  <div className="flex items-center gap-2 border-l-2 border-fg/20 pl-3">
+                                    <span className="text-[13px] font-bold text-fg/80 uppercase tracking-tight">
+                                      {t("editModel.runtimeSections.samplingPenaltiesTitle")}
+                                    </span>
+                                  </div>
+
+                                  <div className="grid grid-cols-2 gap-6">
+                                    <div className="space-y-4">
+                                      <div className="space-y-0.5">
+                                        <span className="block text-[13px] font-medium text-fg/70">
+                                          {t("editModel.ollamaParams.tfsZ")}
+                                        </span>
+                                        <span className="block text-[13px] text-fg/40">
+                                          {t("editModel.ollamaParams.tfsZDescription")}
+                                        </span>
+                                      </div>
+                                      <NumberInput
+                                        min={ADVANCED_OLLAMA_TFS_Z_RANGE.min}
+                                        max={ADVANCED_OLLAMA_TFS_Z_RANGE.max}
+                                        step={0.01}
+                                        value={modelAdvancedDraft.ollamaTfsZ ?? null}
+                                        onChange={(next) => handleOllamaTfsZChange(next)}
+                                        placeholder={t("common.labels.auto")}
+                                        className={numberInputClassName}
+                                      />
+                                    </div>
+
+                                    <div className="space-y-4">
+                                      <div className="space-y-0.5">
+                                        <span className="block text-[13px] font-medium text-fg/70">
+                                          {t("editModel.ollamaParams.repeatPenalty")}
+                                        </span>
+                                        <span className="block text-[13px] text-fg/40">
+                                          {t("editModel.ollamaParams.repeatPenaltyDescription")}
+                                        </span>
+                                      </div>
+                                      <NumberInput
+                                        min={ADVANCED_OLLAMA_REPEAT_PENALTY_RANGE.min}
+                                        max={ADVANCED_OLLAMA_REPEAT_PENALTY_RANGE.max}
+                                        step={0.01}
+                                        value={modelAdvancedDraft.ollamaRepeatPenalty ?? null}
+                                        onChange={(next) => handleOllamaRepeatPenaltyChange(next)}
+                                        placeholder={t("common.labels.auto")}
+                                        className={numberInputClassName}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="grid grid-cols-2 gap-6">
+                                    <div className="space-y-4">
+                                      <div className="space-y-0.5">
+                                        <span className="block text-[13px] font-medium text-fg/70">
+                                          {t("editModel.ollamaParams.minP")}
+                                        </span>
+                                        <span className="block text-[13px] text-fg/40">
+                                          {t("editModel.ollamaParams.minPDescription")}
+                                        </span>
+                                      </div>
+                                      <NumberInput
+                                        min={ADVANCED_OLLAMA_MIN_P_RANGE.min}
+                                        max={ADVANCED_OLLAMA_MIN_P_RANGE.max}
+                                        step={0.01}
+                                        value={modelAdvancedDraft.ollamaMinP ?? null}
+                                        onChange={(next) => handleOllamaMinPChange(next)}
+                                        placeholder={t("common.labels.auto")}
+                                        className={numberInputClassName}
+                                      />
+                                    </div>
+
+                                    <div className="space-y-4">
+                                      <div className="space-y-0.5">
+                                        <span className="block text-[13px] font-medium text-fg/70">
+                                          {t("editModel.ollamaParams.typicalP")}
+                                        </span>
+                                        <span className="block text-[13px] text-fg/40">
+                                          {t("editModel.ollamaParams.typicalPDescription")}
+                                        </span>
+                                      </div>
+                                      <NumberInput
+                                        min={ADVANCED_OLLAMA_TYPICAL_P_RANGE.min}
+                                        max={ADVANCED_OLLAMA_TYPICAL_P_RANGE.max}
+                                        step={0.01}
+                                        value={modelAdvancedDraft.ollamaTypicalP ?? null}
+                                        onChange={(next) => handleOllamaTypicalPChange(next)}
+                                        placeholder={t("common.labels.auto")}
+                                        className={numberInputClassName}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="space-y-4">
+                                    <div className="space-y-0.5">
+                                      <span className="block text-[13px] font-medium text-fg/70">
+                                        {t("editModel.ollamaParams.mirostat")}
+                                      </span>
+                                      <span className="block text-[13px] text-fg/40">
+                                        {t("editModel.ollamaParams.mirostatDescription")}
+                                      </span>
+                                    </div>
+                                    <select
+                                      value={
+                                        modelAdvancedDraft.ollamaMirostat === null ||
+                                          modelAdvancedDraft.ollamaMirostat === undefined
+                                          ? "auto"
+                                          : modelAdvancedDraft.ollamaMirostat.toString()
+                                      }
+                                      onChange={(e) => {
+                                        const val = e.target.value;
+                                        handleOllamaMirostatChange(
+                                          val === "auto" ? null : Number(val),
+                                        );
+                                      }}
+                                      className={selectInputClassName}
+                                    >
+                                      <option value="auto" className="bg-[#16171d]">
+                                        {t("common.labels.auto")}
+                                      </option>
+                                      <option value="0" className="bg-[#16171d]">
+                                        {t("editModel.ollamaParams.mirostatOff")}
+                                      </option>
+                                      <option value="1" className="bg-[#16171d]">
+                                        1
+                                      </option>
+                                      <option value="2" className="bg-[#16171d]">
+                                        2
+                                      </option>
+                                    </select>
+                                  </div>
+
+                                  <div className="grid grid-cols-2 gap-6">
+                                    <div className="space-y-4">
+                                      <div className="space-y-0.5">
+                                        <span className="block text-[13px] font-medium text-fg/70">
+                                          {t("editModel.ollamaParams.tau")}
+                                        </span>
+                                        <span className="block text-[13px] text-fg/40">
+                                          {t("editModel.ollamaParams.tauDescription")}
+                                        </span>
+                                      </div>
+                                      <NumberInput
+                                        min={ADVANCED_OLLAMA_MIROSTAT_TAU_RANGE.min}
+                                        max={ADVANCED_OLLAMA_MIROSTAT_TAU_RANGE.max}
+                                        step={0.1}
+                                        value={modelAdvancedDraft.ollamaMirostatTau ?? null}
+                                        onChange={(next) => handleOllamaMirostatTauChange(next)}
+                                        placeholder={t("common.labels.auto")}
+                                        className={numberInputClassName}
+                                      />
+                                    </div>
+
+                                    <div className="space-y-4">
+                                      <div className="space-y-0.5">
+                                        <span className="block text-[13px] font-medium text-fg/70">
+                                          {t("editModel.ollamaParams.eta")}
+                                        </span>
+                                        <span className="block text-[13px] text-fg/40">
+                                          {t("editModel.ollamaParams.etaDescription")}
+                                        </span>
+                                      </div>
+                                      <NumberInput
+                                        min={ADVANCED_OLLAMA_MIROSTAT_ETA_RANGE.min}
+                                        max={ADVANCED_OLLAMA_MIROSTAT_ETA_RANGE.max}
+                                        step={0.01}
+                                        value={modelAdvancedDraft.ollamaMirostatEta ?? null}
+                                        onChange={(next) => handleOllamaMirostatEtaChange(next)}
+                                        placeholder={t("common.labels.auto")}
+                                        className={numberInputClassName}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="space-y-4">
+                                    <div className="space-y-0.5">
+                                      <span className="block text-[13px] font-medium text-fg/70">
+                                        {t("editModel.ollamaParams.seed")}
+                                      </span>
+                                      <span className="block text-[13px] text-fg/40">
+                                        {t("editModel.ollamaParams.seedDescription")}
+                                      </span>
+                                    </div>
+                                    <NumberInput
+                                      min={ADVANCED_OLLAMA_SEED_RANGE.min}
+                                      max={ADVANCED_OLLAMA_SEED_RANGE.max}
+                                      step={1}
+                                      value={modelAdvancedDraft.ollamaSeed ?? null}
+                                      onChange={(next) =>
+                                        handleOllamaSeedChange(
+                                          next === null || next < 0 ? null : Math.trunc(next),
+                                        )
+                                      }
+                                      placeholder={t("editModel.placeholders.random")}
+                                      className={numberInputClassName}
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                  <div className="flex items-center gap-2 border-l-2 border-fg/20 pl-3">
+                                    <span className="text-[13px] font-bold text-fg/80 uppercase tracking-tight">
+                                      {t("editModel.runtimeSections.stopSequencesTitle")}
+                                    </span>
+                                  </div>
+                                  <textarea
+                                    value={ollamaStopText}
+                                    onChange={(e) => {
+                                      const raw = e.target.value;
+                                      const next = raw
+                                        .split(/[\n,]+/)
+                                        .map((s) => s.trim())
+                                        .filter((s) => s.length > 0);
+                                      handleOllamaStopChange(next.length > 0 ? next : null);
+                                    }}
+                                    placeholder={t("editModel.placeholders.stopSequences")}
+                                    rows={2}
+                                    className={textAreaInputClassName}
+                                  />
+                                </div>
+                              </>
+                            )}
+                              </>
                             )}
                           </div>
                         )}
@@ -4259,8 +4947,213 @@ export function EditModelPage() {
                                   </div>
                                 </div>
 
-                                {/* Performance */}
+                              </div>
+
+                              <div className="space-y-6">
+                                {/* Prompting & Templates */}
                                 <div className="space-y-6 border-t border-fg/8 pt-6">
+                                  <div className="flex items-center gap-2 border-l-2 border-fg/20 pl-3">
+                                    <div className="space-y-0.5">
+                                      <span className="block text-[13px] font-bold text-fg/80 uppercase tracking-tight">
+                                        {t("editModel.runtimeSections.promptingTemplatesTitle")}
+                                      </span>
+                                      <span className="block text-[13px] text-fg/40">
+                                        {t("editModel.runtimeSections.promptingTemplatesDescription")}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <div className="space-y-4">
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div className="space-y-0.5">
+                                        <span className="block text-[13px] font-medium text-fg/70">
+                                          {t("editModel.templates.templateOverride")}
+                                        </span>
+                                        <span className="block text-[13px] text-fg/40">
+                                          {t("editModel.templates.templateOverrideDescription")}
+                                        </span>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={openTemplateOverlay}
+                                        className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-fg/10 bg-fg/5 px-2.5 py-1.5 text-[12px] font-medium text-fg/68 transition hover:border-fg/20 hover:bg-fg/10 hover:text-fg"
+                                      >
+                                        <Maximize2 className="h-3.5 w-3.5 text-accent/70" />
+                                        {t("common.buttons.edit")}
+                                      </button>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={openTemplateOverlay}
+                                      className={cn(
+                                        selectInputClassName,
+                                        "block w-full cursor-pointer truncate text-left",
+                                        modelAdvancedDraft.llamaChatTemplateOverride
+                                          ? "text-fg/78"
+                                          : "text-fg/35",
+                                      )}
+                                    >
+                                      {modelAdvancedDraft.llamaChatTemplateOverride
+                                        ? modelAdvancedDraft.llamaChatTemplateOverride.length > 80
+                                          ? `${modelAdvancedDraft.llamaChatTemplateOverride.slice(0, 80)}...`
+                                          : modelAdvancedDraft.llamaChatTemplateOverride
+                                        : t("editModel.templates.preferEmbedded")}
+                                    </button>
+                                  </div>
+
+                                  <div className="space-y-4">
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div className="space-y-0.5">
+                                        <span className="block text-[13px] font-medium text-fg/70">
+                                          {t("editModel.templates.mmprojPath")}
+                                        </span>
+                                        <span className="block text-[13px] text-fg/40">
+                                          {t("editModel.templates.mmprojPathDescription")}
+                                        </span>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={openLocalMmprojPicker}
+                                        className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-fg/10 bg-fg/5 px-2.5 py-1.5 text-[12px] font-medium text-fg/68 transition hover:border-fg/20 hover:bg-fg/10 hover:text-fg"
+                                      >
+                                        <FolderOpen className="h-3.5 w-3.5 text-accent/70" />
+                                        {t("hfBrowser.selectFromLibrary")}
+                                      </button>
+                                    </div>
+                                    <input
+                                      type="text"
+                                      value={modelAdvancedDraft.llamaMmprojPath ?? ""}
+                                      onChange={(e) => {
+                                        const nextValue =
+                                          e.target.value === "" ? null : e.target.value;
+                                        handleLlamaMmprojPathChange(nextValue);
+                                        syncImageInputScope(nextValue);
+                                      }}
+                                      placeholder={t("editModel.placeholders.mmprojPath")}
+                                      className={selectInputClassName}
+                                      spellCheck={false}
+                                    />
+                                  </div>
+
+                                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                    <div className="space-y-4">
+                                      <div className="space-y-0.5">
+                                        <span className="block text-[13px] font-medium text-fg/70">
+                                          {t("editModel.templates.templatePreset")}
+                                        </span>
+                                        <span className="block text-[13px] text-fg/40">
+                                          {t("editModel.templates.templatePresetDescription")}
+                                        </span>
+                                      </div>
+                                      <select
+                                        value={modelAdvancedDraft.llamaChatTemplatePreset ?? "auto"}
+                                        onChange={(e) =>
+                                          handleLlamaChatTemplatePresetChange(
+                                            e.target.value === "auto" ? null : e.target.value,
+                                          )
+                                        }
+                                        className={selectInputClassName}
+                                      >
+                                        {LLAMA_CHAT_TEMPLATE_PRESET_OPTIONS.map((option) => (
+                                          <option
+                                            key={option.value}
+                                            value={option.value}
+                                            className="bg-[#16171d]"
+                                          >
+                                            {t(option.labelKey)}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                      <div className="space-y-0.5">
+                                        <span className="block text-[13px] font-medium text-fg/70">
+                                          {t("editModel.templates.rawCompletionFallback")}
+                                        </span>
+                                        <span className="block text-[13px] text-fg/40">
+                                          {t("editModel.templates.rawCompletionFallbackDescription")}
+                                        </span>
+                                      </div>
+                                      <select
+                                        value={
+                                          modelAdvancedDraft.llamaRawCompletionFallback === true
+                                            ? "enabled"
+                                            : modelAdvancedDraft.llamaRawCompletionFallback ===
+                                              false
+                                              ? "disabled"
+                                              : "default"
+                                        }
+                                        onChange={(e) => {
+                                          const val = e.target.value;
+                                          handleLlamaRawCompletionFallbackChange(
+                                            val === "default" ? null : val === "enabled",
+                                          );
+                                        }}
+                                        className={selectInputClassName}
+                                      >
+                                        <option value="default" className="bg-[#16171d]">
+                                          {t("editModel.templates.rawCompletionDefault")}
+                                        </option>
+                                        <option value="enabled" className="bg-[#16171d]">
+                                          {t("common.labels.enabled")}
+                                        </option>
+                                        <option value="disabled" className="bg-[#16171d]">
+                                          {t("common.labels.disabled")}
+                                        </option>
+                                      </select>
+                                    </div>
+                                  </div>
+
+                                  <div className="text-danger/80">
+                                    <div className="flex items-start justify-between gap-4">
+                                      <div className="min-w-0 space-y-1.5">
+                                        <div className="flex items-start gap-3">
+                                          <div className="mt-0.5 shrink-0 text-danger/80">
+                                            <AlertTriangle className="h-4 w-4" />
+                                          </div>
+                                          <div className="min-w-0 space-y-1">
+                                            <span className="block text-[13px] font-medium text-fg/82">
+                                              {t("editModel.templates.strictMode")}
+                                            </span>
+                                            <span className="block text-[13px] leading-relaxed text-fg/48">
+                                              {t("editModel.templates.strictModeDescription")}
+                                            </span>
+                                          </div>
+                                        </div>
+                                        <span className="block text-[12px] text-danger/75">
+                                          {t("editModel.templates.strictModeWarning")}
+                                        </span>
+                                      </div>
+                                      <div className="flex shrink-0 items-center gap-3">
+                                        <span
+                                          className={cn(
+                                            "text-[12px] font-medium transition",
+                                            modelAdvancedDraft.llamaStrictMode === true
+                                              ? "text-danger/85"
+                                              : "text-fg/42",
+                                          )}
+                                        >
+                                          {modelAdvancedDraft.llamaStrictMode === true
+                                            ? t("common.labels.on")
+                                            : t("common.labels.off")}
+                                        </span>
+                                        <Switch
+                                          id="llama-strict-mode"
+                                          checked={modelAdvancedDraft.llamaStrictMode === true}
+                                          onChange={(next) =>
+                                            handleLlamaStrictModeChange(next ? true : null)
+                                          }
+                                          aria-label={t("editModel.llama.toggleStrictMode")}
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                                {/* Performance */}
+                                <div className="space-y-6 border-t border-fg/8 pt-6 xl:col-span-2">
                                   <div className="flex items-center gap-2 border-l-2 border-fg/20 pl-3">
                                     <div className="space-y-0.5">
                                       <span className="block text-[13px] font-bold text-fg/80 uppercase tracking-tight">
@@ -4321,6 +5214,9 @@ export function EditModelPage() {
                                       </div>
                                     )}
                                   </div>
+
+                                <div className="grid grid-cols-1 gap-6 xl:grid-cols-2 xl:items-start">
+                                  <div className="space-y-6">
 
                                   {!(effectiveMultiGpuEnabled && multiGpuAvailable) && (
                                   <div className="space-y-4">
@@ -5061,8 +5957,12 @@ export function EditModelPage() {
                                         className={numberInputClassName}
                                       />
                                     </div>
+                                  </div>
+                                  </div>
 
-                                    <div className="col-span-2 space-y-4">
+                                  <div className="space-y-6">
+
+                                    <div className="space-y-4">
                                       <div className="space-y-0.5">
                                         <span className="block text-[13px] font-medium text-fg/70">
                                           {t("editModel.layerPlacement.flashAttention")}
@@ -5092,7 +5992,6 @@ export function EditModelPage() {
                                         </option>
                                       </select>
                                     </div>
-                                  </div>
 
                                   <div className="space-y-4 border-t border-fg/8 pt-4">
                                     <div className="flex items-center justify-between gap-4">
@@ -5252,514 +6151,9 @@ export function EditModelPage() {
                                       </div>
                                     )}
                                   </div>
-                                </div>
-                              </div>
-
-                              {/* 3. Sampling & Quality + 4. Prompting & Templates */}
-                              <div className="space-y-6">
-                                <div className="flex items-center gap-2 border-l-2 border-fg/20 pl-3">
-                                  <div className="space-y-0.5">
-                                    <span className="block text-[13px] font-bold text-fg/80 uppercase tracking-tight">
-                                      {t("editModel.runtimeSections.samplingQualityTitle")}
-                                    </span>
-                                    <span className="block text-[13px] text-fg/40">
-                                      {t("editModel.runtimeSections.samplingQualityDescription")}
-                                    </span>
                                   </div>
                                 </div>
-
-                                <div className="space-y-4">
-                                  <div className="space-y-0.5">
-                                    <span className="block text-[13px] font-medium text-fg/70">
-                                      {t("editModel.llamaSampler.samplerProfile")}
-                                    </span>
-                                    <span className="block text-[13px] text-fg/40">
-                                      {t("editModel.llamaSampler.samplerProfileDescription")}
-                                    </span>
-                                  </div>
-                                  <select
-                                    value={selectedSamplerProfile}
-                                    onChange={(e) =>
-                                      handleLlamaSamplerProfileChange(
-                                        e.target.value as
-                                        | "balanced"
-                                        | "creative"
-                                        | "stable"
-                                        | "reasoning",
-                                      )
-                                    }
-                                    className={selectInputClassName}
-                                  >
-                                    {LLAMA_SAMPLER_PROFILE_OPTIONS.map((option) => (
-                                      <option
-                                        key={option.value}
-                                        value={option.value}
-                                        className="bg-[#16171d]"
-                                      >
-                                        {t(option.labelKey)}
-                                      </option>
-                                    ))}
-                                  </select>
-                                  <div className="flex flex-wrap gap-2 pt-1">
-                                    {LLAMA_SAMPLER_PROFILE_DETAILS[selectedSamplerProfile].map(
-                                      (detail) => (
-                                        <span
-                                          key={detail}
-                                          className="font-mono text-[13px] text-fg/55"
-                                        >
-                                          {t(detail)}
-                                        </span>
-                                      ),
-                                    )}
-                                  </div>
                                 </div>
-
-                                <LlamaSamplerOrderEditor
-                                  value={modelAdvancedDraft.llamaSamplerOrder}
-                                  onChange={handleLlamaSamplerOrderChange}
-                                />
-
-                                <div className="grid grid-cols-2 gap-6">
-                                  <div className="space-y-4">
-                                    <div className="space-y-0.5">
-                                      <span className="block text-[13px] font-medium text-fg/70">
-                                        {t("editModel.llamaSampler.minP")}
-                                      </span>
-                                      <span className="block text-[13px] text-fg/40">
-                                        {t("editModel.llamaSampler.localOverride")}
-                                      </span>
-                                    </div>
-                                    <NumberInput
-                                      min={0}
-                                      max={1}
-                                      step={0.01}
-                                      value={modelAdvancedDraft.llamaMinP ?? null}
-                                      onChange={(next) => handleLlamaMinPChange(next)}
-                                      placeholder={t("editModel.placeholders.default")}
-                                      className={numberInputClassName}
-                                    />
-                                  </div>
-
-                                  <div className="space-y-4">
-                                    <div className="space-y-0.5">
-                                      <span className="block text-[13px] font-medium text-fg/70">
-                                        {t("editModel.llamaSampler.typicalP")}
-                                      </span>
-                                      <span className="block text-[13px] text-fg/40">
-                                        {t("editModel.llamaSampler.localOverride")}
-                                      </span>
-                                    </div>
-                                    <NumberInput
-                                      min={0}
-                                      max={1}
-                                      step={0.01}
-                                      value={modelAdvancedDraft.llamaTypicalP ?? null}
-                                      onChange={(next) => handleLlamaTypicalPChange(next)}
-                                      placeholder={t("editModel.placeholders.default")}
-                                      className={numberInputClassName}
-                                    />
-                                  </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-6">
-                                  <div className="space-y-4">
-                                    <div className="space-y-0.5">
-                                      <span className="block text-[13px] font-medium text-fg/70">
-                                        {t("editModel.ollamaParams.repeatPenalty")}
-                                      </span>
-                                      <span className="block text-[13px] text-fg/40">
-                                        {t("editModel.ollamaParams.repeatPenaltyDescription")}
-                                      </span>
-                                    </div>
-                                    <NumberInput
-                                      min={ADVANCED_LLAMA_REPEAT_PENALTY_RANGE.min}
-                                      max={ADVANCED_LLAMA_REPEAT_PENALTY_RANGE.max}
-                                      step={0.01}
-                                      value={modelAdvancedDraft.llamaRepeatPenalty ?? null}
-                                      onChange={(next) => handleLlamaRepeatPenaltyChange(next)}
-                                      placeholder="1.00"
-                                      className={numberInputClassName}
-                                    />
-                                  </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-6">
-                                  <div className="space-y-4">
-                                    <div className="space-y-0.5">
-                                      <span className="block text-[13px] font-medium text-fg/70">
-                                        {t("editModel.llamaSampler.xtcProbability")}
-                                      </span>
-                                      <span className="block text-[13px] text-fg/40">
-                                        {t("editModel.llamaSampler.localOverride")}
-                                      </span>
-                                    </div>
-                                    <NumberInput
-                                      min={0}
-                                      max={1}
-                                      step={0.01}
-                                      value={modelAdvancedDraft.llamaXtcProbability ?? null}
-                                      onChange={(next) => handleLlamaXtcProbabilityChange(next)}
-                                      placeholder={t("editModel.placeholders.default")}
-                                      className={numberInputClassName}
-                                    />
-                                  </div>
-
-                                  <div className="space-y-4">
-                                    <div className="space-y-0.5">
-                                      <span className="block text-[13px] font-medium text-fg/70">
-                                        {t("editModel.llamaSampler.xtcThreshold")}
-                                      </span>
-                                      <span className="block text-[13px] text-fg/40">
-                                        {t("editModel.llamaSampler.localOverride")}
-                                      </span>
-                                    </div>
-                                    <NumberInput
-                                      min={0}
-                                      max={1}
-                                      step={0.01}
-                                      value={modelAdvancedDraft.llamaXtcThreshold ?? null}
-                                      onChange={(next) => handleLlamaXtcThresholdChange(next)}
-                                      placeholder={t("editModel.placeholders.default")}
-                                      className={numberInputClassName}
-                                    />
-                                  </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-6">
-                                  <div className="space-y-4">
-                                    <div className="space-y-0.5">
-                                      <span className="block text-[13px] font-medium text-fg/70">
-                                        {t("editModel.llamaSampler.dryMultiplier")}
-                                      </span>
-                                      <span className="block text-[13px] text-fg/40">
-                                        {t("editModel.llamaSampler.dryMultiplierDescription")}
-                                      </span>
-                                    </div>
-                                    <NumberInput
-                                      min={ADVANCED_LLAMA_DRY_MULTIPLIER_RANGE.min}
-                                      max={ADVANCED_LLAMA_DRY_MULTIPLIER_RANGE.max}
-                                      step={0.05}
-                                      value={modelAdvancedDraft.llamaDryMultiplier ?? null}
-                                      onChange={(next) => handleLlamaDryMultiplierChange(next)}
-                                      placeholder={t("editModel.placeholders.dryMultiplier")}
-                                      className={numberInputClassName}
-                                    />
-                                  </div>
-
-                                  <div className="space-y-4">
-                                    <div className="space-y-0.5">
-                                      <span className="block text-[13px] font-medium text-fg/70">
-                                        {t("editModel.llamaSampler.dryBase")}
-                                      </span>
-                                      <span className="block text-[13px] text-fg/40">
-                                        {t("editModel.llamaSampler.dryBaseDescription")}
-                                      </span>
-                                    </div>
-                                    <NumberInput
-                                      min={ADVANCED_LLAMA_DRY_BASE_RANGE.min}
-                                      max={ADVANCED_LLAMA_DRY_BASE_RANGE.max}
-                                      step={0.05}
-                                      value={modelAdvancedDraft.llamaDryBase ?? null}
-                                      onChange={(next) => handleLlamaDryBaseChange(next)}
-                                      placeholder={t("editModel.placeholders.dryBase")}
-                                      className={numberInputClassName}
-                                    />
-                                  </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-6">
-                                  <div className="space-y-4">
-                                    <div className="space-y-0.5">
-                                      <span className="block text-[13px] font-medium text-fg/70">
-                                        {t("editModel.llamaSampler.dryAllowedLength")}
-                                      </span>
-                                      <span className="block text-[13px] text-fg/40">
-                                        {t("editModel.llamaSampler.dryAllowedLengthDescription")}
-                                      </span>
-                                    </div>
-                                    <NumberInput
-                                      min={ADVANCED_LLAMA_DRY_ALLOWED_LENGTH_RANGE.min}
-                                      max={ADVANCED_LLAMA_DRY_ALLOWED_LENGTH_RANGE.max}
-                                      step={1}
-                                      value={modelAdvancedDraft.llamaDryAllowedLength ?? null}
-                                      onChange={(next) => handleLlamaDryAllowedLengthChange(next)}
-                                      placeholder={t("editModel.placeholders.dryAllowedLength")}
-                                      className={numberInputClassName}
-                                    />
-                                  </div>
-
-                                  <div className="space-y-4">
-                                    <div className="space-y-0.5">
-                                      <span className="block text-[13px] font-medium text-fg/70">
-                                        {t("editModel.llamaSampler.dryPenaltyLastN")}
-                                      </span>
-                                      <span className="block text-[13px] text-fg/40">
-                                        {t("editModel.llamaSampler.dryPenaltyLastNDescription")}
-                                      </span>
-                                    </div>
-                                    <NumberInput
-                                      min={ADVANCED_LLAMA_DRY_PENALTY_LAST_N_RANGE.min}
-                                      max={ADVANCED_LLAMA_DRY_PENALTY_LAST_N_RANGE.max}
-                                      step={1}
-                                      value={modelAdvancedDraft.llamaDryPenaltyLastN ?? null}
-                                      onChange={(next) => handleLlamaDryPenaltyLastNChange(next)}
-                                      placeholder={t("editModel.placeholders.dryPenaltyLastN")}
-                                      className={numberInputClassName}
-                                    />
-                                  </div>
-                                </div>
-
-                                <div className="space-y-4">
-                                  <div className="space-y-0.5">
-                                    <span className="block text-[13px] font-medium text-fg/70">
-                                      {t("editModel.llamaSampler.drySequenceBreakers")}
-                                    </span>
-                                    <span className="block text-[13px] text-fg/40">
-                                      {t("editModel.llamaSampler.drySequenceBreakersDescription")}
-                                    </span>
-                                  </div>
-                                  <input
-                                    type="text"
-                                    value={joinStringList(modelAdvancedDraft.llamaDrySequenceBreakers)}
-                                    onChange={(e) => {
-                                      const next = e.target.value
-                                        .split(",")
-                                        .map((item) => item.trim())
-                                        .filter((item) => item.length > 0);
-                                      handleLlamaDrySequenceBreakersChange(
-                                        next.length ? next : null,
-                                      );
-                                    }}
-                                    placeholder={'\\n, :, ", *'}
-                                    className={textAreaInputClassName}
-                                  />
-                                </div>
-
-                                <div className="space-y-4">
-                                  <div className="space-y-0.5">
-                                    <span className="block text-[13px] font-medium text-fg/70">
-                                      {t("editModel.llamaSampler.seed")}
-                                    </span>
-                                    <span className="block text-[13px] text-fg/40">
-                                      {t("editModel.llamaSampler.seedDescription")}
-                                    </span>
-                                  </div>
-                                  <NumberInput
-                                    min={ADVANCED_LLAMA_SEED_RANGE.min}
-                                    max={ADVANCED_LLAMA_SEED_RANGE.max}
-                                    step={1}
-                                    value={modelAdvancedDraft.llamaSeed ?? null}
-                                    onChange={(next) =>
-                                      handleLlamaSeedChange(
-                                        next === null || next < 0 ? null : Math.trunc(next),
-                                      )
-                                    }
-                                    placeholder={t("editModel.placeholders.random")}
-                                    className={numberInputClassName}
-                                  />
-                                </div>
-
-                                {/* Prompting & Templates */}
-                                <div className="space-y-6 border-t border-fg/8 pt-6">
-                                  <div className="flex items-center gap-2 border-l-2 border-fg/20 pl-3">
-                                    <div className="space-y-0.5">
-                                      <span className="block text-[13px] font-bold text-fg/80 uppercase tracking-tight">
-                                        {t("editModel.runtimeSections.promptingTemplatesTitle")}
-                                      </span>
-                                      <span className="block text-[13px] text-fg/40">
-                                        {t("editModel.runtimeSections.promptingTemplatesDescription")}
-                                      </span>
-                                    </div>
-                                  </div>
-
-                                  <div className="space-y-4">
-                                    <div className="flex items-start justify-between gap-3">
-                                      <div className="space-y-0.5">
-                                        <span className="block text-[13px] font-medium text-fg/70">
-                                          {t("editModel.templates.templateOverride")}
-                                        </span>
-                                        <span className="block text-[13px] text-fg/40">
-                                          {t("editModel.templates.templateOverrideDescription")}
-                                        </span>
-                                      </div>
-                                      <button
-                                        type="button"
-                                        onClick={openTemplateOverlay}
-                                        className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-fg/10 bg-fg/5 px-2.5 py-1.5 text-[12px] font-medium text-fg/68 transition hover:border-fg/20 hover:bg-fg/10 hover:text-fg"
-                                      >
-                                        <Maximize2 className="h-3.5 w-3.5 text-accent/70" />
-                                        {t("common.buttons.edit")}
-                                      </button>
-                                    </div>
-                                    <button
-                                      type="button"
-                                      onClick={openTemplateOverlay}
-                                      className={cn(
-                                        selectInputClassName,
-                                        "block w-full cursor-pointer truncate text-left",
-                                        modelAdvancedDraft.llamaChatTemplateOverride
-                                          ? "text-fg/78"
-                                          : "text-fg/35",
-                                      )}
-                                    >
-                                      {modelAdvancedDraft.llamaChatTemplateOverride
-                                        ? modelAdvancedDraft.llamaChatTemplateOverride.length > 80
-                                          ? `${modelAdvancedDraft.llamaChatTemplateOverride.slice(0, 80)}...`
-                                          : modelAdvancedDraft.llamaChatTemplateOverride
-                                        : t("editModel.templates.preferEmbedded")}
-                                    </button>
-                                  </div>
-
-                                  <div className="space-y-4">
-                                    <div className="flex items-start justify-between gap-3">
-                                      <div className="space-y-0.5">
-                                        <span className="block text-[13px] font-medium text-fg/70">
-                                          {t("editModel.templates.mmprojPath")}
-                                        </span>
-                                        <span className="block text-[13px] text-fg/40">
-                                          {t("editModel.templates.mmprojPathDescription")}
-                                        </span>
-                                      </div>
-                                      <button
-                                        type="button"
-                                        onClick={openLocalMmprojPicker}
-                                        className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-fg/10 bg-fg/5 px-2.5 py-1.5 text-[12px] font-medium text-fg/68 transition hover:border-fg/20 hover:bg-fg/10 hover:text-fg"
-                                      >
-                                        <FolderOpen className="h-3.5 w-3.5 text-accent/70" />
-                                        {t("hfBrowser.selectFromLibrary")}
-                                      </button>
-                                    </div>
-                                    <input
-                                      type="text"
-                                      value={modelAdvancedDraft.llamaMmprojPath ?? ""}
-                                      onChange={(e) => {
-                                        const nextValue =
-                                          e.target.value === "" ? null : e.target.value;
-                                        handleLlamaMmprojPathChange(nextValue);
-                                        syncImageInputScope(nextValue);
-                                      }}
-                                      placeholder={t("editModel.placeholders.mmprojPath")}
-                                      className={selectInputClassName}
-                                      spellCheck={false}
-                                    />
-                                  </div>
-
-                                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                    <div className="space-y-4">
-                                      <div className="space-y-0.5">
-                                        <span className="block text-[13px] font-medium text-fg/70">
-                                          {t("editModel.templates.templatePreset")}
-                                        </span>
-                                        <span className="block text-[13px] text-fg/40">
-                                          {t("editModel.templates.templatePresetDescription")}
-                                        </span>
-                                      </div>
-                                      <select
-                                        value={modelAdvancedDraft.llamaChatTemplatePreset ?? "auto"}
-                                        onChange={(e) =>
-                                          handleLlamaChatTemplatePresetChange(
-                                            e.target.value === "auto" ? null : e.target.value,
-                                          )
-                                        }
-                                        className={selectInputClassName}
-                                      >
-                                        {LLAMA_CHAT_TEMPLATE_PRESET_OPTIONS.map((option) => (
-                                          <option
-                                            key={option.value}
-                                            value={option.value}
-                                            className="bg-[#16171d]"
-                                          >
-                                            {t(option.labelKey)}
-                                          </option>
-                                        ))}
-                                      </select>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                      <div className="space-y-0.5">
-                                        <span className="block text-[13px] font-medium text-fg/70">
-                                          {t("editModel.templates.rawCompletionFallback")}
-                                        </span>
-                                        <span className="block text-[13px] text-fg/40">
-                                          {t("editModel.templates.rawCompletionFallbackDescription")}
-                                        </span>
-                                      </div>
-                                      <select
-                                        value={
-                                          modelAdvancedDraft.llamaRawCompletionFallback === true
-                                            ? "enabled"
-                                            : modelAdvancedDraft.llamaRawCompletionFallback ===
-                                              false
-                                              ? "disabled"
-                                              : "default"
-                                        }
-                                        onChange={(e) => {
-                                          const val = e.target.value;
-                                          handleLlamaRawCompletionFallbackChange(
-                                            val === "default" ? null : val === "enabled",
-                                          );
-                                        }}
-                                        className={selectInputClassName}
-                                      >
-                                        <option value="default" className="bg-[#16171d]">
-                                          {t("editModel.templates.rawCompletionDefault")}
-                                        </option>
-                                        <option value="enabled" className="bg-[#16171d]">
-                                          {t("common.labels.enabled")}
-                                        </option>
-                                        <option value="disabled" className="bg-[#16171d]">
-                                          {t("common.labels.disabled")}
-                                        </option>
-                                      </select>
-                                    </div>
-                                  </div>
-
-                                  <div className="text-danger/80">
-                                    <div className="flex items-start justify-between gap-4">
-                                      <div className="min-w-0 space-y-1.5">
-                                        <div className="flex items-start gap-3">
-                                          <div className="mt-0.5 shrink-0 text-danger/80">
-                                            <AlertTriangle className="h-4 w-4" />
-                                          </div>
-                                          <div className="min-w-0 space-y-1">
-                                            <span className="block text-[13px] font-medium text-fg/82">
-                                              {t("editModel.templates.strictMode")}
-                                            </span>
-                                            <span className="block text-[13px] leading-relaxed text-fg/48">
-                                              {t("editModel.templates.strictModeDescription")}
-                                            </span>
-                                          </div>
-                                        </div>
-                                        <span className="block text-[12px] text-danger/75">
-                                          {t("editModel.templates.strictModeWarning")}
-                                        </span>
-                                      </div>
-                                      <div className="flex shrink-0 items-center gap-3">
-                                        <span
-                                          className={cn(
-                                            "text-[12px] font-medium transition",
-                                            modelAdvancedDraft.llamaStrictMode === true
-                                              ? "text-danger/85"
-                                              : "text-fg/42",
-                                          )}
-                                        >
-                                          {modelAdvancedDraft.llamaStrictMode === true
-                                            ? t("common.labels.on")
-                                            : t("common.labels.off")}
-                                        </span>
-                                        <Switch
-                                          id="llama-strict-mode"
-                                          checked={modelAdvancedDraft.llamaStrictMode === true}
-                                          onChange={(next) =>
-                                            handleLlamaStrictModeChange(next ? true : null)
-                                          }
-                                          aria-label={t("editModel.llama.toggleStrictMode")}
-                                        />
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
                             </div>
                           </div>
                         )}
@@ -5936,227 +6330,6 @@ export function EditModelPage() {
                                     className={numberInputClassName}
                                   />
                                 </div>
-                              </div>
-
-                              {/* 3. Sampling */}
-                              <div className="space-y-6">
-                                <div className="flex items-center gap-2 border-l-2 border-fg/20 pl-3">
-                                  <span className="text-[13px] font-bold text-fg/80 uppercase tracking-tight">
-                                    {t("editModel.runtimeSections.samplingPenaltiesTitle")}
-                                  </span>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-6">
-                                  <div className="space-y-4">
-                                    <div className="space-y-0.5">
-                                      <span className="block text-[13px] font-medium text-fg/70">
-                                        {t("editModel.ollamaParams.tfsZ")}
-                                      </span>
-                                      <span className="block text-[13px] text-fg/40">
-                                        {t("editModel.ollamaParams.tfsZDescription")}
-                                      </span>
-                                    </div>
-                                    <NumberInput
-                                      min={ADVANCED_OLLAMA_TFS_Z_RANGE.min}
-                                      max={ADVANCED_OLLAMA_TFS_Z_RANGE.max}
-                                      step={0.01}
-                                      value={modelAdvancedDraft.ollamaTfsZ ?? null}
-                                      onChange={(next) => handleOllamaTfsZChange(next)}
-                                      placeholder={t("common.labels.auto")}
-                                      className={numberInputClassName}
-                                    />
-                                  </div>
-
-                                  <div className="space-y-4">
-                                    <div className="space-y-0.5">
-                                      <span className="block text-[13px] font-medium text-fg/70">
-                                        {t("editModel.ollamaParams.repeatPenalty")}
-                                      </span>
-                                      <span className="block text-[13px] text-fg/40">
-                                        {t("editModel.ollamaParams.repeatPenaltyDescription")}
-                                      </span>
-                                    </div>
-                                    <NumberInput
-                                      min={ADVANCED_OLLAMA_REPEAT_PENALTY_RANGE.min}
-                                      max={ADVANCED_OLLAMA_REPEAT_PENALTY_RANGE.max}
-                                      step={0.01}
-                                      value={modelAdvancedDraft.ollamaRepeatPenalty ?? null}
-                                      onChange={(next) => handleOllamaRepeatPenaltyChange(next)}
-                                      placeholder={t("common.labels.auto")}
-                                      className={numberInputClassName}
-                                    />
-                                  </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-6">
-                                  <div className="space-y-4">
-                                    <div className="space-y-0.5">
-                                      <span className="block text-[13px] font-medium text-fg/70">
-                                        {t("editModel.ollamaParams.minP")}
-                                      </span>
-                                      <span className="block text-[13px] text-fg/40">
-                                        {t("editModel.ollamaParams.minPDescription")}
-                                      </span>
-                                    </div>
-                                    <NumberInput
-                                      min={ADVANCED_OLLAMA_MIN_P_RANGE.min}
-                                      max={ADVANCED_OLLAMA_MIN_P_RANGE.max}
-                                      step={0.01}
-                                      value={modelAdvancedDraft.ollamaMinP ?? null}
-                                      onChange={(next) => handleOllamaMinPChange(next)}
-                                      placeholder={t("common.labels.auto")}
-                                      className={numberInputClassName}
-                                    />
-                                  </div>
-
-                                  <div className="space-y-4">
-                                    <div className="space-y-0.5">
-                                      <span className="block text-[13px] font-medium text-fg/70">
-                                        {t("editModel.ollamaParams.typicalP")}
-                                      </span>
-                                      <span className="block text-[13px] text-fg/40">
-                                        {t("editModel.ollamaParams.typicalPDescription")}
-                                      </span>
-                                    </div>
-                                    <NumberInput
-                                      min={ADVANCED_OLLAMA_TYPICAL_P_RANGE.min}
-                                      max={ADVANCED_OLLAMA_TYPICAL_P_RANGE.max}
-                                      step={0.01}
-                                      value={modelAdvancedDraft.ollamaTypicalP ?? null}
-                                      onChange={(next) => handleOllamaTypicalPChange(next)}
-                                      placeholder={t("common.labels.auto")}
-                                      className={numberInputClassName}
-                                    />
-                                  </div>
-                                </div>
-
-                                <div className="space-y-4">
-                                  <div className="space-y-0.5">
-                                    <span className="block text-[13px] font-medium text-fg/70">
-                                      {t("editModel.ollamaParams.mirostat")}
-                                    </span>
-                                    <span className="block text-[13px] text-fg/40">
-                                      {t("editModel.ollamaParams.mirostatDescription")}
-                                    </span>
-                                  </div>
-                                  <select
-                                    value={
-                                      modelAdvancedDraft.ollamaMirostat === null ||
-                                        modelAdvancedDraft.ollamaMirostat === undefined
-                                        ? "auto"
-                                        : modelAdvancedDraft.ollamaMirostat.toString()
-                                    }
-                                    onChange={(e) => {
-                                      const val = e.target.value;
-                                      handleOllamaMirostatChange(
-                                        val === "auto" ? null : Number(val),
-                                      );
-                                    }}
-                                    className={selectInputClassName}
-                                  >
-                                    <option value="auto" className="bg-[#16171d]">
-                                      {t("common.labels.auto")}
-                                    </option>
-                                    <option value="0" className="bg-[#16171d]">
-                                      {t("editModel.ollamaParams.mirostatOff")}
-                                    </option>
-                                    <option value="1" className="bg-[#16171d]">
-                                      1
-                                    </option>
-                                    <option value="2" className="bg-[#16171d]">
-                                      2
-                                    </option>
-                                  </select>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-6">
-                                  <div className="space-y-4">
-                                    <div className="space-y-0.5">
-                                      <span className="block text-[13px] font-medium text-fg/70">
-                                        {t("editModel.ollamaParams.tau")}
-                                      </span>
-                                      <span className="block text-[13px] text-fg/40">
-                                        {t("editModel.ollamaParams.tauDescription")}
-                                      </span>
-                                    </div>
-                                    <NumberInput
-                                      min={ADVANCED_OLLAMA_MIROSTAT_TAU_RANGE.min}
-                                      max={ADVANCED_OLLAMA_MIROSTAT_TAU_RANGE.max}
-                                      step={0.1}
-                                      value={modelAdvancedDraft.ollamaMirostatTau ?? null}
-                                      onChange={(next) => handleOllamaMirostatTauChange(next)}
-                                      placeholder={t("common.labels.auto")}
-                                      className={numberInputClassName}
-                                    />
-                                  </div>
-
-                                  <div className="space-y-4">
-                                    <div className="space-y-0.5">
-                                      <span className="block text-[13px] font-medium text-fg/70">
-                                        {t("editModel.ollamaParams.eta")}
-                                      </span>
-                                      <span className="block text-[13px] text-fg/40">
-                                        {t("editModel.ollamaParams.etaDescription")}
-                                      </span>
-                                    </div>
-                                    <NumberInput
-                                      min={ADVANCED_OLLAMA_MIROSTAT_ETA_RANGE.min}
-                                      max={ADVANCED_OLLAMA_MIROSTAT_ETA_RANGE.max}
-                                      step={0.01}
-                                      value={modelAdvancedDraft.ollamaMirostatEta ?? null}
-                                      onChange={(next) => handleOllamaMirostatEtaChange(next)}
-                                      placeholder={t("common.labels.auto")}
-                                      className={numberInputClassName}
-                                    />
-                                  </div>
-                                </div>
-
-                                <div className="space-y-4">
-                                  <div className="space-y-0.5">
-                                    <span className="block text-[13px] font-medium text-fg/70">
-                                      {t("editModel.ollamaParams.seed")}
-                                    </span>
-                                    <span className="block text-[13px] text-fg/40">
-                                      {t("editModel.ollamaParams.seedDescription")}
-                                    </span>
-                                  </div>
-                                  <NumberInput
-                                    min={ADVANCED_OLLAMA_SEED_RANGE.min}
-                                    max={ADVANCED_OLLAMA_SEED_RANGE.max}
-                                    step={1}
-                                    value={modelAdvancedDraft.ollamaSeed ?? null}
-                                    onChange={(next) =>
-                                      handleOllamaSeedChange(
-                                        next === null || next < 0 ? null : Math.trunc(next),
-                                      )
-                                    }
-                                    placeholder={t("editModel.placeholders.random")}
-                                    className={numberInputClassName}
-                                  />
-                                </div>
-                              </div>
-
-                              {/* 4. Stop Sequences */}
-                              <div className="space-y-4">
-                                <div className="flex items-center gap-2 border-l-2 border-fg/20 pl-3">
-                                  <span className="text-[13px] font-bold text-fg/80 uppercase tracking-tight">
-                                    {t("editModel.runtimeSections.stopSequencesTitle")}
-                                  </span>
-                                </div>
-                                <textarea
-                                  value={ollamaStopText}
-                                  onChange={(e) => {
-                                    const raw = e.target.value;
-                                    const next = raw
-                                      .split(/[\n,]+/)
-                                      .map((s) => s.trim())
-                                      .filter((s) => s.length > 0);
-                                    handleOllamaStopChange(next.length > 0 ? next : null);
-                                  }}
-                                  placeholder={t("editModel.placeholders.stopSequences")}
-                                  rows={2}
-                                  className={textAreaInputClassName}
-                                />
                               </div>
                             </div>
                           </div>

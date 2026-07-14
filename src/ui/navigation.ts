@@ -243,6 +243,7 @@ export const BACK_MAPPINGS: BackMapping[] = [
     target: "/settings/advanced",
   },
   { match: (p) => p.startsWith("/settings/advanced/help-me-reply"), target: "/settings/advanced" },
+  { match: (p) => p.startsWith("/settings/advanced/group-chats"), target: "/settings/advanced" },
   {
     match: (p) => p.startsWith("/settings/advanced/lorebooks"),
     target: "/settings/advanced",

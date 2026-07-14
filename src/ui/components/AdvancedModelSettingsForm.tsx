@@ -1,7 +1,11 @@
 import { Brain, Info } from "lucide-react";
 import {
+  FeatureGenerationSettingsMapSchema,
   normalizeLlamaSamplerOrder,
   type AdvancedModelSettings,
+  type FeatureGenerationKey,
+  type FeatureGenerationSettings,
+  type FeatureGenerationSettingsMap,
   type ReasoningSupport,
 } from "../../core/storage/schemas";
 import { cn } from "../design-tokens";
@@ -54,6 +58,76 @@ export const ADVANCED_OLLAMA_SEED_RANGE = { min: 0, max: 2_147_483_647 };
 
 function clampValue(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
+}
+
+const FEATURE_GENERATION_NUMBER_RANGES = {
+  temperature: ADVANCED_TEMPERATURE_RANGE,
+  topP: ADVANCED_TOP_P_RANGE,
+  topK: ADVANCED_TOP_K_RANGE,
+  maxOutputTokens: ADVANCED_MAX_TOKENS_RANGE,
+  frequencyPenalty: ADVANCED_FREQUENCY_PENALTY_RANGE,
+  presencePenalty: ADVANCED_PRESENCE_PENALTY_RANGE,
+  llamaMinP: ADVANCED_TOP_P_RANGE,
+  llamaTypicalP: ADVANCED_TOP_P_RANGE,
+  llamaRepeatPenalty: ADVANCED_LLAMA_REPEAT_PENALTY_RANGE,
+  llamaXtcProbability: ADVANCED_LLAMA_XTC_PROBABILITY_RANGE,
+  llamaXtcThreshold: ADVANCED_LLAMA_XTC_THRESHOLD_RANGE,
+  llamaDryMultiplier: ADVANCED_LLAMA_DRY_MULTIPLIER_RANGE,
+  llamaDryBase: ADVANCED_LLAMA_DRY_BASE_RANGE,
+  llamaDryAllowedLength: ADVANCED_LLAMA_DRY_ALLOWED_LENGTH_RANGE,
+  llamaDryPenaltyLastN: ADVANCED_LLAMA_DRY_PENALTY_LAST_N_RANGE,
+  llamaSeed: ADVANCED_LLAMA_SEED_RANGE,
+  ollamaMinP: ADVANCED_OLLAMA_MIN_P_RANGE,
+  ollamaTypicalP: ADVANCED_OLLAMA_TYPICAL_P_RANGE,
+  ollamaTfsZ: ADVANCED_OLLAMA_TFS_Z_RANGE,
+  ollamaRepeatPenalty: ADVANCED_OLLAMA_REPEAT_PENALTY_RANGE,
+  ollamaMirostat: ADVANCED_OLLAMA_MIROSTAT_RANGE,
+  ollamaMirostatTau: ADVANCED_OLLAMA_MIROSTAT_TAU_RANGE,
+  ollamaMirostatEta: ADVANCED_OLLAMA_MIROSTAT_ETA_RANGE,
+  ollamaSeed: ADVANCED_OLLAMA_SEED_RANGE,
+} as const;
+
+type FeatureGenerationNumericKey = keyof typeof FEATURE_GENERATION_NUMBER_RANGES;
+
+const FEATURE_GENERATION_SETTING_KEYS = Object.keys(
+  FeatureGenerationSettingsMapSchema.shape,
+) as FeatureGenerationKey[];
+
+export function sanitizeFeatureGenerationSettings(
+  value: FeatureGenerationSettings | null | undefined,
+): FeatureGenerationSettings | null {
+  if (!value) return null;
+  const next: FeatureGenerationSettings = { ...value };
+  for (const key of Object.keys(
+    FEATURE_GENERATION_NUMBER_RANGES,
+  ) as FeatureGenerationNumericKey[]) {
+    const range = FEATURE_GENERATION_NUMBER_RANGES[key];
+    const current = next[key];
+    if (typeof current === "number" && Number.isFinite(current)) {
+      next[key] = clampValue(current, range.min, range.max);
+    } else if (current !== undefined) {
+      delete next[key];
+    }
+  }
+  if (next.llamaSamplerOrder !== undefined && next.llamaSamplerOrder !== null) {
+    next.llamaSamplerOrder = normalizeLlamaSamplerOrder(next.llamaSamplerOrder);
+  }
+  const hasAnyValue = Object.values(next).some(
+    (entry) => entry !== null && entry !== undefined,
+  );
+  return hasAnyValue ? next : null;
+}
+
+export function sanitizeFeatureGenerationSettingsMap(
+  input: FeatureGenerationSettingsMap | null | undefined,
+): FeatureGenerationSettingsMap | undefined {
+  if (!input) return undefined;
+  const next: FeatureGenerationSettingsMap = {};
+  for (const key of FEATURE_GENERATION_SETTING_KEYS) {
+    const entry = sanitizeFeatureGenerationSettings(input[key]);
+    if (entry) next[key] = entry;
+  }
+  return Object.keys(next).length > 0 ? next : undefined;
 }
 
 export function sanitizeAdvancedModelSettings(input: AdvancedModelSettings): AdvancedModelSettings {
@@ -257,6 +331,9 @@ export function sanitizeAdvancedModelSettings(input: AdvancedModelSettings): Adv
           logoUrl: input.openRouterProvider.logoUrl ?? null,
         }
       : null,
+    featureGenerationSettings: sanitizeFeatureGenerationSettingsMap(
+      input.featureGenerationSettings,
+    ),
   };
 }
 
