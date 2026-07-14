@@ -33,7 +33,11 @@ use crate::storage_manager::media::{
     storage_write_image_data,
 };
 use crate::storage_manager::personas as personas_storage;
-use crate::storage_manager::settings::internal_read_settings;
+use crate::chat_manager::execution::prepare_feature_request;
+use crate::chat_manager::feature_generation::{
+    feature_model_overrides, synthetic_feature_session, LlmFeature, CREATION_HELPER_DEFAULTS,
+};
+use crate::storage_manager::settings::{internal_read_settings, read_settings_typed};
 use crate::usage::{
     add_usage_record,
     tracking::{RequestUsage, UsageFinishReason, UsageOperationType},
@@ -1416,6 +1420,43 @@ fn tool_config_with_auto_choice(tool_config: &ToolConfig) -> ToolConfig {
     cloned
 }
 
+fn creation_request_sampling(
+    app: &AppHandle,
+    provider_id: &str,
+    model_name: &str,
+) -> (Option<f64>, Option<f64>, u32, Option<HashMap<String, Value>>) {
+    let fallback = (
+        Some(CREATION_HELPER_DEFAULTS.temperature),
+        Some(CREATION_HELPER_DEFAULTS.top_p),
+        CREATION_HELPER_DEFAULTS.max_output_tokens.unwrap_or(20480),
+        None,
+    );
+    let settings: crate::chat_manager::types::Settings =
+        match read_settings_typed(app) {
+            Ok(Some(settings)) => settings,
+            _ => return fallback,
+        };
+    let Some(model) = settings
+        .models
+        .iter()
+        .find(|model| model.name == model_name && model.provider_id == provider_id)
+    else {
+        return fallback;
+    };
+    let request_session = synthetic_feature_session(
+        "__creation_helper__",
+        feature_model_overrides(model, LlmFeature::CreationHelper, CREATION_HELPER_DEFAULTS),
+    );
+    let (request_settings, extra_body_fields) =
+        prepare_feature_request(provider_id, &request_session, model, &settings);
+    (
+        request_settings.temperature,
+        request_settings.top_p,
+        request_settings.max_tokens,
+        extra_body_fields,
+    )
+}
+
 pub(crate) async fn send_creation_api_request(
     app: &AppHandle,
     session_id: &str,
@@ -1429,6 +1470,8 @@ pub(crate) async fn send_creation_api_request(
     tool_config: Option<&ToolConfig>,
 ) -> Result<ApiResponse, String> {
     let mut current_tool_config = tool_config.cloned();
+    let (temperature, top_p, max_tokens, extra_body_fields) =
+        creation_request_sampling(app, provider_id, model_name);
 
     loop {
         let built = build_chat_request(
@@ -1437,9 +1480,9 @@ pub(crate) async fn send_creation_api_request(
             model_name,
             messages,
             None,
-            Some(0.7),
-            Some(1.0),
-            20480,
+            temperature,
+            top_p,
+            max_tokens,
             None,
             streaming_enabled,
             Some(stream_request_id.to_string()),
@@ -1451,7 +1494,7 @@ pub(crate) async fn send_creation_api_request(
             None,
             None,
             false,
-            None,
+            extra_body_fields.clone(),
         );
 
         log_info(
@@ -3295,15 +3338,17 @@ async fn process_assistant_turn_legacy(
             &system_role,
         );
 
+        let (finalize_temperature, finalize_top_p, finalize_max_tokens, finalize_extra_fields) =
+            creation_request_sampling(&app, provider_id, model_name);
         let finalize_built = build_chat_request(
             &cred,
             api_key,
             model_name,
             &finalize_messages,
             None,
-            Some(0.7),
-            Some(1.0),
-            20480,
+            finalize_temperature,
+            finalize_top_p,
+            finalize_max_tokens,
             None,
             streaming_enabled,
             Some(stream_request_id.clone()),
@@ -3315,7 +3360,7 @@ async fn process_assistant_turn_legacy(
             None,
             None,
             false,
-            None,
+            finalize_extra_fields,
         );
 
         let finalize_request = ApiRequest {

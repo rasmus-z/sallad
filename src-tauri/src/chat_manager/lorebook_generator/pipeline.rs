@@ -1,9 +1,11 @@
 use serde_json::{json, Value};
-use std::collections::HashMap;
 use tauri::AppHandle;
 
 use crate::api::{api_request, ApiRequest};
-use crate::chat_manager::execution::find_model_with_credential;
+use crate::chat_manager::execution::{find_model_with_credential, prepare_feature_request};
+use crate::chat_manager::feature_generation::{
+    feature_model_overrides, synthetic_feature_session, LlmFeature, LOREBOOK_GENERATOR_DEFAULTS,
+};
 use crate::chat_manager::prompting::entry_conditions::{
     entry_is_active, PromptEntryConditionContext,
 };
@@ -280,17 +282,32 @@ async fn invoke_tool(
     messages: &Vec<Value>,
     tool_config: &ToolConfig,
     max_tokens: u32,
+    settings: &Settings,
 ) -> Result<Vec<ToolCall>, String> {
-    let extra_body_fields: Option<HashMap<String, Value>> = None;
+    let mut overrides = feature_model_overrides(
+        model,
+        LlmFeature::LorebookGenerator,
+        LOREBOOK_GENERATOR_DEFAULTS,
+    );
+    if overrides.max_output_tokens.is_none() {
+        overrides.max_output_tokens = Some(max_tokens);
+    }
+    let request_session = synthetic_feature_session("__lorebook_generator__", overrides);
+    let (request_settings, extra_body_fields) = prepare_feature_request(
+        &credential.provider_id,
+        &request_session,
+        model,
+        settings,
+    );
     let built = build_chat_request(
         credential,
         api_key,
         &model.name,
         messages,
         None,
-        Some(0.3),
-        Some(1.0),
-        max_tokens,
+        request_settings.temperature,
+        request_settings.top_p,
+        request_settings.max_tokens,
         None,
         false,
         None,
@@ -578,6 +595,7 @@ pub async fn run_planner(app: &AppHandle, job: &JobState) -> Result<Vec<EntryPla
         &messages,
         &tool_config,
         resolve_max_tokens(&settings),
+        &settings,
     )
     .await?;
     let mut plan = parse_planner_result(&calls)?;
@@ -714,6 +732,7 @@ pub async fn run_writer(
         &messages,
         &tool_config,
         resolve_max_tokens(&settings),
+        &settings,
     )
     .await?;
     parse_writer_result(plan.idx, &calls)
@@ -775,6 +794,7 @@ pub async fn run_refine(
         &messages,
         &tool_config,
         resolve_max_tokens(&settings),
+        &settings,
     )
     .await?;
     let mut revised = parse_writer_result(draft.plan_idx, &calls)?;
@@ -1004,6 +1024,7 @@ pub async fn run_coherence(
         &messages,
         &tool_config,
         resolve_max_tokens(&settings),
+        &settings,
     )
     .await?;
     parse_coherence_result(&calls)

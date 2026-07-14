@@ -220,7 +220,7 @@ pub fn load_settings(app: &AppHandle) -> Result<Settings, String> {
     }
 }
 
-fn default_settings() -> Settings {
+pub(crate) fn default_settings() -> Settings {
     Settings {
         default_provider_credential_id: None,
         default_model_id: None,
@@ -232,6 +232,7 @@ fn default_settings() -> Settings {
             llama_default_context_length: None,
             llama_default_kv_cache_type: None,
             llama_sampler_presets: None,
+            group_speaker_selection_model_id: None,
             sd_default_offload_mode: None,
             sd_default_size: None,
             summarisation_model_id: None,

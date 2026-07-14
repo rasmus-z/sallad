@@ -7,7 +7,10 @@ use tauri::{AppHandle, Emitter, Manager};
 
 use crate::api::{api_request, ApiRequest, ApiResponse};
 use crate::chat_manager::execution::{
-    find_model_with_credential, prepare_default_sampling_request,
+    find_model_with_credential, prepare_feature_request,
+};
+use crate::chat_manager::feature_generation::{
+    feature_model_overrides, synthetic_feature_session, LlmFeature, COMPANION_SOUL_WRITER_DEFAULTS,
 };
 use crate::chat_manager::prompts;
 use crate::chat_manager::request::{extract_error_message, extract_text, extract_usage};
@@ -594,6 +597,8 @@ async fn send_request(
     model: &Model,
     api_key: &str,
     messages: &Vec<Value>,
+    temperature: f64,
+    top_p: f64,
     max_tokens: u32,
     context_length: Option<u32>,
     extra_body_fields: Option<HashMap<String, Value>>,
@@ -606,8 +611,8 @@ async fn send_request(
         &model.name,
         messages,
         None,
-        Some(0.4),
-        Some(1.0),
+        Some(temperature),
+        Some(top_p),
         max_tokens,
         context_length,
         false,
@@ -656,8 +661,8 @@ async fn send_request(
                     &model.name,
                     messages,
                     None,
-                    Some(0.4),
-                    Some(1.0),
+                    Some(temperature),
+                    Some(top_p),
                     max_tokens,
                     context_length,
                     false,
@@ -701,8 +706,8 @@ async fn send_request(
                     &model.name,
                     messages,
                     None,
-                    Some(0.4),
-                    Some(1.0),
+                    Some(temperature),
+                    Some(top_p),
                     max_tokens,
                     context_length,
                     false,
@@ -839,18 +844,19 @@ async fn run_with_target(
 ) -> Result<Value, String> {
     let mut working_soul = normalize_working_soul(args.current_soul.as_ref());
 
-    let preview_session = preview_session();
-    let (request_settings, extra_body_fields) = prepare_default_sampling_request(
+    let preview_session = preview_session(model);
+    let (request_settings, extra_body_fields) = prepare_feature_request(
         &credential.provider_id,
         &preview_session,
         model,
         settings,
-        0.35,
-        1.0,
-        None,
-        None,
-        None,
     );
+    let temperature = request_settings
+        .temperature
+        .unwrap_or(COMPANION_SOUL_WRITER_DEFAULTS.temperature);
+    let top_p = request_settings
+        .top_p
+        .unwrap_or(COMPANION_SOUL_WRITER_DEFAULTS.top_p);
 
     let mut messages_for_api = render_messages(app, settings, credential, args);
     if messages_for_api.is_empty() {
@@ -888,6 +894,8 @@ async fn run_with_target(
             model,
             api_key,
             &messages_for_api,
+            temperature,
+            top_p,
             request_settings.max_tokens,
             request_settings.context_length,
             extra_body_fields.clone(),
@@ -1064,6 +1072,8 @@ async fn run_with_target(
         model,
         api_key,
         &fallback_messages,
+        temperature,
+        top_p,
         request_settings.max_tokens,
         request_settings.context_length,
         extra_body_fields.clone(),
@@ -1132,39 +1142,18 @@ async fn run_with_target(
     Ok(working_soul)
 }
 
-fn preview_session() -> Session {
-    Session {
-        id: "companion-soul-writer".to_string(),
-        character_id: String::new(),
-        title: "Companion Soul Writer".to_string(),
-        parent_session_id: None,
-        branched_from_message_id: None,
-        root_session_id: None,
-        background_image_path: None,
-        system_prompt: None,
-        mode: "companion".to_string(),
-        selected_scene_id: None,
-        prompt_template_id: None,
-        lorebook_ids_override: None,
-        author_note: None,
-        persona_id: None,
-        persona_disabled: false,
-        voice_autoplay: None,
-        advanced_model_settings: None,
-        companion_state: None,
-        memories: Vec::new(),
-        memory_embeddings: Vec::new(),
-        memory_summary: None,
-        memory_summary_token_count: 0,
-        memory_tool_events: Vec::new(),
-        memory_status: None,
-        memory_error: None,
-        memory_progress_step: None,
-        messages: Vec::new(),
-        archived: false,
-        created_at: 0,
-        updated_at: 0,
-    }
+fn preview_session(model: &Model) -> Session {
+    let mut session = synthetic_feature_session(
+        "companion-soul-writer",
+        feature_model_overrides(
+            model,
+            LlmFeature::CompanionSoulWriter,
+            COMPANION_SOUL_WRITER_DEFAULTS,
+        ),
+    );
+    session.title = "Companion Soul Writer".to_string();
+    session.mode = "companion".to_string();
+    session
 }
 
 fn dummy_character() -> crate::chat_manager::types::Character {

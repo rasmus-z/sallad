@@ -7,7 +7,11 @@ use tauri::AppHandle;
 
 use crate::api::{api_request, ApiRequest, ApiResponse};
 use crate::chat_manager::execution::{
-    find_model_with_credential, prepare_default_sampling_request,
+    find_model_with_credential, prepare_feature_request,
+};
+use crate::chat_manager::feature_generation::{
+    feature_model_overrides, synthetic_feature_session, LlmFeature,
+    LOREBOOK_ENTRY_GENERATOR_DEFAULTS,
 };
 use crate::chat_manager::prompting::entry_conditions::{
     entry_is_active, PromptEntryConditionContext,
@@ -1328,6 +1332,8 @@ async fn send_lorebook_entry_request(
     model: &Model,
     api_key: &str,
     messages_for_api: &Vec<Value>,
+    temperature: f64,
+    top_p: f64,
     max_tokens: u32,
     context_length: Option<u32>,
     extra_body_fields: Option<HashMap<String, Value>>,
@@ -1339,8 +1345,8 @@ async fn send_lorebook_entry_request(
         &model.name,
         messages_for_api,
         None,
-        Some(0.2),
-        Some(1.0),
+        Some(temperature),
+        Some(top_p),
         max_tokens,
         context_length,
         false,
@@ -1387,8 +1393,8 @@ async fn send_lorebook_entry_request(
                     &model.name,
                     messages_for_api,
                     None,
-                    Some(0.2),
-                    Some(1.0),
+                    Some(temperature),
+                    Some(top_p),
                     max_tokens,
                     context_length,
                     false,
@@ -1431,8 +1437,8 @@ async fn send_lorebook_entry_request(
                     &model.name,
                     messages_for_api,
                     None,
-                    Some(0.2),
-                    Some(1.0),
+                    Some(temperature),
+                    Some(top_p),
                     max_tokens,
                     context_length,
                     false,
@@ -1725,17 +1731,24 @@ pub async fn chat_generate_lorebook_entry_draft(
     let messages_for_api =
         prompt_entries_to_messages(credential, &prompt_entries, force, source_mode);
     let tool_config = build_lorebook_entry_tool_config(force);
-    let (request_settings, extra_body_fields) = prepare_default_sampling_request(
+    let mut request_session = session.clone();
+    request_session.advanced_model_settings = Some(feature_model_overrides(
+        model,
+        LlmFeature::LorebookEntryGenerator,
+        LOREBOOK_ENTRY_GENERATOR_DEFAULTS,
+    ));
+    let (request_settings, extra_body_fields) = prepare_feature_request(
         &credential.provider_id,
-        &session,
+        &request_session,
         model,
         settings,
-        0.2,
-        1.0,
-        None,
-        None,
-        None,
     );
+    let temperature = request_settings
+        .temperature
+        .unwrap_or(LOREBOOK_ENTRY_GENERATOR_DEFAULTS.temperature);
+    let top_p = request_settings
+        .top_p
+        .unwrap_or(LOREBOOK_ENTRY_GENERATOR_DEFAULTS.top_p);
     let fallback_format = lorebook_entry_structured_fallback_format(settings);
     let fallback_label = fallback_format_label(fallback_format);
 
@@ -1745,6 +1758,8 @@ pub async fn chat_generate_lorebook_entry_draft(
         model,
         &api_key,
         &messages_for_api,
+        temperature,
+        top_p,
         request_settings.max_tokens,
         request_settings.context_length,
         extra_body_fields.clone(),
@@ -1815,6 +1830,8 @@ pub async fn chat_generate_lorebook_entry_draft(
         model,
         &api_key,
         &fallback_messages,
+        temperature,
+        top_p,
         request_settings.max_tokens,
         request_settings.context_length,
         extra_body_fields,
@@ -1920,49 +1937,28 @@ pub async fn chat_generate_lorebook_keyword_draft(
     let tool_config = build_lorebook_keyword_tool_config();
     let fallback_format = lorebook_entry_structured_fallback_format(settings);
     let fallback_label = fallback_format_label(fallback_format);
-    let temp_session = Session {
-        id: "__lorebook_keyword_generator__".to_string(),
-        character_id: String::new(),
-        title: "Lorebook Keyword Generator".to_string(),
-        parent_session_id: None,
-        branched_from_message_id: None,
-        root_session_id: None,
-        background_image_path: None,
-        system_prompt: None,
-        persona_id: None,
-        persona_disabled: true,
-        mode: "roleplay".to_string(),
-        author_note: None,
-        selected_scene_id: None,
-        prompt_template_id: None,
-        lorebook_ids_override: None,
-        voice_autoplay: None,
-        advanced_model_settings: None,
-        companion_state: None,
-        memory_summary: None,
-        memories: Vec::new(),
-        memory_embeddings: Vec::new(),
-        memory_summary_token_count: 0,
-        memory_tool_events: Vec::new(),
-        memory_status: None,
-        memory_error: None,
-        memory_progress_step: None,
-        messages: Vec::new(),
-        archived: false,
-        created_at: 0,
-        updated_at: 0,
-    };
-    let (request_settings, extra_body_fields) = prepare_default_sampling_request(
+    let mut temp_session = synthetic_feature_session(
+        "__lorebook_keyword_generator__",
+        feature_model_overrides(
+            model,
+            LlmFeature::LorebookEntryGenerator,
+            LOREBOOK_ENTRY_GENERATOR_DEFAULTS,
+        ),
+    );
+    temp_session.title = "Lorebook Keyword Generator".to_string();
+    temp_session.persona_disabled = true;
+    let (request_settings, extra_body_fields) = prepare_feature_request(
         &credential.provider_id,
         &temp_session,
         model,
         settings,
-        0.2,
-        1.0,
-        None,
-        None,
-        None,
     );
+    let temperature = request_settings
+        .temperature
+        .unwrap_or(LOREBOOK_ENTRY_GENERATOR_DEFAULTS.temperature);
+    let top_p = request_settings
+        .top_p
+        .unwrap_or(LOREBOOK_ENTRY_GENERATOR_DEFAULTS.top_p);
 
     let tool_attempt = send_lorebook_entry_request(
         &app,
@@ -1970,6 +1966,8 @@ pub async fn chat_generate_lorebook_keyword_draft(
         model,
         &api_key,
         &messages_for_api,
+        temperature,
+        top_p,
         request_settings.max_tokens,
         request_settings.context_length,
         extra_body_fields.clone(),
@@ -2025,6 +2023,8 @@ pub async fn chat_generate_lorebook_keyword_draft(
         model,
         &api_key,
         &fallback_messages,
+        temperature,
+        top_p,
         request_settings.max_tokens,
         request_settings.context_length,
         extra_body_fields,

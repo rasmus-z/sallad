@@ -7,8 +7,9 @@ use crate::chat_manager::companion::{
     self, soul_category_is_changeable, soul_category_label, SoulGrowthEntry,
     CHANGEABLE_SOUL_CATEGORIES,
 };
-use crate::chat_manager::execution::{
-    find_model_with_credential, prepare_default_sampling_request,
+use crate::chat_manager::execution::{find_model_with_credential, prepare_feature_request};
+use crate::chat_manager::feature_generation::{
+    feature_model_overrides, LlmFeature, COMPANION_MEMORY_DEFAULTS,
 };
 use crate::chat_manager::memory::flow::resolve_dynamic_memory_summarisation_model_id;
 use crate::chat_manager::prompts;
@@ -55,17 +56,24 @@ pub async fn run_growthcycle(
         .ok_or_else(|| "Growthcycle model could not be resolved".to_string())?;
     let api_key = require_api_key(app, credential, "companion_growth")?;
 
-    let (request_settings, extra_body_fields) = prepare_default_sampling_request(
+    let mut request_session = session.clone();
+    request_session.advanced_model_settings = Some(feature_model_overrides(
+        model,
+        LlmFeature::CompanionMemory,
+        COMPANION_MEMORY_DEFAULTS,
+    ));
+    let (request_settings, extra_body_fields) = prepare_feature_request(
         &credential.provider_id,
-        session,
+        &request_session,
         model,
         settings,
-        0.3,
-        1.0,
-        None,
-        None,
-        None,
     );
+    let temperature = request_settings
+        .temperature
+        .unwrap_or(COMPANION_MEMORY_DEFAULTS.temperature);
+    let top_p = request_settings
+        .top_p
+        .unwrap_or(COMPANION_MEMORY_DEFAULTS.top_p);
 
     let messages = render_messages(
         app,
@@ -86,6 +94,8 @@ pub async fn run_growthcycle(
         model,
         &api_key,
         &messages,
+        temperature,
+        top_p,
         request_settings.max_tokens,
         request_settings.context_length,
         extra_body_fields,
@@ -396,6 +406,8 @@ async fn send_growth_request(
     model: &Model,
     api_key: &str,
     messages: &Vec<Value>,
+    temperature: f64,
+    top_p: f64,
     max_tokens: u32,
     context_length: Option<u32>,
     extra_body_fields: Option<HashMap<String, Value>>,
@@ -407,8 +419,8 @@ async fn send_growth_request(
         &model.name,
         messages,
         None,
-        Some(0.3),
-        Some(1.0),
+        Some(temperature),
+        Some(top_p),
         max_tokens,
         context_length,
         false,

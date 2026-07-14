@@ -3,8 +3,10 @@ use tauri::AppHandle;
 
 use crate::api::{api_request, ApiRequest};
 use crate::chat_manager::attachments::{cleanup_attachments, persist_attachments};
-use crate::chat_manager::execution::{
-    find_model_with_credential, prepare_default_sampling_request, prepare_sampling_request,
+use crate::chat_manager::execution::{find_model_with_credential, prepare_feature_request};
+use crate::chat_manager::feature_generation::{
+    feature_model_overrides, synthetic_feature_session, LlmFeature,
+    SCENE_DESIGN_REFERENCE_DEFAULTS, SCENE_WRITER_DEFAULTS,
 };
 use crate::chat_manager::prompting::entry_conditions::{
     entry_is_active, PromptEntryConditionContext,
@@ -1680,17 +1682,17 @@ pub async fn chat_generate_scene_prompt(
         persona,
     );
 
-    let (request_settings, extra_body_fields) = prepare_sampling_request(
+    let mut request_session = session.clone();
+    request_session.advanced_model_settings = Some(feature_model_overrides(
+        model,
+        LlmFeature::SceneWriter,
+        SCENE_WRITER_DEFAULTS,
+    ));
+    let (request_settings, extra_body_fields) = prepare_feature_request(
         &credential.provider_id,
-        &session,
+        &request_session,
         model,
         settings,
-        1280,
-        0.7,
-        1.0,
-        None,
-        None,
-        None,
     );
 
     let built = super::request_builder::build_chat_request(
@@ -1866,49 +1868,21 @@ pub async fn chat_generate_design_reference_description(
         return Err("Design reference template rendered no prompt content".to_string());
     }
 
-    let preview_session = Session {
-        id: "scene-writer-preview".to_string(),
-        character_id: String::new(),
-        title: "Scene writer preview".to_string(),
-        parent_session_id: None,
-        branched_from_message_id: None,
-        root_session_id: None,
-        background_image_path: None,
-        system_prompt: None,
-        mode: "roleplay".to_string(),
-        selected_scene_id: None,
-        prompt_template_id: None,
-        lorebook_ids_override: None,
-        author_note: None,
-        persona_id: None,
-        persona_disabled: false,
-        voice_autoplay: None,
-        advanced_model_settings: None,
-        companion_state: None,
-        memories: Vec::new(),
-        memory_embeddings: Vec::new(),
-        memory_summary: None,
-        memory_summary_token_count: 0,
-        memory_tool_events: Vec::new(),
-        memory_status: None,
-        memory_error: None,
-        memory_progress_step: None,
-        messages: Vec::new(),
-        archived: false,
-        created_at: 0,
-        updated_at: 0,
-    };
+    let mut preview_session = synthetic_feature_session(
+        "scene-writer-preview",
+        feature_model_overrides(
+            model,
+            LlmFeature::SceneWriter,
+            SCENE_DESIGN_REFERENCE_DEFAULTS,
+        ),
+    );
+    preview_session.title = "Scene writer preview".to_string();
 
-    let (request_settings, extra_body_fields) = prepare_default_sampling_request(
+    let (request_settings, extra_body_fields) = prepare_feature_request(
         &credential.provider_id,
         &preview_session,
         model,
         settings,
-        0.4,
-        1.0,
-        None,
-        None,
-        None,
     );
 
     let built = super::request_builder::build_chat_request(

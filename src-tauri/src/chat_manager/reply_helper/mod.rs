@@ -2,7 +2,10 @@ use tauri::AppHandle;
 
 use crate::api::{api_request, ApiRequest};
 use crate::chat_manager::entries::in_chat_user_entry;
-use crate::chat_manager::execution::prepare_sampling_request;
+use crate::chat_manager::execution::prepare_feature_request;
+use crate::chat_manager::feature_generation::{
+    feature_model_overrides, LlmFeature, HELP_ME_REPLY_DEFAULTS,
+};
 use crate::chat_manager::prompts;
 use crate::chat_manager::request::extract_text;
 use crate::chat_manager::service::{require_api_key, ChatContext};
@@ -244,17 +247,21 @@ pub async fn chat_generate_user_reply(
     ));
     let messages_for_api = assemble_prompt_messages(prompt_entries, Vec::new(), &system_role);
 
-    let (request_settings, extra_body_fields) = prepare_sampling_request(
+    let mut overrides = feature_model_overrides(
+        model,
+        LlmFeature::HelpMeReply,
+        HELP_ME_REPLY_DEFAULTS,
+    );
+    if overrides.max_output_tokens.is_none() {
+        overrides.max_output_tokens = Some(max_tokens);
+    }
+    let mut request_session = session.clone();
+    request_session.advanced_model_settings = Some(overrides);
+    let (request_settings, extra_body_fields) = prepare_feature_request(
         &credential.provider_id,
-        &session,
+        &request_session,
         model,
         settings,
-        max_tokens,
-        0.8,
-        1.0,
-        None,
-        None,
-        None,
     );
     let built = super::request_builder::build_chat_request(
         credential,

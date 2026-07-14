@@ -293,27 +293,6 @@ mod tests {
         }
     }
 
-    #[test]
-    fn group_chat_emits_the_same_llama_extra_body_keys_as_chat() {
-        let (session, model, settings) = populated_llama_fixture();
-        let chat_keys: std::collections::BTreeSet<String> =
-            build_llama_extra_fields(&session, &model, &settings)
-                .unwrap_or_default()
-                .into_keys()
-                .filter(|key| key.starts_with("llama"))
-                .collect();
-        let group_keys: std::collections::BTreeSet<String> =
-            crate::group_chat_manager::build_llama_extra_fields(&model, &settings)
-                .unwrap_or_default()
-                .into_keys()
-                .filter(|key| key.starts_with("llama"))
-                .collect();
-
-        assert_eq!(
-            chat_keys, group_keys,
-            "group_chat_manager::build_llama_extra_fields drifted from the chat builder; llama settings missing on either side silently stop applying in that chat mode"
-        );
-    }
 }
 
 fn build_ollama_extra_fields(
@@ -656,31 +635,6 @@ impl RequestSettings {
                 .advanced_model_settings
                 .as_ref()
                 .and_then(|s| s.prompt_caching_enabled),
-        }
-    }
-
-    pub(crate) fn for_sampling(
-        context_length: Option<u32>,
-        max_tokens: u32,
-        temperature: f64,
-        top_p: f64,
-        top_k: Option<u32>,
-        frequency_penalty: Option<f64>,
-        presence_penalty: Option<f64>,
-        prompt_caching_enabled: Option<bool>,
-    ) -> Self {
-        Self {
-            temperature: Some(temperature),
-            top_p: Some(top_p),
-            max_tokens,
-            context_length,
-            frequency_penalty,
-            presence_penalty,
-            top_k,
-            reasoning_enabled: false,
-            reasoning_effort: None,
-            reasoning_budget: None,
-            prompt_caching_enabled,
         }
     }
 }

@@ -35,8 +35,10 @@ use super::structured_fallback::{
 };
 use crate::chat_manager::companion;
 use crate::chat_manager::entries::{in_chat_user_entry, relative_system_entry};
-use crate::chat_manager::execution::{
-    find_model_with_credential, prepare_default_sampling_request,
+use crate::chat_manager::execution::{find_model_with_credential, prepare_feature_request};
+use crate::chat_manager::feature_generation::{
+    feature_llama_sampler_override_present, feature_model_overrides, LlmFeature,
+    DYNAMIC_MEMORY_MANAGER_DEFAULTS,
 };
 use crate::chat_manager::prompt_engine;
 use crate::chat_manager::prompting::entry_conditions::{
@@ -325,9 +327,13 @@ fn dynamic_memory_request_id(session_id: &str, phase: &str) -> String {
 
 const POST_TURN_MEMORY_DEBOUNCE_MS: u64 = 1_200;
 
-fn dynamic_memory_request_session(session: &Session) -> Session {
+fn dynamic_memory_request_session(session: &Session, model: &Model) -> Session {
     let mut sanitized = session.clone();
-    sanitized.advanced_model_settings = None;
+    sanitized.advanced_model_settings = Some(feature_model_overrides(
+        model,
+        LlmFeature::DynamicMemory,
+        DYNAMIC_MEMORY_MANAGER_DEFAULTS,
+    ));
     sanitized
 }
 
@@ -336,7 +342,10 @@ fn uses_local_dynamic_memory_model(provider_cred: &ProviderCredential, model: &M
         || crate::llama_cpp::is_llama_cpp(Some(model.provider_id.as_str()))
 }
 
-fn dynamic_memory_llama_sampler_overwrite_enabled(settings: &Settings) -> bool {
+fn dynamic_memory_llama_sampler_overwrite_enabled(settings: &Settings, model: &Model) -> bool {
+    if feature_llama_sampler_override_present(model, LlmFeature::DynamicMemory) {
+        return false;
+    }
     settings
         .advanced_settings
         .as_ref()
@@ -412,6 +421,8 @@ async fn request_memory_tool_calls(
     overwrite_llama_sampler_config: bool,
     api_key: &str,
     messages_for_api: &Vec<Value>,
+    temperature: f64,
+    top_p: f64,
     max_tokens: u32,
     context_length: Option<u32>,
     extra_body_fields: Option<HashMap<String, Value>>,
@@ -433,6 +444,8 @@ async fn request_memory_tool_calls(
         overwrite_llama_sampler_config,
         api_key,
         messages_for_api,
+        temperature,
+        top_p,
         max_tokens,
         context_length,
         extra_body_fields.clone(),
@@ -500,6 +513,8 @@ async fn request_memory_tool_calls(
                     overwrite_llama_sampler_config,
                     api_key,
                     &fallback_messages,
+                    temperature,
+                    top_p,
                     max_tokens,
                     context_length,
                     extra_body_fields,
@@ -590,6 +605,8 @@ async fn request_memory_tool_calls(
                         overwrite_llama_sampler_config,
                         api_key,
                         &fallback_messages,
+                        temperature,
+                        top_p,
                         max_tokens,
                         context_length,
                         extra_body_fields,
@@ -689,6 +706,8 @@ async fn request_memory_tool_calls(
                 overwrite_llama_sampler_config,
                 api_key,
                 &fallback_messages,
+                temperature,
+                top_p,
                 max_tokens,
                 context_length,
                 extra_body_fields,
@@ -3100,6 +3119,8 @@ async fn send_dynamic_memory_request(
     overwrite_llama_sampler_config: bool,
     api_key: &str,
     messages_for_api: &Vec<Value>,
+    temperature: f64,
+    top_p: f64,
     max_tokens: u32,
     context_length: Option<u32>,
     extra_body_fields: Option<HashMap<String, Value>>,
@@ -3136,8 +3157,8 @@ async fn send_dynamic_memory_request(
         &model.name,
         messages_for_api,
         None,
-        Some(0.4),
-        Some(1.0),
+        Some(temperature),
+        Some(top_p),
         max_tokens,
         context_length,
         false,
@@ -3190,8 +3211,8 @@ async fn send_dynamic_memory_request(
                     &model.name,
                     messages_for_api,
                     None,
-                    Some(0.4),
-                    Some(1.0),
+                    Some(temperature),
+                    Some(top_p),
                     max_tokens,
                     context_length,
                     false,
@@ -3266,8 +3287,8 @@ async fn send_dynamic_memory_request(
                     &model.name,
                     messages_for_api,
                     None,
-                    Some(0.4),
-                    Some(1.0),
+                    Some(temperature),
+                    Some(top_p),
                     max_tokens,
                     context_length,
                     false,
@@ -3329,8 +3350,8 @@ async fn send_dynamic_memory_request(
                     &model.name,
                     messages_for_api,
                     None,
-                    Some(0.2),
-                    Some(1.0),
+                    Some(temperature),
+                    Some(top_p),
                     max_tokens,
                     context_length,
                     false,
@@ -3447,7 +3468,7 @@ async fn run_memory_tool_update(
     request_id: Option<&str>,
     cancel_token: Option<&DynamicMemoryCancellationToken>,
 ) -> Result<Vec<Value>, String> {
-    let overwrite_llama_sampler_config = dynamic_memory_llama_sampler_overwrite_enabled(settings);
+    let overwrite_llama_sampler_config = dynamic_memory_llama_sampler_overwrite_enabled(settings, model);
     let memory_supersede_enabled = companion::is_companion_mode(session, character);
     let tool_config = build_memory_tool_config(memory_supersede_enabled);
     let max_entries = dynamic_max_entries(settings);
@@ -3541,17 +3562,12 @@ async fn run_memory_tool_update(
     ));
     let mut messages_for_api = assemble_prompt_messages(prompt_entries, Vec::new(), &system_role);
 
-    let request_session = dynamic_memory_request_session(session);
-    let (request_settings, extra_body_fields) = prepare_default_sampling_request(
+    let request_session = dynamic_memory_request_session(session, model);
+    let (request_settings, extra_body_fields) = prepare_feature_request(
         &provider_cred.provider_id,
         &request_session,
         model,
         settings,
-        0.2,
-        1.0,
-        None,
-        None,
-        None,
     );
     let context = ChatContext::initialize(app.clone())?;
     let fallback_format = dynamic_memory_structured_fallback_format(settings);
@@ -3624,6 +3640,12 @@ async fn run_memory_tool_update(
             overwrite_llama_sampler_config,
             api_key,
             &messages_for_api,
+            request_settings
+                .temperature
+                .unwrap_or(DYNAMIC_MEMORY_MANAGER_DEFAULTS.temperature),
+            request_settings
+                .top_p
+                .unwrap_or(DYNAMIC_MEMORY_MANAGER_DEFAULTS.top_p),
             request_settings.max_tokens,
             request_settings.context_length,
             extra_body_fields.clone(),
@@ -4212,6 +4234,12 @@ async fn run_memory_tool_update(
             model,
             overwrite_llama_sampler_config,
             api_key,
+            request_settings
+                .temperature
+                .unwrap_or(DYNAMIC_MEMORY_MANAGER_DEFAULTS.temperature),
+            request_settings
+                .top_p
+                .unwrap_or(DYNAMIC_MEMORY_MANAGER_DEFAULTS.top_p),
             &candidate_texts,
             fallback_format,
         )
@@ -4492,6 +4520,8 @@ async fn run_memory_tag_repair(
     model: &Model,
     overwrite_llama_sampler_config: bool,
     api_key: &str,
+    temperature: f64,
+    top_p: f64,
     texts: &[String],
     fallback_format: crate::chat_manager::types::DynamicMemoryStructuredFallbackFormat,
 ) -> Result<HashMap<String, String>, String> {
@@ -4533,6 +4563,8 @@ async fn run_memory_tag_repair(
         overwrite_llama_sampler_config,
         api_key,
         &messages_for_api,
+        temperature,
+        top_p,
         512,
         None,
         None,
@@ -4597,6 +4629,8 @@ async fn run_memory_tag_repair(
             overwrite_llama_sampler_config,
             api_key,
             &fallback_messages,
+            temperature,
+            top_p,
             512,
             None,
             None,
@@ -4783,7 +4817,7 @@ async fn summarize_messages(
     request_id: Option<&str>,
     cancel_token: Option<&DynamicMemoryCancellationToken>,
 ) -> Result<String, String> {
-    let overwrite_llama_sampler_config = dynamic_memory_llama_sampler_overwrite_enabled(settings);
+    let overwrite_llama_sampler_config = dynamic_memory_llama_sampler_overwrite_enabled(settings, model);
     let system_role = request_builder::system_role_for(provider_cred);
 
     let summary_template =
@@ -4865,17 +4899,12 @@ async fn summarize_messages(
     let messages_for_api =
         assemble_prompt_messages(prompt_entries, conversation_messages, &system_role);
 
-    let request_session = dynamic_memory_request_session(session);
-    let (request_settings, extra_body_fields) = prepare_default_sampling_request(
+    let request_session = dynamic_memory_request_session(session, model);
+    let (request_settings, extra_body_fields) = prepare_feature_request(
         &provider_cred.provider_id,
         &request_session,
         model,
         settings,
-        0.2,
-        1.0,
-        None,
-        None,
-        None,
     );
     let context = ChatContext::initialize(app.clone())?;
     let tool_attempt = send_dynamic_memory_request(
@@ -4885,6 +4914,12 @@ async fn summarize_messages(
         overwrite_llama_sampler_config,
         api_key,
         &messages_for_api,
+        request_settings
+            .temperature
+            .unwrap_or(DYNAMIC_MEMORY_MANAGER_DEFAULTS.temperature),
+        request_settings
+            .top_p
+            .unwrap_or(DYNAMIC_MEMORY_MANAGER_DEFAULTS.top_p),
         request_settings.max_tokens,
         request_settings.context_length,
         extra_body_fields.clone(),
@@ -5033,6 +5068,12 @@ async fn summarize_messages(
         overwrite_llama_sampler_config,
         api_key,
         &fallback_messages,
+        request_settings
+            .temperature
+            .unwrap_or(DYNAMIC_MEMORY_MANAGER_DEFAULTS.temperature),
+        request_settings
+            .top_p
+            .unwrap_or(DYNAMIC_MEMORY_MANAGER_DEFAULTS.top_p),
         request_settings.max_tokens,
         request_settings.context_length,
         extra_body_fields,

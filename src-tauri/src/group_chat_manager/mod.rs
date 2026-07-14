@@ -29,6 +29,12 @@ use crate::dynamic_memory_run_manager::{DynamicMemoryCancellationToken, DynamicM
 use crate::usage::add_usage_record;
 use crate::usage::tracking::{RequestUsage, UsageFinishReason, UsageOperationType};
 
+use crate::chat_manager::execution::prepare_feature_request;
+use crate::chat_manager::feature_generation::{
+    feature_llama_sampler_override_present, feature_model_overrides, synthetic_feature_session,
+    LlmFeature, DYNAMIC_MEMORY_MANAGER_DEFAULTS, GROUP_SPEAKER_SELECTION_DEFAULTS,
+    HELP_ME_REPLY_DEFAULTS,
+};
 use crate::chat_manager::entries::{
     in_chat_system_entry, in_chat_user_entry, relative_system_entry,
 };
@@ -194,7 +200,10 @@ fn push_group_memory_debug_step(debug_steps: &mut Vec<Value>, enabled: bool, ste
     }
 }
 
-fn dynamic_memory_llama_sampler_overwrite_enabled(settings: &Settings) -> bool {
+fn dynamic_memory_llama_sampler_overwrite_enabled(settings: &Settings, model: &Model) -> bool {
+    if feature_llama_sampler_override_present(model, LlmFeature::DynamicMemory) {
+        return false;
+    }
     settings
         .advanced_settings
         .as_ref()
@@ -351,16 +360,6 @@ impl Drop for AbortGuard<'_> {
     }
 }
 
-fn resolve_context_length(model: &Model, settings: &Settings) -> Option<u32> {
-    model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|cfg| cfg.context_length)
-        .or(settings.advanced_model_settings.context_length)
-        .filter(|v| *v > 0)
-}
-
-const DEFAULT_LLAMA_SAMPLER_PROFILE: &str = "balanced";
 
 fn group_dynamic_memory_run_key(session_id: &str) -> String {
     format!("group:{}", session_id)
@@ -453,677 +452,6 @@ fn is_cancelled_request_error(message: &str) -> bool {
     normalized.contains("aborted")
         || normalized.contains("cancelled")
         || normalized.contains("canceled")
-}
-
-#[derive(Clone, Copy)]
-struct LlamaSamplerProfileDefaults {
-    name: &'static str,
-    min_p: Option<f64>,
-    typical_p: Option<f64>,
-}
-
-fn normalize_llama_sampler_profile(value: &str) -> Option<String> {
-    let normalized = value.trim().to_ascii_lowercase();
-    match normalized.as_str() {
-        "balanced" | "creative" | "stable" | "reasoning" => Some(normalized),
-        _ => None,
-    }
-}
-
-fn decode_llama_sequence_breaker(value: &str) -> String {
-    match value.trim() {
-        "\\n" => "\n".to_string(),
-        "\\r" => "\r".to_string(),
-        "\\t" => "\t".to_string(),
-        "\\\"" => "\"".to_string(),
-        "\\\\" => "\\".to_string(),
-        other => other.to_string(),
-    }
-}
-
-fn resolve_llama_sampler_profile(model: &Model, settings: &Settings) -> String {
-    model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_sampler_profile.clone())
-        .or_else(|| {
-            settings
-                .advanced_model_settings
-                .llama_sampler_profile
-                .clone()
-        })
-        .and_then(|value| normalize_llama_sampler_profile(&value))
-        .unwrap_or_else(|| DEFAULT_LLAMA_SAMPLER_PROFILE.to_string())
-}
-
-fn resolve_llama_sampler_order(model: &Model, settings: &Settings) -> Option<Vec<String>> {
-    model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_sampler_order.clone())
-        .or_else(|| settings.advanced_model_settings.llama_sampler_order.clone())
-}
-
-fn resolve_llama_dry_sequence_breakers(model: &Model, settings: &Settings) -> Option<Vec<String>> {
-    model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_dry_sequence_breakers.clone())
-        .or_else(|| {
-            settings
-                .advanced_model_settings
-                .llama_dry_sequence_breakers
-                .clone()
-        })
-        .map(|values| {
-            values
-                .into_iter()
-                .map(|value| decode_llama_sequence_breaker(&value))
-                .filter(|value| !value.is_empty())
-                .collect::<Vec<_>>()
-        })
-        .filter(|values| !values.is_empty())
-}
-
-fn llama_sampler_profile_defaults(profile: &str) -> LlamaSamplerProfileDefaults {
-    match profile {
-        "creative" => LlamaSamplerProfileDefaults {
-            name: "creative",
-            min_p: Some(0.02),
-            typical_p: None,
-        },
-        "stable" => LlamaSamplerProfileDefaults {
-            name: "stable",
-            min_p: Some(0.08),
-            typical_p: Some(0.97),
-        },
-        "reasoning" => LlamaSamplerProfileDefaults {
-            name: "reasoning",
-            min_p: None,
-            typical_p: Some(0.95),
-        },
-        _ => LlamaSamplerProfileDefaults {
-            name: "balanced",
-            min_p: Some(0.05),
-            typical_p: None,
-        },
-    }
-}
-
-pub(crate) fn build_llama_extra_fields(
-    model: &Model,
-    settings: &Settings,
-) -> Option<HashMap<String, Value>> {
-    let mut extra = HashMap::new();
-    let sampler_profile = resolve_llama_sampler_profile(model, settings);
-    let sampler_defaults = llama_sampler_profile_defaults(&sampler_profile);
-    let explicit_min_p = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_min_p)
-        .or(settings.advanced_model_settings.llama_min_p);
-    let explicit_typical_p = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_typical_p)
-        .or(settings.advanced_model_settings.llama_typical_p);
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_gpu_layers)
-        .or(settings.advanced_model_settings.llama_gpu_layers)
-    {
-        extra.insert("llamaGpuLayers".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_multi_gpu_enabled)
-        .or(settings.advanced_model_settings.llama_multi_gpu_enabled)
-    {
-        extra.insert("llamaMultiGpuEnabled".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_gpu_device_ids.clone())
-        .or_else(|| {
-            settings
-                .advanced_model_settings
-                .llama_gpu_device_ids
-                .clone()
-        })
-        .filter(|ids| !ids.is_empty())
-    {
-        extra.insert("llamaGpuDeviceIds".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_gpu_distribution_mode.clone())
-        .or_else(|| {
-            settings
-                .advanced_model_settings
-                .llama_gpu_distribution_mode
-                .clone()
-        })
-        .map(|v| v.trim().to_ascii_lowercase())
-        .filter(|v| {
-            matches!(
-                v.as_str(),
-                "balanced" | "proportional" | "priority" | "manual"
-            )
-        })
-    {
-        extra.insert("llamaGpuDistributionMode".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_gpu_manual_layers.clone())
-        .or_else(|| {
-            settings
-                .advanced_model_settings
-                .llama_gpu_manual_layers
-                .clone()
-        })
-        .filter(|layers| !layers.is_empty())
-    {
-        extra.insert("llamaGpuManualLayers".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_kv_placement.clone())
-        .or_else(|| settings.advanced_model_settings.llama_kv_placement.clone())
-        .map(|v| v.trim().to_string())
-        .filter(|v| matches!(v.as_str(), "auto" | "split" | "systemRam" | "pin"))
-    {
-        extra.insert("llamaKvPlacement".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_main_gpu)
-        .or(settings.advanced_model_settings.llama_main_gpu)
-    {
-        extra.insert("llamaMainGpu".to_string(), json!(v));
-    }
-    let group_multi_gpu_leveled = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_multi_gpu_enabled)
-        .map(|value| (value, 1u8))
-        .or(settings
-            .advanced_model_settings
-            .llama_multi_gpu_enabled
-            .map(|value| (value, 0u8)));
-    let group_single_gpu_pin = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_single_gpu_device_id)
-        .map(|value| (value, 1u8))
-        .or(settings
-            .advanced_model_settings
-            .llama_single_gpu_device_id
-            .map(|value| (value, 0u8)));
-    if !crate::chat_manager::execution::llama_pin_overridden_by_multi_gpu(
-        group_multi_gpu_leveled,
-        group_single_gpu_pin,
-    ) {
-        if let Some((v, _)) = group_single_gpu_pin {
-            extra.insert("llamaSingleGpuDeviceId".to_string(), json!(v));
-        }
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_priority_vram_limit_bytes)
-        .or(settings
-            .advanced_model_settings
-            .llama_priority_vram_limit_bytes)
-        .filter(|v| *v > 0)
-    {
-        extra.insert("llamaPriorityVramLimitBytes".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_threads)
-        .or(settings.advanced_model_settings.llama_threads)
-    {
-        extra.insert("llamaThreads".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_threads_batch)
-        .or(settings.advanced_model_settings.llama_threads_batch)
-    {
-        extra.insert("llamaThreadsBatch".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_seed)
-        .or(settings.advanced_model_settings.llama_seed)
-    {
-        extra.insert("llamaSeed".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_rope_freq_base)
-        .or(settings.advanced_model_settings.llama_rope_freq_base)
-    {
-        extra.insert("llamaRopeFreqBase".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_rope_freq_scale)
-        .or(settings.advanced_model_settings.llama_rope_freq_scale)
-    {
-        extra.insert("llamaRopeFreqScale".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_offload_kqv)
-        .or(settings.advanced_model_settings.llama_offload_kqv)
-    {
-        extra.insert("llamaOffloadKqv".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_swa_full)
-        .or(settings.advanced_model_settings.llama_swa_full)
-    {
-        extra.insert("llamaSwaFull".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_batch_size)
-        .or(settings.advanced_model_settings.llama_batch_size)
-        .filter(|v| *v > 0)
-    {
-        extra.insert("llamaBatchSize".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_ubatch_size)
-        .or(settings.advanced_model_settings.llama_ubatch_size)
-        .filter(|v| *v > 0)
-    {
-        extra.insert("llamaUbatchSize".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_kv_type.clone())
-        .or_else(|| settings.advanced_model_settings.llama_kv_type.clone())
-        .map(|v| v.trim().to_ascii_lowercase())
-        .filter(|v| !v.is_empty())
-    {
-        extra.insert("llamaKvType".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_flash_attention.clone())
-        .or_else(|| {
-            settings
-                .advanced_model_settings
-                .llama_flash_attention
-                .clone()
-        })
-        .map(|v| v.trim().to_ascii_lowercase())
-        .filter(|v| !v.is_empty())
-    {
-        extra.insert("llamaFlashAttentionPolicy".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_chat_template_override.clone())
-        .or_else(|| {
-            settings
-                .advanced_model_settings
-                .llama_chat_template_override
-                .clone()
-        })
-        .map(|v| v.trim().to_string())
-        .filter(|v| !v.is_empty())
-    {
-        extra.insert("llamaChatTemplateOverride".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_mmproj_path.clone())
-        .or_else(|| settings.advanced_model_settings.llama_mmproj_path.clone())
-        .map(|v| v.trim().to_string())
-        .filter(|v| !v.is_empty())
-    {
-        extra.insert("llamaMmprojPath".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_mtp_enabled)
-        .or(settings.advanced_model_settings.llama_mtp_enabled)
-    {
-        extra.insert("llamaMtpEnabled".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_mtp_placement.clone())
-        .or_else(|| settings.advanced_model_settings.llama_mtp_placement.clone())
-        .map(|v| v.trim().to_ascii_lowercase())
-        .filter(|v| matches!(v.as_str(), "auto" | "gpu" | "cpu"))
-    {
-        extra.insert("llamaMtpPlacement".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_mtp_draft_tokens)
-        .or(settings.advanced_model_settings.llama_mtp_draft_tokens)
-        .filter(|v| *v > 0)
-    {
-        extra.insert("llamaMtpDraftTokens".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_mtp_model_path.clone())
-        .or_else(|| {
-            settings
-                .advanced_model_settings
-                .llama_mtp_model_path
-                .clone()
-        })
-        .map(|v| v.trim().to_string())
-        .filter(|v| !v.is_empty())
-    {
-        extra.insert("llamaMtpModelPath".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_chat_template_preset.clone())
-        .or_else(|| {
-            settings
-                .advanced_model_settings
-                .llama_chat_template_preset
-                .clone()
-        })
-        .map(|v| v.trim().to_string())
-        .filter(|v| !v.is_empty())
-    {
-        extra.insert("llamaChatTemplatePreset".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_raw_completion_fallback)
-        .or(settings
-            .advanced_model_settings
-            .llama_raw_completion_fallback)
-    {
-        extra.insert("llamaRawCompletionFallback".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_streaming_enabled)
-        .or(settings.advanced_model_settings.llama_streaming_enabled)
-    {
-        extra.insert("llamaStreamingEnabled".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_strict_mode)
-        .or(settings.advanced_model_settings.llama_strict_mode)
-    {
-        extra.insert("llamaStrictMode".to_string(), json!(v));
-    }
-    extra.insert(
-        "llamaSamplerProfile".to_string(),
-        json!(sampler_defaults.name),
-    );
-    if let Some(v) = resolve_llama_sampler_order(model, settings) {
-        extra.insert("llamaSamplerOrder".to_string(), json!(v));
-    }
-    if let Some(v) = explicit_min_p.or(sampler_defaults.min_p) {
-        extra.insert("llamaMinP".to_string(), json!(v));
-    }
-    if let Some(v) = explicit_typical_p.or(sampler_defaults.typical_p) {
-        extra.insert("llamaTypicalP".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_repeat_penalty)
-        .or(settings.advanced_model_settings.llama_repeat_penalty)
-    {
-        extra.insert("llamaRepeatPenalty".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_dry_multiplier)
-        .or(settings.advanced_model_settings.llama_dry_multiplier)
-    {
-        extra.insert("llamaDryMultiplier".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_dry_base)
-        .or(settings.advanced_model_settings.llama_dry_base)
-    {
-        extra.insert("llamaDryBase".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_dry_allowed_length)
-        .or(settings.advanced_model_settings.llama_dry_allowed_length)
-    {
-        extra.insert("llamaDryAllowedLength".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_dry_penalty_last_n)
-        .or(settings.advanced_model_settings.llama_dry_penalty_last_n)
-    {
-        extra.insert("llamaDryPenaltyLastN".to_string(), json!(v));
-    }
-    if let Some(v) = resolve_llama_dry_sequence_breakers(model, settings) {
-        extra.insert("llamaDrySequenceBreakers".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_xtc_probability)
-        .or(settings.advanced_model_settings.llama_xtc_probability)
-    {
-        extra.insert("llamaXtcProbability".to_string(), json!(v));
-    }
-    if let Some(v) = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.llama_xtc_threshold)
-        .or(settings.advanced_model_settings.llama_xtc_threshold)
-    {
-        extra.insert("llamaXtcThreshold".to_string(), json!(v));
-    }
-
-    if extra.is_empty() {
-        None
-    } else {
-        Some(extra)
-    }
-}
-
-fn build_ollama_extra_fields(
-    model: &Model,
-    settings: &Settings,
-    context_length: Option<u32>,
-    max_tokens: u32,
-    temperature: f64,
-    top_p: f64,
-    top_k: Option<u32>,
-    frequency_penalty: Option<f64>,
-    presence_penalty: Option<f64>,
-) -> Option<HashMap<String, Value>> {
-    let mut options = Map::new();
-
-    let num_ctx = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.ollama_num_ctx)
-        .or(settings.advanced_model_settings.ollama_num_ctx)
-        .or(context_length);
-    let num_predict = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.ollama_num_predict)
-        .or(settings.advanced_model_settings.ollama_num_predict)
-        .or(Some(max_tokens));
-    let num_keep = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.ollama_num_keep)
-        .or(settings.advanced_model_settings.ollama_num_keep);
-    let num_batch = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.ollama_num_batch)
-        .or(settings.advanced_model_settings.ollama_num_batch);
-    let num_gpu = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.ollama_num_gpu)
-        .or(settings.advanced_model_settings.ollama_num_gpu);
-    let num_thread = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.ollama_num_thread)
-        .or(settings.advanced_model_settings.ollama_num_thread);
-    let tfs_z = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.ollama_tfs_z)
-        .or(settings.advanced_model_settings.ollama_tfs_z);
-    let typical_p = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.ollama_typical_p)
-        .or(settings.advanced_model_settings.ollama_typical_p);
-    let min_p = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.ollama_min_p)
-        .or(settings.advanced_model_settings.ollama_min_p);
-    let mirostat = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.ollama_mirostat)
-        .or(settings.advanced_model_settings.ollama_mirostat);
-    let mirostat_tau = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.ollama_mirostat_tau)
-        .or(settings.advanced_model_settings.ollama_mirostat_tau);
-    let mirostat_eta = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.ollama_mirostat_eta)
-        .or(settings.advanced_model_settings.ollama_mirostat_eta);
-    let repeat_penalty = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.ollama_repeat_penalty)
-        .or(settings.advanced_model_settings.ollama_repeat_penalty);
-    let seed = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.ollama_seed)
-        .or(settings.advanced_model_settings.ollama_seed);
-    let stop = model
-        .advanced_model_settings
-        .as_ref()
-        .and_then(|a| a.ollama_stop.clone())
-        .or(settings.advanced_model_settings.ollama_stop.clone());
-
-    options.insert("temperature".into(), json!(temperature));
-    options.insert("top_p".into(), json!(top_p));
-    if let Some(v) = top_k {
-        options.insert("top_k".into(), json!(v));
-    }
-    if let Some(v) = frequency_penalty {
-        options.insert("frequency_penalty".into(), json!(v));
-    }
-    if let Some(v) = presence_penalty {
-        options.insert("presence_penalty".into(), json!(v));
-    }
-    if let Some(v) = num_ctx {
-        options.insert("num_ctx".into(), json!(v));
-    }
-    if let Some(v) = num_predict {
-        options.insert("num_predict".into(), json!(v));
-    }
-    if let Some(v) = num_keep {
-        options.insert("num_keep".into(), json!(v));
-    }
-    if let Some(v) = num_batch {
-        options.insert("num_batch".into(), json!(v));
-    }
-    if let Some(v) = num_gpu {
-        options.insert("num_gpu".into(), json!(v));
-    }
-    if let Some(v) = num_thread {
-        options.insert("num_thread".into(), json!(v));
-    }
-    if let Some(v) = tfs_z {
-        options.insert("tfs_z".into(), json!(v));
-    }
-    if let Some(v) = typical_p {
-        options.insert("typical_p".into(), json!(v));
-    }
-    if let Some(v) = min_p {
-        options.insert("min_p".into(), json!(v));
-    }
-    if let Some(v) = mirostat {
-        options.insert("mirostat".into(), json!(v));
-    }
-    if let Some(v) = mirostat_tau {
-        options.insert("mirostat_tau".into(), json!(v));
-    }
-    if let Some(v) = mirostat_eta {
-        options.insert("mirostat_eta".into(), json!(v));
-    }
-    if let Some(v) = repeat_penalty {
-        options.insert("repeat_penalty".into(), json!(v));
-    }
-    if let Some(v) = seed {
-        options.insert("seed".into(), json!(v));
-    }
-    if let Some(v) = stop {
-        options.insert("stop".into(), json!(v));
-    }
-
-    let mut extra = HashMap::new();
-    extra.insert("options".to_string(), Value::Object(options));
-    Some(extra)
 }
 
 // ============================================================================
@@ -1883,6 +1211,8 @@ async fn send_dynamic_memory_request(
     overwrite_llama_sampler_config: bool,
     api_key: &str,
     messages_for_api: &Vec<Value>,
+    temperature: f64,
+    top_p: f64,
     max_tokens: u32,
     context_length: Option<u32>,
     extra_body_fields: Option<HashMap<String, Value>>,
@@ -1919,8 +1249,8 @@ async fn send_dynamic_memory_request(
         &model.name,
         messages_for_api,
         None,
-        Some(0.4),
-        Some(1.0),
+        Some(temperature),
+        Some(top_p),
         max_tokens,
         context_length,
         false,
@@ -1973,8 +1303,8 @@ async fn send_dynamic_memory_request(
                     &model.name,
                     messages_for_api,
                     None,
-                    Some(0.4),
-                    Some(1.0),
+                    Some(temperature),
+                    Some(top_p),
                     max_tokens,
                     context_length,
                     false,
@@ -2049,8 +1379,8 @@ async fn send_dynamic_memory_request(
                     &model.name,
                     messages_for_api,
                     None,
-                    Some(0.4),
-                    Some(1.0),
+                    Some(temperature),
+                    Some(top_p),
                     max_tokens,
                     context_length,
                     false,
@@ -2112,8 +1442,8 @@ async fn send_dynamic_memory_request(
                     &model.name,
                     messages_for_api,
                     None,
-                    Some(0.2),
-                    Some(1.0),
+                    Some(temperature),
+                    Some(top_p),
                     max_tokens,
                     context_length,
                     false,
@@ -3235,7 +2565,7 @@ async fn summarize_group_messages(
     request_id: Option<&str>,
     cancel_token: Option<&DynamicMemoryCancellationToken>,
 ) -> Result<String, String> {
-    let overwrite_llama_sampler_config = dynamic_memory_llama_sampler_overwrite_enabled(settings);
+    let overwrite_llama_sampler_config = dynamic_memory_llama_sampler_overwrite_enabled(settings, model);
     let system_role = crate::chat_manager::request_builder::system_role_for(provider_cred);
 
     let summary_template =
@@ -3296,29 +2626,28 @@ async fn summarize_group_messages(
     let messages_for_api =
         assemble_prompt_messages(prompt_entries, conversation_messages, &system_role);
 
-    let max_tokens = settings
-        .advanced_model_settings
-        .max_output_tokens
-        .unwrap_or(2048);
-
-    let context_length = resolve_context_length(model, settings);
-    let extra_body_fields = if provider_cred.provider_id == "llamacpp" {
-        build_llama_extra_fields(model, settings)
-    } else if provider_cred.provider_id == "ollama" {
-        build_ollama_extra_fields(
+    let request_session = synthetic_feature_session(
+        "__group_dynamic_memory__",
+        feature_model_overrides(
             model,
-            settings,
-            context_length,
-            max_tokens,
-            0.2,
-            1.0,
-            None,
-            None,
-            None,
-        )
-    } else {
-        None
-    };
+            LlmFeature::DynamicMemory,
+            DYNAMIC_MEMORY_MANAGER_DEFAULTS,
+        ),
+    );
+    let (request_settings, extra_body_fields) = prepare_feature_request(
+        &provider_cred.provider_id,
+        &request_session,
+        model,
+        settings,
+    );
+    let max_tokens = request_settings.max_tokens;
+    let context_length = request_settings.context_length;
+    let temperature = request_settings
+        .temperature
+        .unwrap_or(DYNAMIC_MEMORY_MANAGER_DEFAULTS.temperature);
+    let top_p = request_settings
+        .top_p
+        .unwrap_or(DYNAMIC_MEMORY_MANAGER_DEFAULTS.top_p);
     let tool_attempt = send_dynamic_memory_request(
         app,
         provider_cred,
@@ -3326,6 +2655,8 @@ async fn summarize_group_messages(
         overwrite_llama_sampler_config,
         api_key,
         &messages_for_api,
+        temperature,
+        top_p,
         max_tokens,
         context_length,
         extra_body_fields.clone(),
@@ -3451,6 +2782,8 @@ async fn summarize_group_messages(
         overwrite_llama_sampler_config,
         api_key,
         &fallback_messages,
+        temperature,
+        top_p,
         max_tokens,
         context_length,
         extra_body_fields,
@@ -3531,7 +2864,7 @@ async fn run_group_memory_tool_update(
     request_id: Option<&str>,
     cancel_token: Option<&DynamicMemoryCancellationToken>,
 ) -> Result<Vec<Value>, String> {
-    let overwrite_llama_sampler_config = dynamic_memory_llama_sampler_overwrite_enabled(settings);
+    let overwrite_llama_sampler_config = dynamic_memory_llama_sampler_overwrite_enabled(settings, model);
     let tool_config = build_memory_tool_config();
     let max_entries = dynamic_settings.max_entries.max(1) as usize;
 
@@ -3600,29 +2933,28 @@ async fn run_group_memory_tool_update(
     ));
     let mut messages_for_api = assemble_prompt_messages(prompt_entries, Vec::new(), &system_role);
 
-    let max_tokens = settings
-        .advanced_model_settings
-        .max_output_tokens
-        .unwrap_or(2048);
-
-    let context_length = resolve_context_length(model, settings);
-    let extra_body_fields = if provider_cred.provider_id == "llamacpp" {
-        build_llama_extra_fields(model, settings)
-    } else if provider_cred.provider_id == "ollama" {
-        build_ollama_extra_fields(
+    let request_session = synthetic_feature_session(
+        "__group_dynamic_memory__",
+        feature_model_overrides(
             model,
-            settings,
-            context_length,
-            max_tokens,
-            0.2,
-            1.0,
-            None,
-            None,
-            None,
-        )
-    } else {
-        None
-    };
+            LlmFeature::DynamicMemory,
+            DYNAMIC_MEMORY_MANAGER_DEFAULTS,
+        ),
+    );
+    let (request_settings, extra_body_fields) = prepare_feature_request(
+        &provider_cred.provider_id,
+        &request_session,
+        model,
+        settings,
+    );
+    let max_tokens = request_settings.max_tokens;
+    let context_length = request_settings.context_length;
+    let temperature = request_settings
+        .temperature
+        .unwrap_or(DYNAMIC_MEMORY_MANAGER_DEFAULTS.temperature);
+    let top_p = request_settings
+        .top_p
+        .unwrap_or(DYNAMIC_MEMORY_MANAGER_DEFAULTS.top_p);
     let fallback_format = dynamic_memory_structured_fallback_format(settings);
     let fallback_label = structured_fallback_format_label(fallback_format);
 
@@ -3684,6 +3016,8 @@ async fn run_group_memory_tool_update(
             overwrite_llama_sampler_config,
             api_key,
             &messages_for_api,
+            temperature,
+            top_p,
             max_tokens,
             context_length,
             extra_body_fields.clone(),
@@ -3738,6 +3072,8 @@ async fn run_group_memory_tool_update(
                         overwrite_llama_sampler_config,
                         api_key,
                         &fallback_messages,
+                        temperature,
+                        top_p,
                         max_tokens,
                         context_length,
                         extra_body_fields.clone(),
@@ -3814,6 +3150,8 @@ async fn run_group_memory_tool_update(
                             overwrite_llama_sampler_config,
                             api_key,
                             &fallback_messages,
+                            temperature,
+                            top_p,
                             max_tokens,
                             context_length,
                             extra_body_fields.clone(),
@@ -3902,6 +3240,8 @@ async fn run_group_memory_tool_update(
                     overwrite_llama_sampler_config,
                     api_key,
                     &fallback_messages,
+                    temperature,
+                    top_p,
                     max_tokens,
                     context_length,
                     extra_body_fields.clone(),
@@ -4475,6 +3815,8 @@ async fn run_group_memory_tool_update(
             model,
             overwrite_llama_sampler_config,
             api_key,
+            temperature,
+            top_p,
             &candidate_texts,
             fallback_format,
         )
@@ -4720,6 +4062,8 @@ async fn run_group_memory_tag_repair(
     model: &Model,
     overwrite_llama_sampler_config: bool,
     api_key: &str,
+    temperature: f64,
+    top_p: f64,
     texts: &[String],
     fallback_format: crate::chat_manager::types::DynamicMemoryStructuredFallbackFormat,
 ) -> Result<HashMap<String, String>, String> {
@@ -4761,6 +4105,8 @@ async fn run_group_memory_tag_repair(
         overwrite_llama_sampler_config,
         api_key,
         &messages_for_api,
+        temperature,
+        top_p,
         512,
         None,
         None,
@@ -4825,6 +4171,8 @@ async fn run_group_memory_tag_repair(
             overwrite_llama_sampler_config,
             api_key,
             &fallback_messages,
+            temperature,
+            top_p,
             512,
             None,
             None,
@@ -6250,10 +5598,31 @@ async fn select_speaker_via_llm_with_tracking(
     request_id: &str,
     track_usage: bool,
 ) -> Result<selection::SelectionResult, String> {
-    // Get the first available model for selection
-    let model = settings
-        .models
-        .first()
+    let configured_model_id = settings
+        .advanced_settings
+        .as_ref()
+        .and_then(|advanced| advanced.group_speaker_selection_model_id.clone())
+        .filter(|id| !id.trim().is_empty());
+    let model = configured_model_id
+        .as_ref()
+        .and_then(|id| {
+            let found = settings.models.iter().find(|model| &model.id == id);
+            if found.is_none() {
+                log_warn(
+                    app,
+                    "group_chat_selection",
+                    format!("configured speaker selection model {id} not found; falling back"),
+                );
+            }
+            found
+        })
+        .or_else(|| {
+            settings
+                .default_model_id
+                .as_ref()
+                .and_then(|id| settings.models.iter().find(|model| &model.id == id))
+        })
+        .or_else(|| settings.models.first())
         .ok_or("No models configured for speaker selection")?;
 
     let credential = resolve_credential_for_model(settings, model)
@@ -6304,34 +5673,30 @@ async fn select_speaker_via_llm_with_tracking(
         choice: Some(ToolChoice::Required),
     };
 
-    let context_length = resolve_context_length(model, settings);
-    let extra_body_fields = if credential.provider_id == "llamacpp" {
-        build_llama_extra_fields(model, settings)
-    } else if credential.provider_id == "ollama" {
-        build_ollama_extra_fields(
+    let request_session = synthetic_feature_session(
+        "__group_speaker_selection__",
+        feature_model_overrides(
             model,
-            settings,
-            context_length,
-            500,
-            0.3,
-            1.0,
-            None,
-            None,
-            None,
-        )
-    } else {
-        None
-    };
+            LlmFeature::GroupSpeakerSelection,
+            GROUP_SPEAKER_SELECTION_DEFAULTS,
+        ),
+    );
+    let (request_settings, extra_body_fields) = prepare_feature_request(
+        &credential.provider_id,
+        &request_session,
+        model,
+        settings,
+    );
     let built = crate::chat_manager::request_builder::build_chat_request(
         credential,
         &api_key,
         &model.name,
         &messages,
-        None,      // system_prompt
-        Some(0.3), // Low temperature for consistent selection
-        Some(1.0), // top_p
-        500,       // max_tokens - short response
-        context_length,
+        None,
+        request_settings.temperature,
+        request_settings.top_p,
+        request_settings.max_tokens,
+        request_settings.context_length,
         false, // No streaming for selection
         None,  // request_id
         None,  // frequency_penalty
@@ -6686,315 +6051,6 @@ async fn generate_character_response(
         gemini_content: execution.gemini_content,
     });
 
-    #[cfg(any())]
-    {
-        let sampler_profile = if credential.provider_id == "llamacpp" {
-            Some(resolve_llama_sampler_profile(model, settings))
-        } else {
-            None
-        };
-        let sampler_defaults = sampler_profile
-            .as_deref()
-            .map(llama_sampler_profile_defaults);
-        let temperature = model
-            .advanced_model_settings
-            .as_ref()
-            .and_then(|a| a.temperature)
-            .unwrap_or_else(|| sampler_defaults.map_or(0.7, |defaults| defaults.temperature));
-        let top_p = model
-            .advanced_model_settings
-            .as_ref()
-            .and_then(|a| a.top_p)
-            .unwrap_or_else(|| sampler_defaults.map_or(1.0, |defaults| defaults.top_p));
-        let max_tokens = model
-            .advanced_model_settings
-            .as_ref()
-            .and_then(|a| a.max_output_tokens)
-            .unwrap_or(2048);
-        let context_length = resolve_context_length(model, settings);
-        let reasoning_enabled = model
-            .advanced_model_settings
-            .as_ref()
-            .and_then(|a| a.reasoning_enabled)
-            .unwrap_or(false);
-        let reasoning_effort = model
-            .advanced_model_settings
-            .as_ref()
-            .and_then(|a| a.reasoning_effort.clone());
-        let reasoning_budget = model
-            .advanced_model_settings
-            .as_ref()
-            .and_then(|a| a.reasoning_budget_tokens);
-        let presence_penalty = model
-            .advanced_model_settings
-            .as_ref()
-            .and_then(|a| a.presence_penalty)
-            .or_else(|| sampler_defaults.and_then(|defaults| defaults.presence_penalty));
-        let frequency_penalty = model
-            .advanced_model_settings
-            .as_ref()
-            .and_then(|a| a.frequency_penalty)
-            .or_else(|| sampler_defaults.and_then(|defaults| defaults.frequency_penalty));
-        let top_k = model
-            .advanced_model_settings
-            .as_ref()
-            .and_then(|a| a.top_k)
-            .or_else(|| sampler_defaults.and_then(|defaults| defaults.top_k));
-        let prompt_caching_enabled = model
-            .advanced_model_settings
-            .as_ref()
-            .and_then(|s| s.prompt_caching_enabled)
-            .unwrap_or(false);
-        let extra_body_fields = if credential.provider_id == "llamacpp" {
-            build_llama_extra_fields(model, settings)
-        } else if credential.provider_id == "ollama" {
-            build_ollama_extra_fields(
-                model,
-                settings,
-                context_length,
-                max_tokens,
-                temperature,
-                top_p,
-                top_k,
-                frequency_penalty,
-                presence_penalty,
-            )
-        } else {
-            None
-        };
-
-        let built = crate::chat_manager::request_builder::build_chat_request(
-            credential,
-            &api_key,
-            &model.name,
-            &messages_for_api,
-            None, // system prompt already handled via push_system_message
-            Some(temperature),
-            Some(top_p),
-            max_tokens,
-            context_length,
-            true,                   // Stream
-            None,                   // request_id will be passed via ApiRequest
-            frequency_penalty,      // frequency_penalty
-            presence_penalty,       // presence_penalty
-            top_k,                  // top_k
-            None,                   // No tools for response generation
-            reasoning_enabled,      // reasoning_enabled
-            reasoning_effort,       // reasoning_effort
-            reasoning_budget,       // reasoning_budget
-            prompt_caching_enabled, // prompt_caching_enabled
-            extra_body_fields,
-        );
-
-        log_info(
-            app,
-            "group_chat",
-            format!(
-                "Generating response from {} via {} model {}",
-                character.name, credential.provider_id, model.name
-            ),
-        );
-
-        // Log request details for debugging
-        log_info(
-            app,
-            "group_chat_response",
-            format!(
-                "Request details: endpoint={} model={} stream={} temp={} max_tokens={}",
-                built.url, model.name, true, temperature, max_tokens
-            ),
-        );
-
-        log_info(
-            app,
-            "group_chat_response",
-            format!(
-                "Request body: {}",
-                serde_json::to_string_pretty(&built.body)
-                    .unwrap_or_else(|_| "unable to serialize".to_string())
-            ),
-        );
-
-        let api_request_payload = ApiRequest {
-            url: built.url,
-            method: Some("POST".into()),
-            headers: Some(built.headers),
-            query: None,
-            body: Some(built.body),
-            timeout_ms: Some(crate::transport::DEFAULT_REQUEST_TIMEOUT_MS),
-            stream: Some(true),
-            request_id: Some(request_id.to_string()),
-            provider_id: Some(credential.provider_id.clone()),
-            cache_key: Some(context.session.id.clone()),
-        };
-
-        log_info(
-            app,
-            "group_chat_response",
-            format!(
-                "Sending streaming request for {} with request_id={}",
-                character.name, request_id
-            ),
-        );
-
-        let api_response = api_request(app.clone(), api_request_payload).await?;
-
-        log_info(
-            app,
-            "group_chat_response",
-            format!(
-                "API response received: status={} ok={}",
-                api_response.status, api_response.ok
-            ),
-        );
-
-        if !api_response.ok {
-            let fallback = format!("Provider returned status {}", api_response.status);
-            let err_message =
-                extract_error_message(api_response.data()).unwrap_or(fallback.clone());
-
-            log_error(
-                app,
-                "group_chat_response",
-                format!(
-                    "API request failed: status={} error={}",
-                    api_response.status, err_message
-                ),
-            );
-
-            // Log the full response body for debugging
-            log_info(
-                app,
-                "group_chat_response",
-                format!(
-                    "Full error response: {}",
-                    serde_json::to_string_pretty(api_response.data())
-                        .unwrap_or_else(|_| "unable to serialize".to_string())
-                ),
-            );
-
-            return Err(format!(
-                "Character response API request failed with status {}: {}",
-                api_response.status, err_message
-            ));
-        }
-
-        let data_preview = match api_response.data() {
-            serde_json::Value::String(s) => {
-                let preview = crate::serde_utils::truncate_for_log(s, 500);
-                format!("String({} bytes): {}", s.len(), preview)
-            }
-            serde_json::Value::Object(obj) => {
-                format!("Object with keys: {:?}", obj.keys().collect::<Vec<_>>())
-            }
-            other => format!("{:?}", other),
-        };
-        log_info(
-            app,
-            "group_chat_response",
-            format!("Response data type: {}", data_preview),
-        );
-
-        let text = extract_text(api_response.data(), Some(&model.provider_id));
-
-        log_info(
-            app,
-            "group_chat_response",
-            format!(
-                "Extracted text: {:?} (len={})",
-                text.as_ref()
-                    .map(|t| crate::serde_utils::truncate_for_log(t, 100)),
-                text.as_ref().map(|t| t.len()).unwrap_or(0)
-            ),
-        );
-
-        let text = text.ok_or_else(|| "Empty response from provider".to_string())?;
-
-        // Post-generation content filter check
-        if let Some(filter) = app.try_state::<crate::content_filter::ContentFilter>() {
-            if filter.is_enabled() {
-                let result = filter.check_text(&text);
-                if result.blocked {
-                    crate::utils::log_warn(
-                        app,
-                        "group_chat_response",
-                        format!(
-                            "Content blocked by Pure Mode (score={:.1}, terms={:?})",
-                            result.score, result.matched_terms
-                        ),
-                    );
-                    return Err(
-                        "Response blocked by Pure Mode. Try rephrasing your message.".to_string(),
-                    );
-                }
-            }
-        }
-
-        let usage = extract_usage(api_response.data());
-        let reasoning = extract_reasoning(api_response.data(), Some(&model.provider_id));
-
-        log_info(
-            app,
-            "generate_character_response",
-            format!(
-                "Extracted reasoning: {} (len={})",
-                if reasoning.is_some() { "YES" } else { "NO" },
-                reasoning.as_ref().map(|r| r.len()).unwrap_or(0)
-            ),
-        );
-
-        let message_usage = usage.as_ref().map(|u| UsageSummary {
-            prompt_tokens: u.prompt_tokens.map(|v| v as i32),
-            completion_tokens: u.completion_tokens.map(|v| v as i32),
-            total_tokens: u.total_tokens.map(|v| v as i32),
-            first_token_ms: u.first_token_ms.map(|v| v as i64),
-            tokens_per_second: u.tokens_per_second,
-            mtp_stats: u
-                .mtp_stats
-                .as_ref()
-                .and_then(|s| serde_json::to_value(s).ok()),
-        });
-
-        record_group_usage(
-            app,
-            &usage,
-            &context.session,
-            &character,
-            model,
-            credential,
-            &api_key,
-            operation_type,
-            "group_chat_response",
-        )
-        .await;
-
-        let model_id_to_return = model.id.clone();
-        log_info(
-            app,
-            "generate_character_response",
-            format!(
-                "✓ Generated response with model_id: {} (model name: {})",
-                model_id_to_return, model.display_name
-            ),
-        );
-
-        let memory_refs: Vec<String> = retrieved_memories
-            .iter()
-            .map(|m| match m.match_score {
-                Some(score) => format!("{}::{}", score, m.text),
-                None => m.text.clone(),
-            })
-            .collect();
-
-        Ok((
-            text,
-            reasoning,
-            message_usage,
-            model_id_to_return,
-            used_lorebook_entries,
-            memory_refs,
-        ))
-    }
 }
 
 #[tauri::command]
@@ -8236,34 +7292,31 @@ pub async fn group_chat_generate_user_reply(
     ));
     let messages_for_api = assemble_prompt_messages(prompt_entries, Vec::new(), &system_role);
 
-    let context_length = resolve_context_length(model, &settings);
-    let extra_body_fields = if provider_cred.provider_id == "llamacpp" {
-        build_llama_extra_fields(model, &settings)
-    } else if provider_cred.provider_id == "ollama" {
-        build_ollama_extra_fields(
-            model,
-            &settings,
-            context_length,
-            max_tokens,
-            0.8,
-            1.0,
-            None,
-            None,
-            None,
-        )
-    } else {
-        None
-    };
+    let mut overrides = feature_model_overrides(
+        model,
+        LlmFeature::HelpMeReply,
+        HELP_ME_REPLY_DEFAULTS,
+    );
+    if overrides.max_output_tokens.is_none() {
+        overrides.max_output_tokens = Some(max_tokens);
+    }
+    let request_session = synthetic_feature_session("__group_help_me_reply__", overrides);
+    let (request_settings, extra_body_fields) = prepare_feature_request(
+        &provider_cred.provider_id,
+        &request_session,
+        model,
+        &settings,
+    );
     let built = crate::chat_manager::request_builder::build_chat_request(
         provider_cred,
         &api_key,
         &model.name,
         &messages_for_api,
         None,
-        Some(0.8),  // temperature
-        Some(1.0),  // top_p
-        max_tokens, // max_tokens from settings
-        context_length,
+        request_settings.temperature,
+        request_settings.top_p,
+        request_settings.max_tokens,
+        request_settings.context_length,
         streaming_enabled,  // streaming from settings
         request_id.clone(), // request_id for streaming
         None,               // frequency_penalty

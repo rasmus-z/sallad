@@ -320,6 +320,8 @@ pub struct AdvancedSettings {
     #[serde(default)]
     pub llama_sampler_presets: Option<Vec<LlamaSamplerPreset>>,
     #[serde(default)]
+    pub group_speaker_selection_model_id: Option<String>,
+    #[serde(default)]
     pub sd_default_offload_mode: Option<String>,
     #[serde(default)]
     pub sd_default_size: Option<String>,
@@ -442,6 +444,90 @@ pub struct LlamaSamplerPreset {
     pub name: String,
     #[serde(default)]
     pub stages: Vec<String>,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct FeatureGenerationSettingsMap {
+    #[serde(default)]
+    pub dynamic_memory: Option<FeatureGenerationSettings>,
+    #[serde(default)]
+    pub companion_soul_writer: Option<FeatureGenerationSettings>,
+    #[serde(default)]
+    pub companion_memory: Option<FeatureGenerationSettings>,
+    #[serde(default)]
+    pub lorebook_entry_generator: Option<FeatureGenerationSettings>,
+    #[serde(default)]
+    pub lorebook_generator: Option<FeatureGenerationSettings>,
+    #[serde(default)]
+    pub scene_writer: Option<FeatureGenerationSettings>,
+    #[serde(default)]
+    pub help_me_reply: Option<FeatureGenerationSettings>,
+    #[serde(default)]
+    pub group_speaker_selection: Option<FeatureGenerationSettings>,
+    #[serde(default)]
+    pub creation_helper: Option<FeatureGenerationSettings>,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct FeatureGenerationSettings {
+    #[serde(default)]
+    pub temperature: Option<f64>,
+    #[serde(default)]
+    pub top_p: Option<f64>,
+    #[serde(default)]
+    pub top_k: Option<u32>,
+    #[serde(default)]
+    pub max_output_tokens: Option<u32>,
+    #[serde(default)]
+    pub frequency_penalty: Option<f64>,
+    #[serde(default)]
+    pub presence_penalty: Option<f64>,
+    #[serde(default)]
+    pub llama_sampler_profile: Option<String>,
+    #[serde(default)]
+    pub llama_sampler_order: Option<Vec<String>>,
+    #[serde(default)]
+    pub llama_min_p: Option<f64>,
+    #[serde(default)]
+    pub llama_typical_p: Option<f64>,
+    #[serde(default)]
+    pub llama_repeat_penalty: Option<f64>,
+    #[serde(default)]
+    pub llama_xtc_probability: Option<f64>,
+    #[serde(default)]
+    pub llama_xtc_threshold: Option<f64>,
+    #[serde(default)]
+    pub llama_dry_multiplier: Option<f64>,
+    #[serde(default)]
+    pub llama_dry_base: Option<f64>,
+    #[serde(default)]
+    pub llama_dry_allowed_length: Option<u32>,
+    #[serde(default)]
+    pub llama_dry_penalty_last_n: Option<i32>,
+    #[serde(default)]
+    pub llama_dry_sequence_breakers: Option<Vec<String>>,
+    #[serde(default)]
+    pub llama_seed: Option<u32>,
+    #[serde(default)]
+    pub ollama_min_p: Option<f64>,
+    #[serde(default)]
+    pub ollama_typical_p: Option<f64>,
+    #[serde(default)]
+    pub ollama_tfs_z: Option<f64>,
+    #[serde(default)]
+    pub ollama_repeat_penalty: Option<f64>,
+    #[serde(default)]
+    pub ollama_mirostat: Option<u32>,
+    #[serde(default)]
+    pub ollama_mirostat_tau: Option<f64>,
+    #[serde(default)]
+    pub ollama_mirostat_eta: Option<f64>,
+    #[serde(default)]
+    pub ollama_seed: Option<u32>,
+    #[serde(default)]
+    pub ollama_stop: Option<Vec<String>>,
 }
 
 #[derive(Deserialize, Serialize, Clone, Copy, Debug, PartialEq, Eq)]
@@ -739,6 +825,8 @@ pub struct AdvancedModelSettings {
     pub prompt_caching_ttl: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub open_router_provider: Option<OpenRouterPinnedProvider>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub feature_generation_settings: Option<FeatureGenerationSettingsMap>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -748,6 +836,17 @@ pub struct OpenRouterPinnedProvider {
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub logo_url: Option<String>,
+}
+
+impl AdvancedModelSettings {
+    pub fn empty() -> Self {
+        Self {
+            max_output_tokens: None,
+            prompt_caching_enabled: None,
+            prompt_caching_ttl: None,
+            ..Self::default()
+        }
+    }
 }
 
 impl Default for AdvancedModelSettings {
@@ -836,6 +935,7 @@ impl Default for AdvancedModelSettings {
             prompt_caching_enabled: Some(false),
             prompt_caching_ttl: Some("5min".to_string()),
             open_router_provider: None,
+            feature_generation_settings: None,
         }
     }
 }
