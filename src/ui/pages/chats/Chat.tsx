@@ -138,6 +138,38 @@ const STICKY_BOTTOM_THRESHOLD_PX = 80;
 const MAX_AUDIO_CACHE_ENTRIES = 50;
 const MOBILE_KEYBOARD_THRESHOLD_PX = 120;
 
+/** Lightweight sentence splitter for TTS chunking (reduces TTFB dramatically) */
+function splitTextForTts(text: string): string[] {
+  if (!text || text.trim().length === 0) return [];
+
+  // Split on sentence-ending punctuation followed by whitespace
+  const sentences = text
+    .replace(/([.!?。！？])\s+/g, "$1|")
+    .split("|")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+
+  if (sentences.length <= 1) {
+    return [text.trim()];
+  }
+
+  // Merge very short sentences to avoid tiny TTS calls
+  const merged: string[] = [];
+  let current = "";
+
+  for (const sentence of sentences) {
+    if (current.length > 0 && (current.length + sentence.length < 280)) {
+      current = (current + " " + sentence).trim();
+    } else {
+      if (current) merged.push(current);
+      current = sentence;
+    }
+  }
+  if (current) merged.push(current);
+
+  return merged.length > 0 ? merged : [text.trim()];
+}
+
 function mergeFloat32Chunks(chunks: Float32Array[]) {
   const total = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
   const merged = new Float32Array(total);
@@ -262,6 +294,7 @@ export function ChatConversationPage() {
   const audioPlayingMessageIdRef = useRef<string | null>(null);
   const audioRequestRef = useRef<{ requestId: string; messageId: string } | null>(null);
   const cancelledAudioRequestsRef = useRef<Set<string>>(new Set());
+  const audioStoppedRef = useRef(false); // used to break out of chunked playback loop
   const abortRequestedRef = useRef(false);
   const abortSoundRef = useRef(false);
   const wasGeneratingRef = useRef(false);
@@ -1253,6 +1286,8 @@ export function ChatConversationPage() {
   );
 
   const stopAudioPlayback = useCallback(() => {
+    audioStoppedRef.current = true;
+
     const audio = audioPlaybackRef.current;
     if (audio) {
       audio.pause();
@@ -1261,6 +1296,7 @@ export function ChatConversationPage() {
       audio.onerror = null;
     }
     audioPlaybackRef.current = null;
+
     const messageId = audioPlayingMessageIdRef.current;
     if (messageId) {
       audioPlayingMessageIdRef.current = null;
@@ -1327,6 +1363,16 @@ export function ChatConversationPage() {
       const trimmedText = text.trim();
       if (!trimmedText) return;
 
+      // Always stop any currently playing audio before starting a new one.
+      // This is critical for Autoplay + long responses (chunked playback)
+      // to prevent overlapping voices.
+      if (audioPlaybackRef.current) {
+        stopAudioPlayback();
+      }
+      if (audioRequestRef.current) {
+        await cancelAudioGeneration();
+      }
+
       if (audioRequestRef.current?.messageId === message.id) {
         await cancelAudioGeneration();
         return;
@@ -1334,13 +1380,6 @@ export function ChatConversationPage() {
       if (audioPlayingMessageIdRef.current === message.id) {
         stopAudioPlayback();
         return;
-      }
-
-      if (audioRequestRef.current) {
-        await cancelAudioGeneration();
-      }
-      if (audioPlaybackRef.current) {
-        stopAudioPlayback();
       }
 
       const requestId = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
@@ -1363,6 +1402,12 @@ export function ChatConversationPage() {
         throw error;
       }
 
+      // Resolve provider + voice config (same as before)
+      let providerId: string;
+      let modelId: string;
+      let voiceId: string;
+      let prompt: string | undefined;
+
       if (character.voiceConfig.source === "user" && character.voiceConfig.userVoiceId) {
         let voices = await ensureUserVoices();
         let voice = voices.find((v) => v.id === character.voiceConfig?.userVoiceId);
@@ -1378,69 +1423,13 @@ export function ChatConversationPage() {
         if (!provider) {
           throw new Error(t("chats.errors.assignedProviderNotFound"));
         }
-
-        const cacheKey = buildAudioCacheKey({
-          providerId: voice.providerId,
-          modelId: voice.modelId,
-          voiceId: voice.voiceId,
-          text: trimmedText,
-          prompt: voice.prompt,
-        });
-        const cached = audioPreviewCacheRef.current.get(cacheKey);
-        if (cached) {
-          if (audioRequestRef.current?.requestId !== requestId) {
-            cancelledAudioRequestsRef.current.delete(requestId);
-            return;
-          }
-          audioRequestRef.current = null;
-          if (cancelledAudioRequestsRef.current.has(requestId)) {
-            cancelledAudioRequestsRef.current.delete(requestId);
-            setAudioStatus(message.id, null);
-            return;
-          }
-          startAudioPlayback(message.id, cached);
-          return;
-        }
-
-        try {
-          const response = await generateTtsForMessage(
-            voice.providerId,
-            voice.modelId,
-            voice.voiceId,
-            trimmedText,
-            voice.prompt,
-            requestId,
-          );
-          if (audioRequestRef.current?.requestId !== requestId) {
-            cancelledAudioRequestsRef.current.delete(requestId);
-            return;
-          }
-          audioRequestRef.current = null;
-          if (cancelledAudioRequestsRef.current.has(requestId)) {
-            cancelledAudioRequestsRef.current.delete(requestId);
-            setAudioStatus(message.id, null);
-            return;
-          }
-          cacheAudioPreview(cacheKey, response);
-          startAudioPlayback(message.id, response);
-          return;
-        } catch (error) {
-          if (audioRequestRef.current?.requestId === requestId) {
-            audioRequestRef.current = null;
-          }
-          setAudioStatus(message.id, null);
-          const messageText = error instanceof Error ? error.message : String(error);
-          const isAbort =
-            messageText.toLowerCase().includes("aborted") ||
-            messageText.toLowerCase().includes("cancel");
-          if (isAbort) return;
-          throw error;
-        }
-      }
-
-      if (character.voiceConfig.source === "provider") {
-        const providerId = character.voiceConfig.providerId;
-        const voiceId = character.voiceConfig.voiceId;
+        providerId = voice.providerId;
+        modelId = voice.modelId;
+        voiceId = voice.voiceId;
+        prompt = voice.prompt;
+      } else if (character.voiceConfig.source === "provider") {
+        providerId = character.voiceConfig.providerId!;
+        voiceId = character.voiceConfig.voiceId!;
         if (!providerId || !voiceId) {
           throw new Error(t("chats.errors.voiceMissingProviderDetails"));
         }
@@ -1448,25 +1437,35 @@ export function ChatConversationPage() {
         if (!provider) {
           throw new Error(t("chats.errors.assignedProviderNotFound"));
         }
-
-        let modelId = character.voiceConfig.modelId;
+        modelId = character.voiceConfig.modelId || "";
         if (!modelId) {
           if (provider.providerType === "kokoro" && provider.kokoroVariant) {
             modelId = provider.kokoroVariant;
           } else {
             const models = await ensureAudioModels(provider.providerType as AudioProviderType);
-            modelId = models[0]?.id;
+            modelId = models[0]?.id || "";
           }
         }
         if (!modelId) {
           throw new Error(t("chats.errors.noAudioModelsForProvider"));
         }
+      } else {
+        setAudioStatus(message.id, null);
+        audioRequestRef.current = null;
+        return;
+      }
 
+      // === CHUNKED TTS (key change for low TTFB) ===
+      const chunks = splitTextForTts(trimmedText);
+
+      // If only one chunk (or very short message), use original single-call behavior
+      if (chunks.length <= 1) {
         const cacheKey = buildAudioCacheKey({
           providerId,
           modelId,
           voiceId,
           text: trimmedText,
+          prompt,
         });
         const cached = audioPreviewCacheRef.current.get(cacheKey);
         if (cached) {
@@ -1490,7 +1489,7 @@ export function ChatConversationPage() {
             modelId,
             voiceId,
             trimmedText,
-            undefined,
+            prompt,
             requestId,
           );
           if (audioRequestRef.current?.requestId !== requestId) {
@@ -1505,6 +1504,7 @@ export function ChatConversationPage() {
           }
           cacheAudioPreview(cacheKey, response);
           startAudioPlayback(message.id, response);
+          return;
         } catch (error) {
           if (audioRequestRef.current?.requestId === requestId) {
             audioRequestRef.current = null;
@@ -1518,6 +1518,178 @@ export function ChatConversationPage() {
           throw error;
         }
       }
+
+      // === MULTI-CHUNK PATH: Prefetch next chunk while current is playing ===
+      audioRequestRef.current = null; // release request lock early
+      setAudioStatus(message.id, "playing"); // show playing state immediately for the whole message
+
+      let firstChunkPlayed = false;
+      let nextChunkPromise: Promise<TtsPreviewResponse | null> | null = null;
+      let currentAudioEl: HTMLAudioElement | null = null;
+
+      // Reset stop flag at the beginning of a new playback
+      audioStoppedRef.current = false;
+
+      const playChunk = async (chunkText: string): Promise<TtsPreviewResponse | null> => {
+        const chunkCacheKey = buildAudioCacheKey({
+          providerId,
+          modelId,
+          voiceId,
+          text: chunkText,
+          prompt,
+        });
+
+        let chunkResponse: TtsPreviewResponse | null =
+          audioPreviewCacheRef.current.get(chunkCacheKey) || null;
+
+        if (!chunkResponse) {
+          try {
+            chunkResponse = await generateTtsForMessage(
+              providerId,
+              modelId,
+              voiceId,
+              chunkText,
+              prompt,
+              undefined,
+            );
+            if (chunkResponse) {
+              cacheAudioPreview(chunkCacheKey, chunkResponse);
+            }
+          } catch (err) {
+            console.warn("TTS chunk failed:", err);
+            return null;
+          }
+        }
+        return chunkResponse;
+      };
+
+      for (let i = 0; i < chunks.length; i++) {
+        // Check if user clicked Stop before starting the next chunk
+        if (audioStoppedRef.current) {
+          break;
+        }
+
+        const chunkText = chunks[i];
+
+        // Use prefetched chunk if available
+        let chunkResponse: TtsPreviewResponse | null = null;
+
+        if (nextChunkPromise) {
+          chunkResponse = await nextChunkPromise;
+          nextChunkPromise = null;
+        } else {
+          chunkResponse = await playChunk(chunkText);
+        }
+
+        // Check again after prefetch/generation (in case user stopped during generation)
+        if (audioStoppedRef.current) {
+          break;
+        }
+
+        if (!chunkResponse) {
+          if (i === 0) setAudioStatus(message.id, null);
+          continue;
+        }
+
+        // Prefetch the next chunk in the background
+        if (i + 1 < chunks.length && !audioStoppedRef.current) {
+          const nextText = chunks[i + 1];
+          nextChunkPromise = playChunk(nextText);
+        }
+
+        // Stop any currently playing audio before starting the next chunk
+        // This prevents overlapping voices when autoplay triggers chunked playback
+        if (audioPlaybackRef.current) {
+          const prevAudio = audioPlaybackRef.current;
+          prevAudio.pause();
+          prevAudio.onended = null;
+          prevAudio.onerror = null;
+        }
+
+        // Play the current chunk
+        const audioEl = playAudioFromBase64(chunkResponse.audioBase64, chunkResponse.format);
+        currentAudioEl = audioEl;
+
+        // Always update the global playback ref so Stop works on the current chunk
+        audioPlaybackRef.current = audioEl;
+        audioPlayingMessageIdRef.current = message.id;
+
+        if (i === 0) {
+          firstChunkPlayed = true;
+        }
+
+        // Only the *last* chunk should clear the global playing state
+        const isLastChunk = i === chunks.length - 1;
+
+        audioEl.onended = () => {
+          if (audioPlaybackRef.current === audioEl) {
+            audioPlaybackRef.current = null;
+            currentAudioEl = null;
+
+            if (isLastChunk && !audioStoppedRef.current) {
+              audioPlayingMessageIdRef.current = null;
+              setAudioStatus(message.id, null);
+            }
+          }
+        };
+
+        audioEl.onerror = () => {
+          if (audioPlaybackRef.current === audioEl) {
+            audioPlaybackRef.current = null;
+            currentAudioEl = null;
+
+            if (isLastChunk && !audioStoppedRef.current) {
+              audioPlayingMessageIdRef.current = null;
+              setAudioStatus(message.id, null);
+            }
+          }
+        };
+
+        // Wait for this chunk to finish (or until stopped)
+        await new Promise<void>((resolve) => {
+          const done = () => resolve();
+          const originalOnEnd = audioEl.onended;
+          const originalOnError = audioEl.onerror;
+
+          audioEl.onended = () => {
+            if (originalOnEnd) originalOnEnd.call(audioEl as any);
+            done();
+          };
+          audioEl.onerror = () => {
+            if (originalOnError) originalOnError.call(audioEl as any);
+            done();
+          };
+
+          // Poll for stop signal every 100ms
+          const stopCheckInterval = setInterval(() => {
+            if (audioStoppedRef.current) {
+              clearInterval(stopCheckInterval);
+              done();
+            }
+          }, 100);
+
+          setTimeout(() => {
+            clearInterval(stopCheckInterval);
+            done();
+          }, 120000); // safety timeout
+        });
+
+        // If user stopped during playback, clean up and exit
+        if (audioStoppedRef.current) {
+          if (currentAudioEl) {
+            currentAudioEl.pause();
+            currentAudioEl.onended = null;
+            currentAudioEl.onerror = null;
+          }
+          audioPlaybackRef.current = null;
+          currentAudioEl = null;
+          break;
+        }
+      }
+
+      if (!firstChunkPlayed) {
+        setAudioStatus(message.id, null);
+      }
     },
     [
       buildAudioCacheKey,
@@ -1530,6 +1702,7 @@ export function ChatConversationPage() {
       setAudioStatus,
       startAudioPlayback,
       stopAudioPlayback,
+      t,
     ],
   );
 
