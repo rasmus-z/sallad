@@ -1185,7 +1185,7 @@ export const plMessages: DeepPartialMessageTree<LocaleMessages> = {
       unknownModel: "Nieznany model",
       loadingModel: "Ładowanie modelu...",
       systemMessage: "Wiadomość systemowa",
-      companionChanges: "Zmiany towarzysza",
+      companionChanges: "Reakcja na Twoją wiadomość",
       companionProcessing: "Przetwarzanie",
       companionFailed: "Niepowodzenie",
       companionLoadError: "Nie udało się załadować analizy towarzysza dla tej tury.",

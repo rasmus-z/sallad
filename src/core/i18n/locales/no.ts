@@ -1185,7 +1185,7 @@ export const noMessages: DeepPartialMessageTree<LocaleMessages> = {
       unknownModel: "Ukjent modell",
       loadingModel: "Laster modell...",
       systemMessage: "Systemmelding",
-      companionChanges: "Følgesvennendringer",
+      companionChanges: "Reaksjon på meldingen din",
       companionProcessing: "Behandler",
       companionFailed: "Mislyktes",
       companionLoadError: "Kunne ikke laste følgesvennanalysen for denne turen.",
