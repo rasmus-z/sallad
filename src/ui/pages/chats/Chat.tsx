@@ -1363,22 +1363,32 @@ export function ChatConversationPage() {
       const trimmedText = text.trim();
       if (!trimmedText) return;
 
-      // Always stop any currently playing audio before starting a new one.
-      // This is critical for Autoplay + long responses (chunked playback)
-      // to prevent overlapping voices.
+      // === CRITICAL: Always stop any previous playback (including queued chunks) ===
+      // This must happen for BOTH manual Play clicks and Autoplay.
+      // We force-clear the old queue before starting anything new.
+      audioStoppedRef.current = true;
+
       if (audioPlaybackRef.current) {
-        stopAudioPlayback();
+        const prev = audioPlaybackRef.current;
+        prev.pause();
+        prev.onended = null;
+        prev.onerror = null;
+        audioPlaybackRef.current = null;
       }
+
+      // Clear any message that was previously marked as playing
+      const previousPlayingId = audioPlayingMessageIdRef.current;
+      if (previousPlayingId) {
+        setAudioStatus(previousPlayingId, null);
+      }
+      audioPlayingMessageIdRef.current = null;
+
       if (audioRequestRef.current) {
         await cancelAudioGeneration();
       }
 
       if (audioRequestRef.current?.messageId === message.id) {
         await cancelAudioGeneration();
-        return;
-      }
-      if (audioPlayingMessageIdRef.current === message.id) {
-        stopAudioPlayback();
         return;
       }
 
@@ -1528,6 +1538,7 @@ export function ChatConversationPage() {
       let currentAudioEl: HTMLAudioElement | null = null;
 
       // Reset stop flag at the beginning of a new playback
+      // (we already set it to true earlier to kill the old queue)
       audioStoppedRef.current = false;
 
       const playChunk = async (chunkText: string): Promise<TtsPreviewResponse | null> => {
