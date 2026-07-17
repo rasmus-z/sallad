@@ -1676,27 +1676,27 @@ export function ChatConversationPage() {
           const originalOnError = audioEl.onerror;
 
           audioEl.onended = () => {
-            if (originalOnEnd) originalOnEnd.call(audioEl as any);
+            if (originalOnEnd) originalOnEnd.call(audioEl, new Event('ended') as any);
             done();
           };
           audioEl.onerror = () => {
-            if (originalOnError) originalOnError.call(audioEl as any);
+            if (originalOnError) originalOnError.call(audioEl, new Event('error') as any);
             done();
           };
 
           // Poll for stop signal + session change every 100ms
-          const stopCheckInterval = setInterval(() => {
+          const stopCheckInterval = window.setInterval(() => {
             if (
               audioStoppedRef.current ||
               currentPlaybackSessionRef.current !== mySessionId
             ) {
-              clearInterval(stopCheckInterval);
+              window.clearInterval(stopCheckInterval);
               done();
             }
           }, 100);
 
-          setTimeout(() => {
-            clearInterval(stopCheckInterval);
+          window.setTimeout(() => {
+            window.clearInterval(stopCheckInterval);
             done();
           }, 120000); // safety timeout
         });
