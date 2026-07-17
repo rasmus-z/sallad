@@ -1646,6 +1646,9 @@ export function ChatConversationPage() {
         const isLastChunk = i === chunks.length - 1;
 
         audioEl.onended = () => {
+          // Guard against stale handlers from previous responses
+          if (currentPlaybackSessionRef.current !== mySessionId) return;
+
           if (audioPlaybackRef.current === audioEl) {
             audioPlaybackRef.current = null;
             currentAudioEl = null;
@@ -1658,6 +1661,9 @@ export function ChatConversationPage() {
         };
 
         audioEl.onerror = () => {
+          // Guard against stale handlers from previous responses
+          if (currentPlaybackSessionRef.current !== mySessionId) return;
+
           if (audioPlaybackRef.current === audioEl) {
             audioPlaybackRef.current = null;
             currentAudioEl = null;
