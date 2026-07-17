@@ -295,6 +295,7 @@ export function ChatConversationPage() {
   const audioRequestRef = useRef<{ requestId: string; messageId: string } | null>(null);
   const cancelledAudioRequestsRef = useRef<Set<string>>(new Set());
   const audioStoppedRef = useRef(false); // used to break out of chunked playback loop
+  const currentPlaybackSessionRef = useRef<string | null>(null); // prevents old chunk loops from interfering
   const abortRequestedRef = useRef(false);
   const abortSoundRef = useRef(false);
   const wasGeneratingRef = useRef(false);
@@ -1364,8 +1365,10 @@ export function ChatConversationPage() {
       if (!trimmedText) return;
 
       // === CRITICAL: Always stop any previous playback (including queued chunks) ===
-      // This must happen for BOTH manual Play clicks and Autoplay.
-      // We force-clear the old queue before starting anything new.
+      // Generate a new playback session ID so old loops can detect they are stale.
+      const playbackSessionId = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
+      currentPlaybackSessionRef.current = playbackSessionId;
+
       audioStoppedRef.current = true;
 
       if (audioPlaybackRef.current) {
@@ -1538,8 +1541,9 @@ export function ChatConversationPage() {
       let currentAudioEl: HTMLAudioElement | null = null;
 
       // Reset stop flag at the beginning of a new playback
-      // (we already set it to true earlier to kill the old queue)
       audioStoppedRef.current = false;
+
+      const mySessionId = currentPlaybackSessionRef.current;
 
       const playChunk = async (chunkText: string): Promise<TtsPreviewResponse | null> => {
         const chunkCacheKey = buildAudioCacheKey({
@@ -1575,6 +1579,11 @@ export function ChatConversationPage() {
       };
 
       for (let i = 0; i < chunks.length; i++) {
+        // === Session guard: abort if a newer playback has started ===
+        if (currentPlaybackSessionRef.current !== mySessionId) {
+          break;
+        }
+
         // Check if user clicked Stop before starting the next chunk
         if (audioStoppedRef.current) {
           break;
@@ -1592,7 +1601,12 @@ export function ChatConversationPage() {
           chunkResponse = await playChunk(chunkText);
         }
 
-        // Check again after prefetch/generation (in case user stopped during generation)
+        // Session guard again after async work
+        if (currentPlaybackSessionRef.current !== mySessionId) {
+          break;
+        }
+
+        // Check again after prefetch/generation
         if (audioStoppedRef.current) {
           break;
         }
@@ -1609,7 +1623,6 @@ export function ChatConversationPage() {
         }
 
         // Stop any currently playing audio before starting the next chunk
-        // This prevents overlapping voices when autoplay triggers chunked playback
         if (audioPlaybackRef.current) {
           const prevAudio = audioPlaybackRef.current;
           prevAudio.pause();
@@ -1671,9 +1684,12 @@ export function ChatConversationPage() {
             done();
           };
 
-          // Poll for stop signal every 100ms
+          // Poll for stop signal + session change every 100ms
           const stopCheckInterval = setInterval(() => {
-            if (audioStoppedRef.current) {
+            if (
+              audioStoppedRef.current ||
+              currentPlaybackSessionRef.current !== mySessionId
+            ) {
               clearInterval(stopCheckInterval);
               done();
             }
@@ -1685,8 +1701,11 @@ export function ChatConversationPage() {
           }, 120000); // safety timeout
         });
 
-        // If user stopped during playback, clean up and exit
-        if (audioStoppedRef.current) {
+        // If user stopped or a new session started, clean up and exit
+        if (
+          audioStoppedRef.current ||
+          currentPlaybackSessionRef.current !== mySessionId
+        ) {
           if (currentAudioEl) {
             currentAudioEl.pause();
             currentAudioEl.onended = null;
