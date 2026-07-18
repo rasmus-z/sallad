@@ -1000,7 +1000,7 @@ export function ChatConversationPage() {
             const seen = new Set<string>();
             const merged: AsrLearnedSuggestion[] = [];
             const key = (s: AsrLearnedSuggestion) =>
-              `${s.normalizedWrong} ${s.normalizedCorrect}`;
+              `${s.normalizedWrong}::${s.normalizedCorrect}`;
             for (const s of prev) {
               if (next.some((n) => key(n) === key(s))) {
                 seen.add(key(s));
