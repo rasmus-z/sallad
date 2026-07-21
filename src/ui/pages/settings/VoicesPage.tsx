@@ -38,6 +38,12 @@ import {
 
 import { BottomMenu, MenuButton } from "../../components/BottomMenu";
 import { useI18n, type TranslationKey } from "../../../core/i18n/context";
+import { readSettings, saveAdvancedSettings } from "../../../core/storage/repo";
+import type { VoicePlaybackRule } from "../../../core/storage/schemas";
+import {
+  compileVoicePlaybackRegex,
+  normalizeVoicePlaybackRules,
+} from "../../../core/tts/voicePlaybackRules";
 
 const GEMINI_VOICES = [
   { id: "kore", name: "Kore", descriptionKey: "voices.extra.geminiVoices.kore" },
@@ -71,6 +77,9 @@ export function VoicesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [cacheStats, setCacheStats] = useState<TtsCacheStats | null>(null);
   const [isClearingCache, setIsClearingCache] = useState(false);
+  const [playbackRules, setPlaybackRules] = useState<VoicePlaybackRule[]>([]);
+  const [playbackRulesSaving, setPlaybackRulesSaving] = useState(false);
+  const [playbackRuleError, setPlaybackRuleError] = useState<string | null>(null);
 
   // Voice editor state
   const [isVoiceEditorOpen, setIsVoiceEditorOpen] = useState(false);
@@ -116,14 +125,16 @@ export function VoicesPage() {
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [loadedProviders, loadedVoices, stats] = await Promise.all([
+      const [loadedProviders, loadedVoices, stats, settings] = await Promise.all([
         listAudioProviders(),
         listUserVoices(),
         getTtsCacheStats(),
+        readSettings(),
       ]);
       setCacheStats(stats);
       setProviders(loadedProviders);
       setUserVoices(loadedVoices);
+      setPlaybackRules(normalizeVoicePlaybackRules(settings.advancedSettings?.voicePlaybackRules));
 
       // Load voices for each provider
       const voicesMap: Record<string, CachedVoice[]> = {};
@@ -190,6 +201,77 @@ export function VoicesPage() {
     setEditingVoice({ ...voice });
     setIsVoiceEditorOpen(true);
     setSelectedVoice(null);
+  };
+
+  const validatePlaybackRules = (rules: VoicePlaybackRule[]) => {
+    for (const rule of rules) {
+      if (!rule.enabled || !rule.pattern.trim()) continue;
+      try {
+        compileVoicePlaybackRegex(rule.pattern);
+      } catch (error) {
+        throw new Error(`${rule.name || "Playback rule"}: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+  };
+
+  const savePlaybackRules = async (rules: VoicePlaybackRule[]) => {
+    const normalized = normalizeVoicePlaybackRules(rules);
+    validatePlaybackRules(normalized);
+    setPlaybackRuleError(null);
+    setPlaybackRulesSaving(true);
+    try {
+      const settings = await readSettings();
+      await saveAdvancedSettings({
+        ...(settings.advancedSettings ?? {}),
+        voicePlaybackRules: normalized,
+      });
+      setPlaybackRules(normalized);
+    } finally {
+      setPlaybackRulesSaving(false);
+    }
+  };
+
+  const updatePlaybackRuleLocal = (id: string, patch: Partial<VoicePlaybackRule>) => {
+    setPlaybackRules((prev) =>
+      prev.map((rule) => (rule.id === id ? { ...rule, ...patch } : rule)),
+    );
+  };
+
+  const handleUpdatePlaybackRule = (id: string, patch: Partial<VoicePlaybackRule>) => {
+    const next = playbackRules.map((rule) => (rule.id === id ? { ...rule, ...patch } : rule));
+    setPlaybackRules(next);
+    void savePlaybackRules(next).catch((error) => {
+      console.error("Failed to save voice playback rules:", error);
+      setPlaybackRuleError(error instanceof Error ? error.message : String(error));
+    });
+  };
+
+  const handleAddPlaybackRule = () => {
+    const next = normalizeVoicePlaybackRules([
+      ...playbackRules,
+      {
+        id: `custom:${globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`}`,
+        name: "Custom playback rule",
+        pattern: "",
+        rule: "exclude",
+        enabled: true,
+        builtin: false,
+      },
+    ]);
+    setPlaybackRules(next);
+    void savePlaybackRules(next).catch((error) => {
+      console.error("Failed to save voice playback rules:", error);
+      setPlaybackRuleError(error instanceof Error ? error.message : String(error));
+    });
+  };
+
+  const handleDeletePlaybackRule = (id: string) => {
+    const next = playbackRules.filter((rule) => rule.id !== id || rule.builtin);
+    setPlaybackRules(next);
+    void savePlaybackRules(next).catch((error) => {
+      console.error("Failed to save voice playback rules:", error);
+      setPlaybackRuleError(error instanceof Error ? error.message : String(error));
+    });
   };
 
   const handleDeleteVoice = async (id: string) => {
@@ -414,6 +496,176 @@ export function VoicesPage() {
           </div>
         </section>
       )}
+
+      {/* Regex Playback Rules Section */}
+      <section>
+        <div className="mb-2 flex items-center justify-between px-1">
+          <div>
+            <h2 className="text-xs font-medium uppercase tracking-wider text-fg/40">
+              Regex Playback Rules
+            </h2>
+            <p className="mt-1 text-[11px] text-fg/45">
+              Control exactly which parts of messages are spoken during voice playback.
+            </p>
+          </div>
+          <button
+            onClick={handleAddPlaybackRule}
+            className="flex items-center gap-1 rounded-lg border border-fg/10 bg-fg/5 px-2 py-1 text-xs text-fg/70 transition hover:border-fg/20 hover:bg-fg/10"
+          >
+            <Plus className="h-3 w-3" />
+            Add rule
+          </button>
+        </div>
+
+        <div className="space-y-3 rounded-xl border border-fg/10 bg-fg/5 p-4">
+          <div className="rounded-lg border border-fg/10 bg-surface-el/20 p-3 text-xs text-fg/55">
+            <p>
+              If any enabled <span className="font-medium text-accent">include</span> rule exists,
+              only matching text is sent to TTS. Enabled <span className="font-medium text-danger">exclude</span> rules
+              then remove matching text from playback.
+            </p>
+            <p className="mt-1 text-fg/40">
+              Examples: exclude <code className="rounded bg-black/30 px-1">[system note]</code>, exclude stage directions like <code className="rounded bg-black/30 px-1">*smiles*</code>, or include only quoted dialogue.
+            </p>
+          </div>
+
+          {playbackRuleError && (
+            <div className="rounded-lg border border-danger/25 bg-danger/10 px-3 py-2 text-xs text-danger/90">
+              {playbackRuleError}
+            </div>
+          )}
+
+          {playbackRules.map((rule) => (
+            <div
+              key={rule.id}
+              className={`rounded-lg border p-3 transition ${
+                rule.enabled
+                  ? "border-fg/10 bg-surface-el/20"
+                  : "border-fg/5 bg-surface-el/10 opacity-70"
+              }`}
+            >
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="truncate text-sm font-medium text-fg">
+                      {rule.name || "Unnamed playback rule"}
+                    </p>
+                    {rule.builtin && (
+                      <span className="rounded-full border border-accent/20 bg-accent/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-accent">
+                        Built-in
+                      </span>
+                    )}
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide ${
+                        rule.rule === "include"
+                          ? "border border-accent/20 bg-accent/10 text-accent"
+                          : "border border-danger/20 bg-danger/10 text-danger/90"
+                      }`}
+                    >
+                      {rule.rule}
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-[11px] text-fg/40">
+                    {rule.enabled ? "Active during playback" : "Disabled and ignored"}
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleUpdatePlaybackRule(rule.id, { enabled: !rule.enabled })}
+                    className={`rounded-lg border px-2 py-1 text-[11px] transition ${
+                      rule.enabled
+                        ? "border-accent/30 bg-accent/10 text-accent"
+                        : "border-fg/10 bg-fg/5 text-fg/50"
+                    }`}
+                  >
+                    {rule.enabled ? "Enabled" : "Disabled"}
+                  </button>
+                  {!rule.builtin && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeletePlaybackRule(rule.id)}
+                      className="rounded-lg border border-danger/20 bg-danger/10 p-1.5 text-danger/80 transition hover:bg-danger/15"
+                      aria-label="Delete playback rule"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-[1fr_2fr_auto]">
+                <label className="block">
+                  <span className="mb-1 block text-[11px] font-medium text-fg/55">Name</span>
+                  <input
+                    value={rule.name}
+                    disabled={rule.builtin}
+                    onChange={(event) => updatePlaybackRuleLocal(rule.id, { name: event.target.value })}
+                    onBlur={() => void savePlaybackRules(playbackRules).catch((error) => {
+                      console.error("Failed to save voice playback rules:", error);
+                      setPlaybackRuleError(error instanceof Error ? error.message : String(error));
+                    })}
+                    className="w-full rounded-lg border border-fg/10 bg-surface-el/30 px-3 py-2 text-xs text-fg placeholder-fg/30 outline-none transition focus:border-fg/25 disabled:opacity-60"
+                    placeholder="Rule name"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="mb-1 block text-[11px] font-medium text-fg/55">
+                    Regular Expression
+                  </span>
+                  <input
+                    value={rule.pattern}
+                    disabled={rule.builtin}
+                    onChange={(event) => updatePlaybackRuleLocal(rule.id, { pattern: event.target.value })}
+                    onBlur={() => void savePlaybackRules(playbackRules).catch((error) => {
+                      console.error("Failed to save voice playback rules:", error);
+                      setPlaybackRuleError(error instanceof Error ? error.message : String(error));
+                    })}
+                    className="w-full rounded-lg border border-fg/10 bg-surface-el/30 px-3 py-2 font-mono text-xs text-fg placeholder-fg/30 outline-none transition focus:border-fg/25 disabled:opacity-60"
+                    placeholder="\\[[^\\]\\n]*\\]"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="mb-1 block text-[11px] font-medium text-fg/55">Rule</span>
+                  <select
+                    value={rule.rule}
+                    disabled={rule.builtin}
+                    onChange={(event) =>
+                      handleUpdatePlaybackRule(rule.id, {
+                        rule: event.target.value === "include" ? "include" : "exclude",
+                      })
+                    }
+                    className="w-full rounded-lg border border-fg/10 bg-surface-el/30 px-3 py-2 text-xs text-fg outline-none transition focus:border-fg/25 disabled:opacity-60"
+                  >
+                    <option value="exclude">Exclude matches</option>
+                    <option value="include">Include matches</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+          ))}
+
+          <div className="flex items-center justify-between gap-3 text-[11px] text-fg/40">
+            <span>{playbackRulesSaving ? "Saving playback rules…" : "Changes are saved automatically."}</span>
+            <button
+              type="button"
+              onClick={() => {
+                const next = normalizeVoicePlaybackRules([]);
+                setPlaybackRules(next);
+                void savePlaybackRules(next).catch((error) => {
+                  console.error("Failed to reset voice playback rules:", error);
+                  setPlaybackRuleError(error instanceof Error ? error.message : String(error));
+                });
+              }}
+              className="rounded-lg border border-fg/10 bg-fg/5 px-2 py-1 text-[11px] text-fg/55 transition hover:border-fg/20 hover:bg-fg/10"
+            >
+              Reset built-ins
+            </button>
+          </div>
+        </div>
+      </section>
 
       {/* TTS Audio Cache Section */}
       <section>

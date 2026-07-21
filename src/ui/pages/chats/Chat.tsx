@@ -73,6 +73,11 @@ import { replacePlaceholders } from "../../../core/utils/placeholders";
 import { splitThinkTags } from "../../../core/utils/thinkTags";
 import { getPlatform } from "../../../core/utils/platform";
 import {
+  applyVoicePlaybackRules,
+  sourceRangeForPlaybackRange,
+  type VoicePlaybackTransform,
+} from "../../../core/tts/voicePlaybackRules";
+import {
   ChatHeader,
   ChatFooter,
   ChatMessage,
@@ -174,7 +179,7 @@ type FooterRecorderSession = {
 
 export function ChatConversationPage() {
   const { characterId } = useParams<{ characterId: string }>();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useI18n();
@@ -1270,6 +1275,7 @@ export function ChatConversationPage() {
       text: string;
       prompt?: string;
       baseCacheKey: string;
+      highlightTransform?: VoicePlaybackTransform;
     }) => {
       const chunks = splitTextForTtsQueue(params.text);
       if (chunks.length === 0) return;
@@ -1335,7 +1341,10 @@ export function ChatConversationPage() {
         new Promise<void>((resolve) => {
           ensureActive();
           const chunk = chunks[chunkIndex];
-          setAudioHighlight(params.messageId, { start: chunk.start, end: chunk.end });
+          const highlightRange = params.highlightTransform
+            ? sourceRangeForPlaybackRange(params.highlightTransform, chunk.start, chunk.end)
+            : { start: chunk.start, end: chunk.end };
+          setAudioHighlight(params.messageId, highlightRange);
           setAudioStatus(params.messageId, "playing");
           const audio = playAudioFromBase64(response.audioBase64, response.format);
           audioPlaybackRef.current = audio;
@@ -1544,6 +1553,20 @@ export function ChatConversationPage() {
         stopAudioPlayback();
       }
 
+      let playbackTransform: VoicePlaybackTransform | undefined;
+      let playbackText = trimmedText;
+      try {
+        const settings = await readSettings();
+        playbackTransform = applyVoicePlaybackRules(
+          trimmedText,
+          settings.advancedSettings?.voicePlaybackRules,
+        );
+        playbackText = playbackTransform.text.trim();
+      } catch (error) {
+        console.warn("Failed to apply voice playback rules:", error);
+      }
+      if (!playbackText) return;
+
       const requestId = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
       audioRequestRef.current = { requestId, messageId: message.id };
       setAudioStatus(message.id, "loading");
@@ -1584,7 +1607,7 @@ export function ChatConversationPage() {
           providerId: voice.providerId,
           modelId: voice.modelId,
           voiceId: voice.voiceId,
-          text: trimmedText,
+          text: playbackText,
           prompt: voice.prompt,
         });
 
@@ -1595,9 +1618,10 @@ export function ChatConversationPage() {
               providerId: voice.providerId,
               modelId: voice.modelId,
               voiceId: voice.voiceId,
-              text: trimmedText,
+              text: playbackText,
               prompt: voice.prompt,
               baseCacheKey: cacheKey,
+              highlightTransform: playbackTransform,
             });
           } catch (error) {
             if (audioRequestRef.current?.requestId === requestId) {
@@ -1636,7 +1660,7 @@ export function ChatConversationPage() {
             voice.providerId,
             voice.modelId,
             voice.voiceId,
-            trimmedText,
+            playbackText,
             voice.prompt,
             requestId,
           );
@@ -1695,7 +1719,7 @@ export function ChatConversationPage() {
           providerId,
           modelId,
           voiceId,
-          text: trimmedText,
+          text: playbackText,
         });
 
         if (provider.providerType === "openai_tts") {
@@ -1705,8 +1729,9 @@ export function ChatConversationPage() {
               providerId,
               modelId,
               voiceId,
-              text: trimmedText,
+              text: playbackText,
               baseCacheKey: cacheKey,
+              highlightTransform: playbackTransform,
             });
           } catch (error) {
             if (audioRequestRef.current?.requestId === requestId) {
@@ -1745,7 +1770,7 @@ export function ChatConversationPage() {
             providerId,
             modelId,
             voiceId,
-            trimmedText,
+            playbackText,
             undefined,
             requestId,
           );
@@ -2810,6 +2835,15 @@ export function ChatConversationPage() {
     const rafIds: number[] = [];
     const timeoutIds: number[] = [];
     let highlightTimeoutId: number | null = null;
+    let clearedJumpParam = false;
+
+    const clearJumpParam = () => {
+      if (clearedJumpParam) return;
+      clearedJumpParam = true;
+      const next = new URLSearchParams(searchParams);
+      next.delete("jumpToMessage");
+      setSearchParams(next, { replace: true });
+    };
 
     isAtBottomRef.current = false;
     setIsAtBottom(false);
@@ -2839,17 +2873,20 @@ export function ChatConversationPage() {
       const attempt = () => {
         if (cancelled) return;
         const found = centerOnMessage();
-        if (found && tries === 0) {
-          const element = document.getElementById(`message-${jumpToMessageId}`);
-          element?.classList.add(
-            "bg-white/10",
-            "rounded-lg",
-            "transition-colors",
-            "duration-1000",
-          );
-          highlightTimeoutId = window.setTimeout(() => {
-            element?.classList.remove("bg-white/10");
-          }, 2000);
+        if (found) {
+          if (tries === 0) {
+            const element = document.getElementById(`message-${jumpToMessageId}`);
+            element?.classList.add(
+              "bg-white/10",
+              "rounded-lg",
+              "transition-colors",
+              "duration-1000",
+            );
+            highlightTimeoutId = window.setTimeout(() => {
+              element?.classList.remove("bg-white/10");
+            }, 2000);
+          }
+          clearJumpParam();
         }
         tries += 1;
         if (!found && tries < 20) {
@@ -2877,7 +2914,7 @@ export function ChatConversationPage() {
         window.clearTimeout(highlightTimeoutId);
       }
     };
-  }, [ensureMessageLoaded, jumpToMessageId, loading]);
+  }, [ensureMessageLoaded, jumpToMessageId, loading, searchParams, setSearchParams]);
 
   if (loading) {
     return <LoadingSpinner />;

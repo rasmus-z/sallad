@@ -360,6 +360,11 @@ function getViewport() {
   return { w: window.innerWidth, h: window.innerHeight };
 }
 
+function findTourTarget(targetAttr: string): HTMLElement | null {
+  const matches = document.querySelectorAll<HTMLElement>(`[data-tour-id="${targetAttr}"]`);
+  return matches.length > 0 ? matches[matches.length - 1] : null;
+}
+
 export function GuidedTour({
   tour,
   onDismiss,
@@ -415,9 +420,7 @@ export function GuidedTour({
     const MAX_RETRIES = 20;
 
     const measure = () => {
-      const el = document.querySelector<HTMLElement>(
-        `[data-tour-id="${step.targetAttr}"]`,
-      );
+      const el = findTourTarget(step.targetAttr);
       if (!el) {
         if (retryCount < MAX_RETRIES) {
           retryCount++;
@@ -437,9 +440,7 @@ export function GuidedTour({
     };
 
     const scrollIntoViewIfNeeded = () => {
-      const el = document.querySelector<HTMLElement>(
-        `[data-tour-id="${step.targetAttr}"]`,
-      );
+      const el = findTourTarget(step.targetAttr);
       if (!el) return;
       const r = el.getBoundingClientRect();
       const vh = window.innerHeight;

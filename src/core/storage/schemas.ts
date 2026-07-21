@@ -3067,6 +3067,42 @@ function stripDefaultsToOptional(schema: z.ZodObject<z.ZodRawShape>) {
 export const ChatAppearanceOverrideSchema = stripDefaultsToOptional(ChatAppearanceSettingsSchema);
 export type ChatAppearanceOverride = Partial<ChatAppearanceSettings>;
 
+export const VoicePlaybackRuleActionSchema = z.enum(["include", "exclude"]);
+export type VoicePlaybackRuleAction = z.infer<typeof VoicePlaybackRuleActionSchema>;
+
+export const VoicePlaybackBuiltinRuleIdSchema = z.enum([
+  "excludeBracketedNotes",
+  "excludeStageDirections",
+  "excludeParentheticals",
+  "excludeMarkdownImages",
+  "excludeMarkdownLinks",
+  "excludeReferenceLinks",
+  "excludeLinkDefinitions",
+  "excludeAutolinks",
+  "excludeInlineCode",
+  "excludeFencedCodeBlocks",
+  "excludeHeadings",
+  "excludeBlockquotes",
+  "excludeUnorderedListItems",
+  "excludeOrderedListItems",
+  "excludeTaskListItems",
+  "excludeDefinitionListItems",
+  "excludeMarkdownTables",
+  "includeQuotedDialogue",
+]);
+export type VoicePlaybackBuiltinRuleId = z.infer<typeof VoicePlaybackBuiltinRuleIdSchema>;
+
+export const VoicePlaybackRuleSchema = z.object({
+  id: z.string(),
+  name: z.string().default(""),
+  pattern: z.string().default(""),
+  rule: VoicePlaybackRuleActionSchema.default("exclude"),
+  enabled: z.boolean().default(true),
+  builtin: z.boolean().default(false),
+  builtinId: VoicePlaybackBuiltinRuleIdSchema.optional(),
+});
+export type VoicePlaybackRule = z.infer<typeof VoicePlaybackRuleSchema>;
+
 export function createDefaultChatAppearanceSettings(): ChatAppearanceSettings {
   return {
     fontSize: "medium",
@@ -3226,6 +3262,7 @@ export const SettingsSchema = z.object({
       groupDynamicMemory: DynamicMemorySettingsSchema.optional(),
       accessibility: AccessibilitySettingsSchema.optional(),
       chatAppearance: ChatAppearanceSettingsSchema.optional(),
+      voicePlaybackRules: z.array(VoicePlaybackRuleSchema).optional(),
     })
     .optional(),
   advancedModelSettings: AdvancedModelSettingsSchema.optional(),
@@ -3264,6 +3301,7 @@ export function createDefaultSettings(): Settings {
         exposedModels: [],
       },
       accessibility: createDefaultAccessibilitySettings(),
+      voicePlaybackRules: [],
     },
     advancedModelSettings: createDefaultAdvancedModelSettings(),
     promptTemplateId: null,
